@@ -1,0 +1,41 @@
+{
+   "name": "proteuscursor",
+   "version": "1.0.0",
+   "description": "Proteus Cursor is a dynamic JavaScript library that revolutionizes web user interaction by transforming the mouse cursor based on HTML element interactions. Inspired by the shape-shifting god Proteus, this library allows the cursor to change into various shapes and behaviors, such as a dot, circle, or text, depending on the element it hovers over",
+   "main": "index.js",
+   "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+   },
+   "repository": {
+      "type": "git",
+      "url": "git+https://github.com/Shuriken933/proteus-cursor.git"
+   },
+   "keywords": [
+      "cursor",
+      "mouse",
+      "shape",
+      "interaction",
+      "hover",
+      "dynamic",
+      "html",
+      "css",
+      "animation",
+      "custom cursor",
+      "UI",
+      "UX",
+      "frontend",
+      "web development",
+      "JavaScript",
+      "web design",
+      "interactivity",
+      "visual effects",
+      "cursor effects",
+      "user interface"
+   ],
+   "author": "Eros Agostini",
+   "license": "MIT",
+   "bugs": {
+      "url": "https://github.com/Shuriken933/proteus-cursor/issues"
+   },
+   "homepage": "https://github.com/Shuriken933/proteus-cursor#readme"
+}
