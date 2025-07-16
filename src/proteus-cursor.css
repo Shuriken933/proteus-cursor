@@ -1,0 +1,24 @@
+.proteus-cursor-shape,
+.proteus-cursor-shadow {
+   pointer-events: none;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   border-radius: 50%;
+   opacity: 0;
+   transform: translate(-50%, -50%);
+   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.proteus-cursor-shape {
+   width: 8px;
+   height: 8px;
+   background-color: #fff;
+}
+
+.proteus-cursor-shadow {
+   width: 40px;
+   height: 40px;
+   background-color: rgba(255, 255, 255, 0.5);
+}
+
