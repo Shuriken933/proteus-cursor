@@ -69,25 +69,22 @@
    </section>
 
 
-
-
    <script type="module">
-      import ProteusCursor from './proteus-cursor.min.js';
+      import ProteusCursor from './proteus-cursor.js';
 
-      // Initialize the ProteusCursor class
-      const cursor = new ProteusCursor();
-      cursor.setShape('dot'); // Set the cursor shape to 'dot'
+      document.addEventListener("DOMContentLoaded", () => {
 
+         // Initialize the ProteusCursor class
+         // Expose to global scope
+         let cursor = new ProteusCursor();
+         console.log("nuovo cursore")
+         cursor.setShape('circle'); // Set the cursor shape to 'dot'
 
-      function trasformProteus(){
-         // Get the value from the input field
-         let inputVal = document.getElementById('myInput').value;
-         // Get the output div
-         let output = document.getElementById('output');
-      }
-
+         cursor.enableTestMode();
+      });
 
    </script>
+
 
 
 </body>

@@ -6,6 +6,8 @@
 export default class ProteusCursor{
 
    constructor(){
+      this.testMode = false;
+
       // shape
       this.shape = 'default'
       this.shape_size = ''
@@ -24,16 +26,79 @@ export default class ProteusCursor{
       // text
       this.text = ''
       this.text_color = ''
-
       this.isMagnetic = false
 
    }
 
+
+   enableTestMode() {
+      this.testMode = true;
+
+      const container = document.querySelector("body");
+
+      // HTML string for the button
+      const buttonHTML = `
+      <button id="proteus-button-test">
+         <img src="icons/icon-cursor.svg" alt="icon" width="35" height="35" />
+      </button>
+   `;
+
+      // Insert the button into the DOM
+      container.insertAdjacentHTML("beforeend", buttonHTML);
+
+      // HTML for the panel
+      const panelHTML = `
+         <div id="proteus-panel-test">
+            <p>Type cursor</p>
+            <ul>
+               <li><button id="button-setShape-circle">circle</button></li>
+               <li><button id="button-setShape-dot">dot</button></li>
+               <li><button></button></li>
+               <li><button></button></li>
+            </ul>
+            
+            <p>Modifiers</p>
+            <ul>
+               <li><button>magnetic</button></li>
+               <li><button>parallax hover</button></li>
+               <li><button>text</button></li>
+            </ul>
+         </div>
+      `;
+
+      container.insertAdjacentHTML("beforeend", panelHTML);
+      const panel = document.querySelector("#proteus-panel-test");
+
+      // Now we can select the real DOM element and add the event listener
+      const button = document.querySelector("#proteus-button-test");
+      button.addEventListener("click", () => {panel.classList.toggle('open')} );
+
+      // type shape
+      const buttonTypeShape_dot = document.querySelector("#button-setShape-dot");
+      const buttonTypeShape_circle = document.querySelector("#button-setShape-circle");
+      // listeners
+      buttonTypeShape_dot.addEventListener("click", () => {this.setShape('dot')} );
+      buttonTypeShape_circle.addEventListener("click", () => {this.setShape('circle')} );
+
+      // Optional class toggle
+      button.classList.add("active");
+   }
+
+   disableTestMode(){
+      this.testMode = false;
+      document.querySelector('#proteus-button-test').classList.remove('active')
+   }
+
+
    setShape(shape){
       this.shape = shape
+      // if (this.shape === 'dot') {
+      //    this.setShape_dot(shape)
+      // }
       if (this.shape === 'circle') {
          this.setShape_circle(shape)
       }
+      this.printShape();
    }
 
    setShape_circle(shape){
@@ -47,14 +112,23 @@ export default class ProteusCursor{
       this.$shape = document.querySelector('.proteus-cursor-shape');
       this.$shadow = document.querySelector('.proteus-cursor-shadow');
       this.init()
+      console.log("setShape_circle executed")
+   }
+
+   setModifier(modifier){
+
    }
 
    init() {
+      if (this.testMode) {
+         this.showButtonTest()
+      }
+
       switch (this.shape) {
          case 'default':
             this.$shape.style.display = 'none';
             break;
-         case 'dot':
+         case 'circle':
             document.body.style.cursor = 'none';
             this.shape_size = this.$shape.offsetWidth;
             this.shadow_size = this.$shadow.offsetWidth;
@@ -65,6 +139,13 @@ export default class ProteusCursor{
             break;
       }
 
+   }
+
+   showButtonTest(){
+      document.querySelector('#proteus-button-test').classList.add('active')
+   }
+   hideButtonTest(){
+      document.querySelector('#proteus-button-test').classList.remove('active')
    }
 
    printShape(){
@@ -146,3 +227,4 @@ export default class ProteusCursor{
       }
    }
 }
+
