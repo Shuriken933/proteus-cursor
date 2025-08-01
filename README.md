@@ -14,30 +14,49 @@ npm i proteuscursor
 ```
 
 ## 2) 📦 Import Files
-Grab the following files from: node_modules/proteuscursor/dist
- - proteus-cursor.min.css
- - proteus-cursor.min.js
+There are two different import style
 
-Place them in your preferred directory (e.g., inside your assets folder).
+- ### 🧪 Without bundler
+    Ideal for simple projects
+    ```
+    <!-- Add minified CSS -->
+    <link rel="stylesheet" href="dist/proteus-cursor.min.css" />
 
-## 3) 🧩 Setup
-### 3.1) Add the CSS
-```
-<link rel="stylesheet" href="proteus-cursor.min.css">
-```
+    <!-- Add UMD script -->
+    <script src="dist/proteus-cursor.umd.js"></script>
 
-### 3.2) Import the JS
-```
-<script type="module">
-    import ProteusCursor from './proteus-cursor.min.js';
+    <script>
+        // Global initialization
+        const cursor = new ProteusCursor({
+        // proteus options
+    });
+    </script>
+    ```
 
-    // Instantiate your ProteusCursor here
+- ### 🧪 With bundler
+    Ideal for modular projects with Vite, Webpack, Nuxt, ecc.
+    #### 📁 1. install with npm
+    ```bash
+    npm install proteuscursor
+    ```
+
+    #### ✍️ 2. Import in your JS modules
+    ```
+    import ProteusCursor from 'proteuscursor';
+    import 'proteuscursor/style'; // importa lo stile CSS minificato
     
-</script>
-```
----
+    const cursor = new ProteusCursor({
+      // proteus options
+    });
+    ```
 
-#### ✨ Cursor Types & Examples
+
+---
+## 3) Proteus options
+There are a lot of options ✨ for Proteus.
+First of all you can set a cursor type:
+- circle
+- fluid
 ##### 🔵 Circle Cursor
 ```
 currentCursor = new ProteusCursor({

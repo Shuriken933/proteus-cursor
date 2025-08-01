@@ -1,0 +1,13 @@
+# Ignora la cartella dei moduli di Node.js
+node_modules/
+
+# Ignora le variabili d'ambiente
+.env
+
+# Ignora i file di log
+*.log
+
+# altri file
+README-private.md
+package.json
+package-lock.json
