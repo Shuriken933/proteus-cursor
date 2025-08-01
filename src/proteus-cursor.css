@@ -1,3 +1,16 @@
+/*!
+ * Proteus Cursor CSS v1.1.5
+ * https://github.com/Shuriken933/proteus-cursor
+ *
+ * Core styles for Proteus Cursor — a customizable, animated cursor library
+ * that enhances user interaction with modern cursor effects and transitions.
+ *
+ * Author: Eros Agostinelli (https://github.com/Shuriken933)
+ * License: MIT
+ * Released: July 2025
+ */
+
+
 body.proteus-is-a-circle .proteus-cursor-shape,
 body.proteus-is-a-circle .proteus-cursor-shadow { pointer-events: none; position: absolute; top: 50%; left: 50%; border-radius: 50%; opacity: 0; transform: translate(-50%, -50%); transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;}
 body.proteus-is-a-circle .proteus-cursor-shape { width: 8px; height: 8px; background-color: #fff; z-index: 9999999999;display: flex; align-items: center; justify-content: center;}

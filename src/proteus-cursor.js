@@ -1,7 +1,25 @@
-/*! ProteusCursor.js - v1.1.0
-* A lightweight javascript library to create some amazing effects for the mouse (cursor) on your website
-* https://github.com/
-* Copyright (c) 2025 Eros A. under MIT license; */
+/*!
+ * Proteus Cursor v1.1.5
+ * https://github.com/Shuriken933/proteus-cursor
+ *
+ * A dynamic JavaScript library that transforms the default mouse cursor
+ * into interactive shapes based on HTML element interactions.
+ * Inspired by Proteus, the Greek god of change, this library provides
+ * a flexible way to customize the user’s pointer experience on the web.
+ *
+ * Features:
+ * - Cursor shape customization (dot, circle, fluid, text, etc.)
+ * - Magnetic effects
+ * - Smooth shadow animations
+ * - Easy integration via ES module or browser script tag
+ *
+ * Author: Eros Agostini (https://github.com/Shuriken933)
+ * License: MIT
+ * Released: July 2025
+ *
+ * © 2025 Eros Agostini. All rights reserved.
+ */
+
 
 export default class ProteusCursor{
    // internal state

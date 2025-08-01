@@ -79,11 +79,20 @@
 
    <script type="module">
       // import ProteusCursor from '../dist/proteus-cursor.js';
-      import ProteusCursor from '../src/proteus-cursor.js';
+      import ProteusCursor from '../dist/proteus-cursor.min.js';
 
       // Initialize the ProteusCursor class
-      const cursor = new ProteusCursor();
-      cursor.setShape('dot'); // Set the cursor shape to 'dot'
+      currentCursor = new ProteusCursor({
+         shape: 'circle',
+         shape_size: '10px',
+         shape_color: '#ffffff',
+         hasShadow: true,
+         shadow_delay: '0.3s',
+         shadow_size: '40px',
+         shadow_color: 'rgba(255, 255, 255, 0.5)',
+         magnetic: false,
+         text: '',
+      });
    </script>
 
 </body>
