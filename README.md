@@ -50,7 +50,6 @@ There are two different import style
     });
     ```
 
-
 ---
 ## 3) Proteus options
 There are a lot of options ✨ for Proteus.

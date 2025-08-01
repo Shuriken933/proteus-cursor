@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
    <meta charset="UTF-8">
-   <title>Try Proteus Cursor</title>
+   <title>Proteus Cursor</title>
    <link rel="preconnect" href="https://fonts.googleapis.com">
    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
-   <link rel="stylesheet" href="../dist/proteus-cursor.min.css">
+   <link rel="stylesheet" href="proteus-cursor.min.css">
    <style>
       .poppins-extralight { font-family: "Poppins", sans-serif; font-weight: 200; font-style: normal; }
       .poppins-light { font-family: "Poppins", sans-serif; font-weight: 300; font-style: normal; }
@@ -23,77 +23,540 @@
       .poppins-semibold-italic { font-family: "Poppins", sans-serif; font-weight: 600; font-style: italic; }
       .poppins-bold-italic { font-family: "Poppins", sans-serif; font-weight: 700; font-style: italic; }
 
-      body{background-color: #111; color: aliceblue; font-family: "Poppins", sans-serif;}
+      /* -------------------------------------------------------------------------------- */
+      /* ! General */
+      /* -------------------------------------------------------------------------------- */
+      html{scroll-behavior: smooth;}
+      body{background-color: #111; color: aliceblue; font-family: "Poppins", sans-serif; scroll-behavior: smooth}
 
-      .hero { display: flex; height: 100vh; width: 100vw; align-items: center; justify-content: center; flex-direction: column; }
-      .hero h1{ font-size: 4rem; margin: 0; }
-      .hero h2{ font-size: 2rem; font-weight: 300; }
+      section{ margin-bottom: 150px;}
 
-      .hero__proteus-types{
-         padding: 0;
-         margin: 0;
-         display: flex;
-         flex-direction: row;
-         list-style-type: none;
-         gap: 15px;
+      .container { width: 90%; max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+      .section-title { font-size: 3rem; color: #fff; margin-bottom: 1rem; }
+      .section-title span { color: #007bff; }
+
+      /* -------------------------------------------------------------------------------- */
+      /* ! Menu */
+      /* -------------------------------------------------------------------------------- */
+      header{ position: fixed; top: 50px; width: 100%; z-index: 999; }
+      header nav{ display: flex; justify-content: space-between; align-items: center; background: #000000; width: fit-content; margin: 0 auto; border-radius: 10px; box-shadow: 0px 0px 30px -15px #f25e36; }
+      header nav ul{ display: flex; flex-direction: row; list-style: none; gap: 0px; padding: 0; margin: 0; }
+      header nav ul li a{ display: block; padding: 10px 20px; text-decoration: none; color: #fff; font-size: 1rem; font-weight: 400; border-radius: 10px; transition: all 0.25s cubic-bezier(.215, .61, .355, 1); }
+      header nav ul li a:hover{ background: #007bff; }
+
+
+
+      /* -------------------------------------------------------------------------------- */
+      /* ! Sections */
+      /* -------------------------------------------------------------------------------- */
+
+      /* ! Hero */
+      .hero { display: flex; height: 100vh; align-items: center; justify-content: center; flex-direction: column; }
+      .hero h1{ font-size: 5rem; margin: 0; }
+      .hero h2{ font-size: 1.75rem; font-weight: 500; margin-top: 0;}
+      .hero p{ max-width: 600px; margin-bottom: 4rem; margin-top: 0; text-align: center; font-weight: 300; }
+      .cta-button { padding: 15px 25px; border-radius: 15px; background: linear-gradient(45deg, #ff6b6b, #ee5a24); border: none; color: white;font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.25s cubic-bezier(.215, .61, .355, 1); }
+      .cta-button:hover {transform: translateY(-3px); box-shadow: 0 15px 40px rgba(238, 90, 36, 0.5); }
+
+      /* ! Features */
+      .features__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; margin-top: 4rem; }
+      .features__grid__card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 20px; padding: 2rem; border: 1px solid rgba(255, 255, 255, 0.2); transition: all 0.3s ease; position: relative;overflow: hidden; }
+      .features__grid__card::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent); transform: rotate(45deg); transition: all 0.6s ease; opacity: 0; }
+      .features__grid__card:hover::before { animation: shine 0.8s ease-in-out; }
+      .features__grid__card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); }
+      .features__grid__card h3 { font-size: 1.5rem; margin-bottom: 1rem; color: #fff; }
+
+      @keyframes shine {
+         0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+         50% { opacity: 1; }
+         100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
       }
 
-      .hero__proteus-types button{
-         padding: 5px 15px;
-         cursor: pointer;
-         /*background: ;*/
-      }
+      /* ! Demo */
+      .demo h3{ font-size: 1.5rem; font-weight: 400; }
+      .demo__controls,
+      .demo__select-cursor{ background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 20px; padding: 2rem; border: 1px solid rgba(255, 255, 255, 0.2); }
+      .demo__controls__group{ display: flex; flex-direction: row; align-items: center; gap: 25px; }
+      .demo__controls__group__input{ display: flex; flex-direction: row; align-items: center; gap: 12px;}
+      .demo__controls__group__label{ width: 250px;}
+
+      .demo__select-cursor{ display: flex; flex-direction: row; gap: 25px; margin-bottom: 25px; align-items: center; justify-content: space-between; }
+
+      .demo .color-input { width: 50px; height: 50px; border: none; border-radius: 18px; padding: 0; cursor: pointer; appearance: none; -webkit-appearance: none; background-color: #ffffff; box-shadow: 0 0 4px rgba(0,0,0,0.2); transition: all 0.25s cubic-bezier(.215, .61, .355, 1); }
+      .demo .color-input:focus { box-shadow: 0 0 0 2px #00ffff, 0 0 8px #00ffff; }
+
+      /* Per nascondere la palette nativa in WebKit (Chrome, Safari) */
+      .demo .color-input::-webkit-color-swatch-wrapper { padding: 0; }
+      .demo .color-input::-webkit-color-swatch { border: none; border-radius: 8px; }
+
+      /* Per Firefox */
+      .demo .color-input::-moz-color-swatch { border: none; border-radius: 8px; }
+
+      .demo #textContent{padding: 10px 15px; border-radius: 12px}
+
+
+      /* ! Data Attribute */
+      .data-attributes{}
+      .data-attributes table { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);border-radius: 20px; padding: 2rem; border: 1px solid rgba(255, 255, 255, 0.2); overflow: hidden; margin-bottom: 25px; width: 100%; border-collapse: collapse; color: #fff;}
+      .data-attributes table th,
+      .data-attributes table td { padding: 1rem; border: 1px solid #444; text-align: left; }
+      .data-attributes table th { background-color: #222; font-weight: 600; }
+      .data-attributes table code { background: #222; padding: 2px 4px; border-radius: 4px; font-family: monospace; color: #00ffff; }
+      .data-attributes__demo{  display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 50px; margin-bottom: 25px; }
+      .data-attributes__demo__button{ padding: 10px 20px; border-radius: 10px; background: linear-gradient(45deg, #ff6b6b, #ee5a24); border: none; color: white; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.25s cubic-bezier(.215, .61, .355, 1); }
+
+
    </style>
 </head>
 <body>
 
-   <div class="proteus-cursor-shadow"></div>
-   <div class="proteus-cursor-shape"></div>
+   <header>
+      <nav>
+         <ul>
+            <li><a href="#hero">presentation</a></li>
+            <li><a href="#features">features</a></li>
+            <li><a href="#demo">demo</a></li>
+            <li><a href="#data-attributes">data-attributes</a></li>
+         </ul>
+      </nav>
+   </header>
 
-   <section class="hero">
+   <section id="hero" class="hero">
       <h1>Proteus</h1>
-      <h2>the shape-shifting cursor</h2>
-      <p>Proteus became:</p>
-      <ul class="hero__proteus-types">
-         <li>
-            <button>normal</button>
-         </li>
-         <li>
-            <button>circle</button>
-         </li>
-         <li>
-            <button>bho...</button>
-         </li>
-         <li>
-            <button>bho...</button>
-         </li>
-      </ul>
+      <h2>The cursor that transforms with your imagination</h2>
+      <p>Inspired by the shape-shifting sea god, Proteus Cursor is a powerful JavaScript library that turns the standard mouse pointer into a dynamic, interactive design element</p>
+      <button class="cta-button">Discover all the features</button>
 
    </section>
 
 
+   <section id="features" class="features">
+      <div class="container">
+         <h2 class="section-title">Main Features</h2>
+
+         <div class="features__grid">
+            <div class="features__grid__card">
+               <h3>🎯 Customisable Circular Cursor</h3>
+               <p>Turns the default cursor into an elegant circle that is fully customizable with dynamic size, color and shadow effects.</p>
+            </div>
+
+            <div class="features__grid__card">
+               <h3>✨ Dynamic Shadow Effects</h3>
+               <p>Apply custom shadows to your cursor with complete control over color, intensity, and diffusion to create stunning visual effects</p>
+            </div>
+
+            <div class="features__grid__card">
+               <h3>📝 Integrated Text</h3>
+               <p>Enter text directly into the cursor to create interactive and informative experiences that follow your mouse movement.</p>
+            </div>
+
+            <div class="features__grid__card">
+               <h3>🧲 Magnetic Behavior</h3>
+               <p>The cursor can be drawn to specific elements on the page, creating a smooth and intuitive navigation experience.</p>
+            </div>
+
+            <div class="features__grid__card">
+               <h3>🌀 Magnetic Parallax</h3>
+               <p>Advanced effect that combines magnetic attraction with parallax movement of HTML elements for immersive interaction.</p>
+            </div>
+
+            <div class="features__grid__card">
+               <h3>🎨 Dynamic Colors</h3>
+               <p>Change cursor and shadow colors in real time, with support for gradients and smooth transitions.</p>
+            </div>
+         </div>
+      </div>
+   </section>
+
+
+   <section id="demo" class="demo">
+      <div class="container">
+         <h2 class="section-title">Interactive Demo</h2>
+
+         <div class="demo__select-cursor">
+            <h3>1) Select a type</h3>
+            <div class="demo__select-cursor__buttons">
+               <button id="btn-kill-proteus" class="demo__type-shape">🖱️default</button>
+               <button id="btn-create-proteus-circle" class="demo__type-shape">⚪circle</button>
+               <button id="btn-create-proteus-fluid" class="demo__type-shape">💧fluid</button>
+            </div>
+
+         </div>
+
+
+         <div class="demo__controls">
+            <h3>2) Modify the cursor</h3>
+
+            <div class="demo__controls__group">
+               <p class="demo__controls__group__label">Customize cursor</p>
+               <div class="demo__controls__group__input">
+                  <label for="cursorSize">size</label>
+                  <input type="range" id="cursorSize" min="10" max="100" value="20">
+               </div>
+               <div class="demo__controls__group__input">
+                  <label for="cursorColor">color</label>
+                  <input type="color" id="cursorColor" value="#ffffff" class="color-input">
+               </div>
+            </div>
+
+            <div class="demo__controls__group">
+               <p class="demo__controls__group__label">Customize shadow</p>
+               <div class="demo__controls__group__input">
+                  <label for="shadowEnabled">enable</label>
+                  <input type="checkbox" id="shadowEnabled">
+               </div>
+               <div class="demo__controls__group__input">
+                  <label for="shadowSize">size</label>
+                  <input type="range" id="shadowSize" min="0" max="100" value="20">
+               </div>
+               <div class="demo__controls__group__input">
+                  <label for="shadowColor">color</label>
+                  <input type="color" id="shadowColor" value="#ffffff" class="color-input">
+               </div>
+               <div class="demo__controls__group__input">
+                  <label for="shadowAlpha">transparency</label>
+                  <input type="range" id="shadowAlpha" min="0" max="1" step="0.01" value="0.5">
+               </div>
+            </div>
+
+            <div class="demo__controls__group">
+               <p class="demo__controls__group__label">Customize the text</p>
+               <div class="demo__controls__group__input">
+                  <label for="textContent">text</label>
+                  <input type="text" id="textContent" placeholder="insert text...">
+               </div>
+               <div class="demo__controls__group__input">
+                  <label for="textSize">size</label>
+                  <input type="range" id="textSize" min="1" max="100" value="20">
+               </div>
+               <div class="demo__controls__group__input">
+                  <label for="textColor">color</label>
+                  <input type="color" id="textColor" value="#ffffff" class="color-input">
+               </div>
+               <div class="demo__controls__group__input">
+                  <label for="textWeight">weight</label>
+                  <input type="range" id="textWeight" min="100" max="900" step="100" value="400">
+               </div>
+            </div>
+
+         </div>
+
+      </div>
+   </section>
+
+
+   <section id="data-attributes" class="data-attributes">
+      <div class="container">
+<!--         <h2 class="section-title">Data-Attribute events</h2>-->
+         <h2 class="section-title">Available <code>data-proteus-*</code> Attributes</h2>
+
+
+         <table>
+            <thead>
+            <tr>
+               <th>Attribute</th>
+               <th>Description</th>
+               <th>Example</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+               <td><code>data-proteus-shape-size</code></td>
+               <td>Sets a custom text to display inside the cursor.</td>
+               <td><code>"Click me!"</code></td>
+            </tr>
+            <tr>
+               <td><code>data-proteus-shape-color</code></td>
+               <td>Defines the color (hexadecimal) of the text displayed.</td>
+               <td><code>"#ff00ff"</code></td>
+            </tr>
+            <tr>
+               <td><code>data-proteus-text-content</code></td>
+               <td>Sets the font size of the cursor text.</td>
+               <td><code>"30px"</code></td>
+            </tr>
+            <tr>
+               <td><code>data-proteus-text-color</code></td>
+               <td>Changes the color of shape text (hexadecimal)</td>
+               <td><code>"#aaa"</code></td>
+            </tr>
+            <tr>
+               <td><code>data-proteus-text-size</code></td>
+               <td>Changes the size of shape text</td>
+               <td><code>"20px"</code></td>
+            </tr>
+            <tr>
+               <td><code>data-proteus-text-weight</code></td>
+               <td>Changes the weight of shape text.</td>
+               <td><code>"400"</code></td>
+            </tr>
+            <tr>
+               <td><code>data-proteus-shadow-isEnabled</code></td>
+               <td>Enables the shadow.</td>
+               <td><code>"true"</code></td>
+            </tr>
+            </tbody>
+         </table>
+
+
+         <div class="data-attributes__demo">
+            <button
+                  data-proteus-shapeSize="80px"
+                  data-proteus-shapeColor="#fff"
+                  data-proteus-text="Hello"
+                  data-proteus-textColor="#162394"
+                  data-proteus-textSize="25px"
+                  data-proteus-textWeight="500"
+                  data-proteus-shadowIsEnabled="true"
+                  class="data-attributes__demo__button">
+               Hover me
+            </button>
+
+            <p class="demo-caption">
+               <code>data-proteus-shapeSize="80px"</code> <br>
+               <code>data-proteus-shapeColor="#fff"</code> <br>
+
+               <code>data-proteus-text="Hello"</code> <br>
+               <code>data-proteus-textColor="#162394"</code> <br>
+               <code>data-proteus-textSize="25px"</code> <br>
+               <code>data-proteus-textWeight="500"</code> <br>
+
+               <code>data-proteus-shadowIsEnabled="500"</code> <br>
+            </p>
+         </div>
 
 
 
-<!--   <script type="module" src="../dist/proteus-cursor.min.js"></script>-->
+      </div>
+   </section>
 
-   <script type="module">
-      // import ProteusCursor from '../dist/proteus-cursor.js';
-      import ProteusCursor from '../dist/proteus-cursor.min.js';
+   <script src="proteus-cursor.umd.js"></script>
+   <script>
 
-      // Initialize the ProteusCursor class
-      currentCursor = new ProteusCursor({
-         shape: 'circle',
-         shape_size: '10px',
-         shape_color: '#ffffff',
-         hasShadow: true,
-         shadow_delay: '0.3s',
-         shadow_size: '40px',
-         shadow_color: 'rgba(255, 255, 255, 0.5)',
-         magnetic: false,
-         text: '',
+      let currentCursor = null;
+      let isTransitioning = false;
+
+      // destroy
+      function destroyCurrentCursor() {
+         if (isTransitioning) return;
+
+         console.log('🔄 Starting cursor transition...');
+         isTransitioning = true;
+
+         if (currentCursor && !currentCursor.isDestroyed) {
+            currentCursor.destroy();
+         }
+         currentCursor = null;
+
+         // Assicurati che tutto sia pulito
+         document.body.style.cursor = '';
+
+         // Reset completo degli elementi
+         const shape = document.getElementById('proteus-cursor-shape');
+         const shadow = document.getElementById('proteus-cursor-shadow');
+
+         if (shape) {
+            shape.style.cssText = '';
+            shape.style.display = 'none';
+            shape.textContent = '';
+         }
+
+         if (shadow) {
+            shadow.style.cssText = '';
+            shadow.style.display = 'none';
+         }
+
+         // Rimuovi tutte le classi proteus dal body
+         document.body.classList.remove('proteus-is-a-fluid', 'proteus-is-a-circle');
+
+         // Aspetta un frame prima di permettere nuove transizioni
+         requestAnimationFrame(() => {
+            isTransitioning = false;
+            console.log('✅ Cursor transition completed');
+         });
+      }
+
+      // create cursor
+      function createDefaultCursor() {
+         if (isTransitioning) return;
+
+         destroyCurrentCursor();
+         setTimeout(() => {
+            document.body.style.cursor = 'auto';
+            updateButtonStates('default');
+            console.log('✅ Default cursor activated');
+         }, 50);
+      }
+      function createCircleCursor() {
+         if (isTransitioning) return;
+
+         destroyCurrentCursor();
+
+         setTimeout(() => {
+            const shape = document.getElementById('proteus-cursor-shape');
+            const shadow = document.getElementById('proteus-cursor-shadow');
+
+            if (shape) {
+               shape.style.display = 'flex';
+               shape.style.opacity = '1';
+            }
+            if (shadow) {
+               shadow.style.display = 'block';
+               shadow.style.opacity = '1';
+            }
+
+            currentCursor = new ProteusCursor({
+               shape: 'circle',
+               shape_size: '10px',
+               shape_color: '#ffffff',
+               hasShadow: true,
+               shadow_delay: '0.3s',
+               shadow_size: '40px',
+               shadow_color: 'rgba(255, 255, 255, 0.5)',
+               magnetic: false,
+               text: '',
+            });
+
+            updateButtonStates('circle');
+            setupDemoControls();
+            console.log('✅ Circle cursor activated');
+         }, 50);
+      }
+      function createFluidCursor() {
+         if (isTransitioning) return;
+
+         destroyCurrentCursor();
+
+         setTimeout(() => {
+            const shape = document.getElementById('proteus-cursor-shape');
+            if (shape) {
+               shape.style.display = 'flex';
+               shape.style.opacity = '1';
+            }
+
+            currentCursor = new ProteusCursor({
+               shape: 'fluid',
+               shape_size: '20px',
+            });
+
+            updateButtonStates('fluid');
+            setupDemoControls();
+            console.log('✅ Fluid cursor activated');
+         }, 50);
+      }
+
+
+      // make the create button Active
+      function updateButtonStates(activeType) {
+         const buttons = document.querySelectorAll('.demo__type-shape');
+         buttons.forEach(btn => btn.classList.remove('active'));
+         const activeButton = document.getElementById( activeType === 'default' ? 'btn-kill-proteus' : `btn-create-proteus-${activeType}` );
+         if (activeButton) {
+            activeButton.classList.add('active');
+         }
+      }
+
+      function setupDemoControls() {
+         if (!currentCursor || currentCursor.isDestroyed) return;
+         // implements the controls...
+      }
+
+      // Event listeners buttons
+      document.addEventListener("DOMContentLoaded", () => {
+         updateButtonStates('default');
+
+         document.getElementById('btn-kill-proteus').addEventListener('click', createDefaultCursor);
+         document.getElementById('btn-create-proteus-circle').addEventListener('click', createCircleCursor);
+         document.getElementById('btn-create-proteus-fluid').addEventListener('click', createFluidCursor);
+
+         // Clean before the refresh page
+         window.addEventListener('beforeunload', () => {
+            destroyCurrentCursor();
+         });
+
+         // Clean when the page is changing
+         window.addEventListener('pagehide', () => {
+            destroyCurrentCursor();
+         });
       });
+
+      document.addEventListener("DOMContentLoaded", () => {
+
+
+         /* -------------------------------------------------------------------------------- */
+         /* ! Buttons for initialize Proteus Cursor (2 types: default, circle, fluid) */
+         /* -------------------------------------------------------------------------------- */
+
+         document.querySelector('.cta-button').addEventListener('click', () => {
+            const target = document.querySelector('.features');
+            if (target) {
+               target.scrollIntoView({ behavior: 'smooth' });
+            }
+         });
+
+
+         /* -------------------------------------------------------------------------------- */
+         /* ! DEMO */
+         /* -------------------------------------------------------------------------------- */
+
+         /* ! - shape */
+         document.querySelector('#cursorSize').addEventListener('input', e => {
+            const size = e.target.value + 'px';
+            currentCursor.setShapeSize(size, size, true)
+         })
+         document.querySelector('#cursorColor').addEventListener('input', e => {
+            const color = e.target.value;
+            e.target.style.backgroundColor = color;
+            currentCursor.setShapeColor(color, true)
+         })
+
+         /* ! - shadow */
+         document.querySelector('#shadowEnabled').addEventListener('input', e => {
+            const isEnabled = e.target.checked;
+            console.log("event listener isEnabled: "); console.log(isEnabled);
+            currentCursor.setShadowEnabled(isEnabled)
+         })
+         document.querySelector('#shadowSize').addEventListener('input', e => {
+            const size = e.target.value + 'px';
+            currentCursor.setShadowSize(size, size)
+         })
+
+         let shadowColor = '#ffffff';
+         let shadowAlpha = 0.5;
+
+         document.querySelector('#shadowColor').addEventListener('input', e => {
+            shadowColor = e.target.value;
+            e.target.style.backgroundColor = shadowColor;
+            currentCursor.setShadowColor(shadowColor)
+         })
+         document.querySelector('#shadowAlpha').addEventListener('input', e => {
+            shadowAlpha = parseFloat(e.target.value);
+            currentCursor.setShadowColor(shadowColor, shadowAlpha);
+         });
+
+         /* ! - text */
+         document.querySelector('#textContent').addEventListener('input', e => {
+            const text = e.target.value;
+            currentCursor.setText(text, true)
+         });
+         document.querySelector('#textSize').addEventListener('input', e => {
+            const textSize = e.target.value + 'px';
+            currentCursor.setTextSize(textSize, true)
+         });
+         document.querySelector('#textColor').addEventListener('input', e => {
+            const color = e.target.value;
+            currentCursor.setTextColor(color, true)
+         });
+         document.querySelector('#textWeight').addEventListener('input', e => {
+            const weight = e.target.value;
+            currentCursor.setTextWeight(weight, true)
+         })
+
+
+      }); // end DOMContentLoaded
+
    </script>
+
 
 </body>
 </html>

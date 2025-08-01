@@ -22,6 +22,7 @@
 
 
 export default class ProteusCursor{
+
    // internal state
    velocity = 0;
    _x = 0;
@@ -32,14 +33,6 @@ export default class ProteusCursor{
    cursorY = 0;
    prevMouseX = 0;
    prevMouseY = 0;
-   // cursor = document.getElementById('cursor');
-   // cursorVisible = true;
-   // cursorEnlarged = false;
-   // $shape = document.querySelector('.proteus-cursor-shape');
-   // $shadow = document.querySelector('.proteus-cursor-shadow');
-   // endX = 0;
-   // endY = 0;
-   // delay = 8;
 
    constructor(options = {}){
 
@@ -67,10 +60,7 @@ export default class ProteusCursor{
       this.text_weight = ''
       this.text_size = ''
 
-
       this.isMagnetic = false
-
-
 
       // Aggiungi questi per tracciare tutto ciò che deve essere pulito
       this.eventListeners = [];
@@ -86,14 +76,14 @@ export default class ProteusCursor{
       this.boundAnimateCircle = this.animateCircleShadow.bind(this);
       this.boundAnimateFluid = this.animateFluidCursor.bind(this);
 
-
-
       this.init();
       this.dataAttributeEvents();
 
    }
 
    init(){
+      this.init_HTMLcursorAndShadow()
+
       this.$shape = document.getElementById('proteus-cursor-shape');
       this.$shadow = document.getElementById('proteus-cursor-shadow');
       this.$shape.style.width = this.shape_size || '20px';
@@ -101,6 +91,27 @@ export default class ProteusCursor{
       this.$shadow.style.width = this.shadow_size || '40px';
       this.$shadow.style.height = this.shadow_size || '40px';
       this.setShape(this.shape);
+   }
+
+   init_HTMLcursorAndShadow(){
+
+      if(document.getElementById('proteus-cursor-shape')) return;
+
+      // Create HTML cursor
+      const proteusCursorShape = document.createElement('div');
+      proteusCursorShape.className = 'proteus-cursor-shape';
+      proteusCursorShape.id = 'proteus-cursor-shape';
+
+      // Create HTML shadow
+      const proteusCursorShadow = document.createElement('div');
+      proteusCursorShadow.className = 'proteus-cursor-shadow';
+      proteusCursorShadow.id = 'proteus-cursor-shadow';
+
+      const body = document.body;
+
+      // Add the elements to the body
+      body.prepend(proteusCursorShape);
+      body.prepend(proteusCursorShadow);
    }
 
    // Metodo helper per aggiungere event listeners tracciabili
@@ -124,7 +135,6 @@ export default class ProteusCursor{
       this.animationIds.push(id);
       return id;
    }
-
 
    setShape(shape){
       document.querySelector('body').classList.remove('proteus-is-a-fluid');
@@ -231,20 +241,6 @@ export default class ProteusCursor{
       this.animateCircleShadow();
    }
 
-   shape__circle__animateShadow() {
-      // this._x += (this.endX - this._x) / this.delay;
-      // this._y += (this.endY - this._y) / this.delay;
-      // this.$shadow.style.top = this._y + 'px';
-      // this.$shadow.style.left = this._x + 'px';
-      //
-      // requestAnimationFrame(this.shape__circle__animateShadow.bind(this));
-      this._x += (this.endX - this._x) / this.delay;
-      this._y += (this.endY - this._y) / this.delay;
-      this.$shadow.style.top = this._y + 'px';
-      this.$shadow.style.left = this._x + 'px';
-
-      this.animationFrame = requestAnimationFrame(this.shape__circle__animateShadow.bind(this));
-   }
    toggleCursorSize() {
       if (this.cursorEnlarged) {
          this.$shape.style.transform = 'translate(-50%, -50%) scale(1.5)';
@@ -631,7 +627,6 @@ export default class ProteusCursor{
    // Optional class toggle
    button.classList.add("active");
 }
-
    enableTestMode__generateHTML(){
    const container = document.querySelector("body");
 
@@ -667,12 +662,10 @@ export default class ProteusCursor{
 
    container.insertAdjacentHTML("beforeend", panelHTML);
 }
-
    disableTestMode(){
    this.testMode = false;
    document.querySelector('#proteus-button-test').classList.remove('active')
 }
-
 }
 
 
