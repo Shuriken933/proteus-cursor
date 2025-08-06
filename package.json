@@ -51,7 +51,7 @@
    "bugs": {
       "url": "https://github.com/Shuriken933/proteus-cursor/issues"
    },
-   "homepage": "https://github.com/Shuriken933/proteus-cursor#readme",
+   "homepage": "https://shuriken933.github.io/proteus-cursor/",
    "devDependencies": {
       "autoprefixer": "^10.4.21",
       "cssnano": "^7.1.0",

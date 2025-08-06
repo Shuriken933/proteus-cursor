@@ -74,7 +74,7 @@ currentCursor = new ProteusCursor({
 ##### 🌊 Fluid Cursor
 ```
 currentCursor = new ProteusCursor({
-               shape: 'circle',
+               shape: 'fluid',
                shape_size: '10px',
                shape_color: '#ffffff',
                hasShadow: true,
