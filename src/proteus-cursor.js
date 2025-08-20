@@ -23,6 +23,7 @@
 
 export default class ProteusCursor{
 
+   //region 🔹 initialization
    // internal state
    velocity = 0;
    _x = 0;
@@ -34,6 +35,7 @@ export default class ProteusCursor{
    prevMouseX = 0;
    prevMouseY = 0;
 
+   //region 🏗️ constructor
    constructor(options = {}){
 
       this.testMode = false;
@@ -54,15 +56,19 @@ export default class ProteusCursor{
          document.querySelector('.proteus-cursor-shadow').style.display = 'none'
       }
 
+
       // text
       this.text = ''
       this.text_color = ''
       this.text_weight = ''
       this.text_size = ''
 
+      this.speed = 0.9;
+      this.maxVelocity = 10;
+
       this.isMagnetic = false
 
-      // Aggiungi questi per tracciare tutto ciò che deve essere pulito
+      // events
       this.eventListeners = [];
       this.animationIds = [];
       this.intervals = [];
@@ -80,6 +86,7 @@ export default class ProteusCursor{
       this.dataAttributeEvents();
 
    }
+   //endregion
 
    init(){
       this.init_HTMLcursorAndShadow()
@@ -154,12 +161,13 @@ export default class ProteusCursor{
 
       printShape(this.shape);
    }
+   //endregion
 
    /* -------------------------------------------------------------------------------- */
    /* ! Type Shape */
    /* -------------------------------------------------------------------------------- */
 
-   /* ! - type 1) CIRCLE */
+   //region 🧩 Type shape CIRCLE
    setShape__circle(shape){
       this.delay = 8;
       this._x = 0
@@ -260,11 +268,12 @@ export default class ProteusCursor{
       }
    }
 
-   /* ! - type 2) FLUID */
+   //endregion
+
+   //region 🧩 Type shape FLUID
    setShape__fluid__animateCursor__calcVelocity() {
       const fluidMouseHandler = (e) => {
          if (this.isDestroyed) return;
-
          const deltaX = e.clientX - this.prevMouseX;
          const deltaY = e.clientY - this.prevMouseY;
          this.velocity = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -273,7 +282,6 @@ export default class ProteusCursor{
          this.mouseX = e.clientX;
          this.mouseY = e.clientY;
       };
-
       this.addEventListenerTracked(document, 'mousemove', fluidMouseHandler);
    }
    setShape__fluid__animateCursor() {
@@ -285,12 +293,10 @@ export default class ProteusCursor{
             this.velocityInitialized = true;
          }
 
-         const speed = 0.9;
-         this.cursorX += (this.mouseX - this.cursorX) * speed;
-         this.cursorY += (this.mouseY - this.cursorY) * speed;
+         this.cursorX += (this.mouseX - this.cursorX) * this.speed;
+         this.cursorY += (this.mouseY - this.cursorY) * this.speed;
 
-         const maxVelocity = 10;
-         const normalizedVelocity = Math.min(this.velocity / maxVelocity, 1);
+         const normalizedVelocity = Math.min(this.velocity / this.maxVelocity, 1);
 
          if (normalizedVelocity > 0.01) {
             const deltaX = this.mouseX - this.cursorX;
@@ -368,10 +374,10 @@ export default class ProteusCursor{
       // start animation
       this.setShape__fluid__animateCursor();
    }
+   //endregion
 
 
-
-
+   //region ❌ destroy Proteus
    destroy() {
       console.log('🔴 Destroying ProteusCursor instance...');
 
@@ -461,9 +467,10 @@ export default class ProteusCursor{
 
       console.log('✅ ProteusCursor instance completely destroyed');
    }
+   //endregion
 
    /* -------------------------------------------------------------------------------- */
-   /* ! Setter */
+   //region 🏷️ Setters
    /* -------------------------------------------------------------------------------- */
    setShapeSize(width, height, isPermanent = false){
       console.log("setShapeSize executed")
@@ -555,9 +562,18 @@ export default class ProteusCursor{
       }
    }
 
+   setSpeed(speed){
+      this.speed = speed;
+   }
+   setMaxVelocity(maxVelocity){
+      this.maxVelocity = maxVelocity;
+   }
+
+   //endregion
+
 
    /* -------------------------------------------------------------------------------- */
-   /* ! Data attribute */
+   //region ✨ Data Attribute
    /* -------------------------------------------------------------------------------- */
    dataAttributeEvents(){
       document.querySelectorAll(
@@ -605,10 +621,11 @@ export default class ProteusCursor{
             });
          });
    }
+   //endregion
 
 
    /* -------------------------------------------------------------------------------- */
-   /* ! Test mode */
+   //region 🧪 TEST MODE
    /* -------------------------------------------------------------------------------- */
    enableTestMode() {
    this.testMode = true;
@@ -667,10 +684,11 @@ export default class ProteusCursor{
    document.querySelector('#proteus-button-test').classList.remove('active')
 }
 }
+//endregion
 
 
 /* -------------------------------------------------------------------------------- */
-/* ! Helper */
+//region 🔹 Helper
 /* -------------------------------------------------------------------------------- */
 function showButtonTest(){
    document.querySelector('#proteus-button-test').classList.add('active')
@@ -690,3 +708,4 @@ function hexToRgba(hex, alpha = 1) {
 function printAllProperties(object){
    console.log(object);
 }
+//endregion

@@ -19,7 +19,8 @@
  *
  * © 2025 Eros Agostini. All rights reserved.
  */
-class v {
+class x {
+  //region 🔹 initialization
   // internal state
   velocity = 0;
   _x = 0;
@@ -30,9 +31,11 @@ class v {
   cursorY = 0;
   prevMouseX = 0;
   prevMouseY = 0;
+  //region 🏗️ constructor
   constructor(t = {}) {
-    this.testMode = !1, this.shape = t.shape || "default", this.shape_size = t.shape_size || "10px", this.shape_color = t.shape_color || "#fff", this.hasShadow = t.hasShadow ?? !0, this.hasShadow ? (this.shadow_delay = t.shadow_delay || "0.3s", this.shadow_size = t.shadow_size || "40px", this.shadow_color = t.shadow_color || "#ffffff") : (this.shadow_delay = "0s", document.querySelector(".proteus-cursor-shadow").style.display = "none"), this.text = "", this.text_color = "", this.text_weight = "", this.text_size = "", this.isMagnetic = !1, this.eventListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.dataAttributeEvents();
+    this.testMode = !1, this.shape = t.shape || "default", this.shape_size = t.shape_size || "10px", this.shape_color = t.shape_color || "#fff", this.hasShadow = t.hasShadow ?? !0, this.hasShadow ? (this.shadow_delay = t.shadow_delay || "0.3s", this.shadow_size = t.shadow_size || "40px", this.shadow_color = t.shadow_color || "#ffffff") : (this.shadow_delay = "0s", document.querySelector(".proteus-cursor-shadow").style.display = "none"), this.text = "", this.text_color = "", this.text_weight = "", this.text_size = "", this.speed = 0.9, this.maxVelocity = 10, this.isMagnetic = !1, this.eventListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.dataAttributeEvents();
   }
+  //endregion
   init() {
     this.init_HTMLcursorAndShadow(), this.$shape = document.getElementById("proteus-cursor-shape"), this.$shadow = document.getElementById("proteus-cursor-shadow"), this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shadow.style.width = this.shadow_size || "40px", this.$shadow.style.height = this.shadow_size || "40px", this.setShape(this.shape);
   }
@@ -71,12 +74,13 @@ class v {
         this.setShape__fluid();
         break;
     }
-    S(this.shape);
+    $(this.shape);
   }
+  //endregion
   /* -------------------------------------------------------------------------------- */
   /* ! Type Shape */
   /* -------------------------------------------------------------------------------- */
-  /* ! - type 1) CIRCLE */
+  //region 🧩 Type shape CIRCLE
   setShape__circle(t) {
     this.delay = 8, this._x = 0, this._y = 0, this.endX = window.innerWidth / 2, this.endY = window.innerHeight / 2, this.cursorVisible = !0, this.cursorEnlarged = !1, document.querySelector("body").classList.add("proteus-is-a-circle"), document.body.style.cursor = "none", this.shape__circle__interactions(), this.shape__circle__animateShadow();
   }
@@ -107,7 +111,8 @@ class v {
   toggleCursorVisibility() {
     this.cursorVisible ? (this.$shape.style.opacity = 1, this.$shadow.style.opacity = 1) : (this.$shape.style.opacity = 0, this.$shadow.style.opacity = 0);
   }
-  /* ! - type 2) FLUID */
+  //endregion
+  //region 🧩 Type shape FLUID
   setShape__fluid__animateCursor__calcVelocity() {
     const t = (e) => {
       if (this.isDestroyed) return;
@@ -118,15 +123,13 @@ class v {
   }
   setShape__fluid__animateCursor() {
     if (this.isDestroyed) return;
-    this.velocityInitialized || (this.setShape__fluid__animateCursor__calcVelocity(), this.velocityInitialized = !0);
-    const t = 0.9;
-    this.cursorX += (this.mouseX - this.cursorX) * t, this.cursorY += (this.mouseY - this.cursorY) * t;
-    const s = Math.min(this.velocity / 10, 1);
-    if (s > 0.01) {
-      const i = this.mouseX - this.cursorX, h = this.mouseY - this.cursorY, a = Math.sqrt(i * i + h * h);
-      if (a > 0) {
-        const r = i / a, n = h / a, l = 1 + s * 1.5, u = 1 - s * 0.3, p = r * r * (l - 1) + 1, y = r * n * (l - 1), f = r * n * (l - 1), m = n * n * (l - 1) + 1, d = -n, c = r, _ = p + d * d * (u - 1), b = y + d * c * (u - 1), $ = f + d * c * (u - 1), w = m + c * c * (u - 1);
-        this.$shape && (this.$shape.style.transform = `matrix(${_}, ${b}, ${$}, ${w}, 0, 0)`);
+    this.velocityInitialized || (this.setShape__fluid__animateCursor__calcVelocity(), this.velocityInitialized = !0), this.cursorX += (this.mouseX - this.cursorX) * this.speed, this.cursorY += (this.mouseY - this.cursorY) * this.speed;
+    const t = Math.min(this.velocity / this.maxVelocity, 1);
+    if (t > 0.01) {
+      const e = this.mouseX - this.cursorX, s = this.mouseY - this.cursorY, i = Math.sqrt(e * e + s * s);
+      if (i > 0) {
+        const o = e / i, h = s / i, r = 1 + t * 1.5, n = 1 - t * 0.3, d = o * o * (r - 1) + 1, c = o * h * (r - 1), p = o * h * (r - 1), y = h * h * (r - 1) + 1, l = -h, u = o, f = d + l * l * (n - 1), m = c + l * u * (n - 1), _ = p + l * u * (n - 1), b = y + u * u * (n - 1);
+        this.$shape && (this.$shape.style.transform = `matrix(${f}, ${m}, ${_}, ${b}, 0, 0)`);
       } else this.$shape && (this.$shape.style.transform = "matrix(1, 0, 0, 1, 0, 0)");
     } else this.$shape && (this.$shape.style.transform = "matrix(1, 0, 0, 1, 0, 0)");
     this.$shape && (this.$shape.style.left = this.cursorX - this.$shape.offsetWidth / 2 + "px", this.$shape.style.top = this.cursorY - this.$shape.offsetHeight / 2 + "px"), this.velocity *= 0.95, this.requestAnimationFrameTracked(this.boundAnimateFluid);
@@ -141,24 +144,27 @@ class v {
     }
     this.$shape.style.position = "fixed", this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shape.style.backgroundColor = this.shape_color || "#fff", this.$shape.style.borderRadius = "50%", this.$shape.style.pointerEvents = "none", this.$shape.style.zIndex = "9999", this.$shape.style.transition = "all 0.3s cubic-bezier(0.23, 1, 0.320, 1)", this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`), this.velocityInitialized = !1, this.cursorX = window.innerWidth / 2, this.cursorY = window.innerHeight / 2, this.setShape__fluid__animateCursor();
   }
+  //endregion
+  //region ❌ destroy Proteus
   destroy() {
     console.log("🔴 Destroying ProteusCursor instance..."), this.isDestroyed = !0, this.animationIds.forEach((e) => {
       cancelAnimationFrame(e);
-    }), this.animationIds = [], this.intervals.forEach((e) => clearInterval(e)), this.timeouts.forEach((e) => clearTimeout(e)), this.intervals = [], this.timeouts = [], this.eventListeners.forEach(({ element: e, event: s, handler: i, options: h }) => {
+    }), this.animationIds = [], this.intervals.forEach((e) => clearInterval(e)), this.timeouts.forEach((e) => clearTimeout(e)), this.intervals = [], this.timeouts = [], this.eventListeners.forEach(({ element: e, event: s, handler: i, options: o }) => {
       try {
-        e.removeEventListener(s, i, h);
-      } catch (a) {
-        console.warn("Error removing event listener:", a);
+        e.removeEventListener(s, i, o);
+      } catch (h) {
+        console.warn("Error removing event listener:", h);
       }
     }), this.eventListeners = [], document.body.style.cursor = "";
     const t = document.querySelector("body");
     t && (t.classList.remove("proteus-is-a-fluid"), t.classList.remove("proteus-is-a-circle")), this.$shape && (this.$shape.style.cssText = "", this.$shape.style.display = "none", this.$shape.style.opacity = "0", this.$shape.style.transform = "", this.$shape.style.left = "", this.$shape.style.top = "", this.$shape.style.width = "", this.$shape.style.height = "", this.$shape.style.backgroundColor = "", this.$shape.style.borderRadius = "", this.$shape.style.boxShadow = "", this.$shape.textContent = ""), this.$shadow && (this.$shadow.style.cssText = "", this.$shadow.style.display = "none", this.$shadow.style.opacity = "0", this.$shadow.style.transform = "", this.$shadow.style.left = "", this.$shadow.style.top = "", this.$shadow.style.width = "", this.$shadow.style.height = "", this.$shadow.style.backgroundColor = ""), this.$shape = null, this.$shadow = null, this.boundMouseMove = null, this.boundMouseEnter = null, this.boundMouseLeave = null, this.boundAnimateCircle = null, this.boundAnimateFluid = null, this.velocity = 0, this._x = 0, this._y = 0, this.mouseX = 0, this.mouseY = 0, this.cursorX = 0, this.cursorY = 0, this.prevMouseX = 0, this.prevMouseY = 0, this.velocityInitialized = !1, console.log("✅ ProteusCursor instance completely destroyed");
   }
+  //endregion
   /* -------------------------------------------------------------------------------- */
-  /* ! Setter */
+  //region 🏷️ Setters
   /* -------------------------------------------------------------------------------- */
   setShapeSize(t, e, s = !1) {
-    console.log("setShapeSize executed"), g(this), s ? (this.shape_size = t || "20px", this.shadow_size = e || "20px", this.$shape.style.width = t || "20px", this.$shape.style.height = e || "20px") : (this.$shape.style.width = t || "20px", this.$shape.style.height = e || "20px");
+    console.log("setShapeSize executed"), S(this), s ? (this.shape_size = t || "20px", this.shadow_size = e || "20px", this.$shape.style.width = t || "20px", this.$shape.style.height = e || "20px") : (this.$shape.style.width = t || "20px", this.$shape.style.height = e || "20px");
   }
   setShapeColor(t, e = !1) {
     e ? (this.shape_color = t, this.$shape.style.backgroundColor = t) : this.$shape.style.backgroundColor = t;
@@ -170,7 +176,7 @@ class v {
     this.$shadow.style.width = t || "20px", this.$shadow.style.height = e || "20px";
   }
   setShadowColor(t, e = 0.5) {
-    const s = x(t, e);
+    const s = w(t, e);
     this.$shadow.style.backgroundColor = s;
   }
   setText(t, e = !1) {
@@ -185,23 +191,31 @@ class v {
   setTextSize(t, e = !1) {
     e && (this.text_size = t), document.querySelector(".proteus-cursor-shape").style.fontSize = t;
   }
+  setSpeed(t) {
+    this.speed = t;
+  }
+  setMaxVelocity(t) {
+    this.maxVelocity = t;
+  }
+  //endregion
   /* -------------------------------------------------------------------------------- */
-  /* ! Data attribute */
+  //region ✨ Data Attribute
   /* -------------------------------------------------------------------------------- */
   dataAttributeEvents() {
     document.querySelectorAll(
       "[data-proteus-shapeSize], [data-proteus-shapeColor], [data-proteus-text], [data-proteus-textColor], [data-proteus-textSize], [data-proteus-textWeight]"
     ).forEach((t) => {
       t.addEventListener("mouseenter", () => {
-        const e = t.getAttribute("data-proteus-shapeSize"), s = t.getAttribute("data-proteus-shapeColor"), i = t.getAttribute("data-proteus-text"), h = t.getAttribute("data-proteus-textColor"), a = t.getAttribute("data-proteus-textSize"), r = t.getAttribute("data-proteus-textWeight"), n = t.getAttribute("data-proteus-shadowIsEnabled");
-        e && this.setShapeSize(e, e), s && this.setShapeColor(s), i && this.setText(i), h && this.setTextColor(h), a && this.setTextSize(a), r && this.setTextWeight(r), n && this.setShadowEnabled(!0);
+        const e = t.getAttribute("data-proteus-shapeSize"), s = t.getAttribute("data-proteus-shapeColor"), i = t.getAttribute("data-proteus-text"), o = t.getAttribute("data-proteus-textColor"), h = t.getAttribute("data-proteus-textSize"), r = t.getAttribute("data-proteus-textWeight"), n = t.getAttribute("data-proteus-shadowIsEnabled");
+        e && this.setShapeSize(e, e), s && this.setShapeColor(s), i && this.setText(i), o && this.setTextColor(o), h && this.setTextSize(h), r && this.setTextWeight(r), n && this.setShadowEnabled(!0);
       }), t.addEventListener("mouseleave", () => {
         this.setShapeSize(this.shape_size, this.shape_size), this.setShapeColor(this.shape_color), this.setText(this.text), this.setTextColor(this.text_color), this.setTextSize(this.text_size), this.setTextWeight(this.text_weight);
       });
     });
   }
+  //endregion
   /* -------------------------------------------------------------------------------- */
-  /* ! Test mode */
+  //region 🧪 TEST MODE
   /* -------------------------------------------------------------------------------- */
   enableTestMode() {
     this.testMode = !0, this.enableTestMode__generateHTML();
@@ -239,16 +253,16 @@ class v {
     this.testMode = !1, document.querySelector("#proteus-button-test").classList.remove("active");
   }
 }
-function S(o) {
-  console.log("This is the type: ", o);
+function $(a) {
+  console.log("This is the type: ", a);
 }
-function x(o, t = 1) {
-  const e = parseInt(o.slice(1, 3), 16), s = parseInt(o.slice(3, 5), 16), i = parseInt(o.slice(5, 7), 16);
+function w(a, t = 1) {
+  const e = parseInt(a.slice(1, 3), 16), s = parseInt(a.slice(3, 5), 16), i = parseInt(a.slice(5, 7), 16);
   return `rgba(${e}, ${s}, ${i}, ${t})`;
 }
-function g(o) {
-  console.log(o);
+function S(a) {
+  console.log(a);
 }
 export {
-  v as default
+  x as default
 };
