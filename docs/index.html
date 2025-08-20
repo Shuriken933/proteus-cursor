@@ -6,7 +6,7 @@
    <link rel="preconnect" href="https://fonts.googleapis.com">
    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
-   <link rel="stylesheet" href="proteus-cursor.min.css">
+   <link rel="stylesheet" href="proteus-cursor.css">
    <style>
       .poppins-extralight { font-family: "Poppins", sans-serif; font-weight: 200; font-style: normal; }
       .poppins-light { font-family: "Poppins", sans-serif; font-weight: 300; font-style: normal; }
@@ -76,7 +76,7 @@
       .demo h3{ font-size: 1.5rem; font-weight: 400; }
       .demo__controls,
       .demo__select-cursor{ background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 20px; padding: 2rem; border: 1px solid rgba(255, 255, 255, 0.2); }
-      .demo__controls__group{ display: flex; flex-direction: row; align-items: center; gap: 25px; }
+      .demo__controls__group{ display: flex; flex-direction: row; align-items: center; gap: 25px; margin-left: 25px;}
       .demo__controls__group__input{ display: flex; flex-direction: row; align-items: center; gap: 12px;}
       .demo__controls__group__label{ width: 250px;}
 
@@ -92,7 +92,9 @@
       /* Per Firefox */
       .demo .color-input::-moz-color-swatch { border: none; border-radius: 8px; }
 
-      .demo #textContent{padding: 10px 15px; border-radius: 12px}
+      .demo #textContent,
+      .demo #cursorSizeNumber,
+      .demo #speedNumber{padding: 10px 15px; border-radius: 12px}
 
 
       /* ! Data Attribute */
@@ -187,11 +189,17 @@
          <div class="demo__controls">
             <h3>2) Modify the cursor</h3>
 
+            <h4 class="demo__controls__group-only-fluid__subtitle">All cursors</h4>
+
             <div class="demo__controls__group">
                <p class="demo__controls__group__label">Customize cursor</p>
                <div class="demo__controls__group__input">
                   <label for="cursorSize">size</label>
                   <input type="range" id="cursorSize" min="10" max="100" value="20">
+               </div>
+               <div class="demo__controls__group__input">
+                  <label for="cursorSizeNumber">size</label>
+                  <input type="number" id="cursorSizeNumber" min="0" max="500" value="20">
                </div>
                <div class="demo__controls__group__input">
                   <label for="cursorColor">color</label>
@@ -239,6 +247,20 @@
                </div>
             </div>
 
+
+            <div class="demo__controls__group-only-fluid">
+               <h4 class="demo__controls__group-only-fluid__subtitle">Fluid cursor</h4>
+               <p class="demo__controls__group-only-fluid__label"></p>
+               <div class="demo__controls__group__input">
+                  <label for="speedNumber">speed</label>
+                  <input type="number" id="speedNumber" name="ratio" min="0.1" max="1" step="0.1">
+               </div>
+               <div class="demo__controls__group__input">
+                  <label for="velocityNumber">velocity</label>
+                  <input type="range" id="velocityNumber" min="1" max="20" value="10">
+               </div>
+            </div>
+
          </div>
 
       </div>
@@ -249,7 +271,7 @@
       <div class="container">
 <!--         <h2 class="section-title">Data-Attribute events</h2>-->
          <h2 class="section-title">Available <code>data-proteus-*</code> Attributes</h2>
-
+         <p>You can insert these data attributes inside HTML tags to trigger a behaviour when the mouse hovers over them.</p>
 
          <table>
             <thead>
@@ -330,8 +352,10 @@
       </div>
    </section>
 
-   <script src="proteus-cursor.umd.js"></script>
-   <script>
+
+   <script type="module">
+      import ProteusCursor from './proteus-cursor.js';
+
 
       let currentCursor = null;
       let isTransitioning = false;
@@ -417,6 +441,8 @@
                text: '',
             });
 
+            document.querySelector('#shadowEnabled').checked = true;
+
             updateButtonStates('circle');
             setupDemoControls();
             console.log('✅ Circle cursor activated');
@@ -438,6 +464,9 @@
                shape: 'fluid',
                shape_size: '20px',
             });
+
+            document.querySelector('#shadowEnabled').checked = false;
+            document.querySelector('#shadowEnabled').disabled = true;
 
             updateButtonStates('fluid');
             setupDemoControls();
@@ -502,6 +531,12 @@
          /* ! - shape */
          document.querySelector('#cursorSize').addEventListener('input', e => {
             const size = e.target.value + 'px';
+            document.querySelector('#cursorSizeNumber').value = e.target.value;
+            currentCursor.setShapeSize(size, size, true)
+         })
+         document.querySelector('#cursorSizeNumber').addEventListener('input', e => {
+            const size = e.target.value + 'px';
+            document.querySelector('#cursorSize').value = e.target.value;
             currentCursor.setShapeSize(size, size, true)
          })
          document.querySelector('#cursorColor').addEventListener('input', e => {
@@ -551,6 +586,17 @@
             const weight = e.target.value;
             currentCursor.setTextWeight(weight, true)
          })
+
+         //region 🔹 fluid cursor settings
+         document.querySelector('#speedNumber').addEventListener('input', e => {
+            const speed = e.target.value;
+            currentCursor.setSpeed(speed)
+         })
+         document.querySelector('#velocityNumber').addEventListener('input', e => {
+            const maxVelocity = e.target.value;
+            currentCursor.setMaxVelocity(maxVelocity)
+         })
+         //endregion
 
 
       }); // end DOMContentLoaded
