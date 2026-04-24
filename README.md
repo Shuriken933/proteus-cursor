@@ -87,6 +87,108 @@ currentCursor = new ProteusCursor({
 ```
 
 
+---
+
+## 4) 🖱️ Click Animations
+
+Proteus plays a small animation on every `mousedown` to give tactile feedback. Choose between two built-in effects or disable them entirely.
+
+```js
+new ProteusCursor({
+  shape: 'circle',
+  click_animation: 'scale',  // 'scale' | 'ripple' | 'none'  — default: 'scale'
+  click_duration: 300,       // ms — default: 300
+});
+```
+
+| Value | Effect |
+|---|---|
+| `'scale'` | Cursor shrinks and springs back on click |
+| `'ripple'` | A circle expands and fades from the click point |
+| `'none'` | No animation |
+
+---
+
+## 6) 🔁 State Machine API
+
+Define named cursor states once in JS and attach them to HTML elements with a single data attribute. The cursor switches automatically on hover and restores defaults on leave.
+
+### Define states
+
+```js
+const cursor = new ProteusCursor({ shape: 'circle' });
+
+cursor
+  .addState('cta', {
+    shape_size: '60px',
+    shape_color: '#ff4444',
+    text: 'Click',
+    text_size: '13px',
+  })
+  .addState('video', {
+    shape_size: '80px',
+    shape_color: 'rgba(255,255,255,0.15)',
+    text: '▶ Play',
+    hasShadow: false,
+  })
+  .addState('gallery', {
+    shape_size: '100px',
+    shape_color: 'rgba(255,255,255,0.1)',
+    text: 'Zoom',
+  });
+```
+
+> `addState()` and `removeState()` are chainable.
+
+### Attach to elements
+
+```html
+<button data-cursor-state="cta">Buy now</button>
+<div data-cursor-state="video">▶ Watch trailer</div>
+<img data-cursor-state="gallery" src="photo.jpg" />
+```
+
+### Available state properties
+
+| Property | Type | Description |
+|---|---|---|
+| `shape_size` | `string` | CSS size (e.g. `'60px'`) |
+| `shape_color` | `string` | CSS color |
+| `hasShadow` | `boolean` | Show/hide shadow |
+| `shadow_size` | `string` | Shadow element size |
+| `text` | `string` | Text inside cursor |
+| `text_color` | `string` | Text color |
+| `text_size` | `string` | CSS font size |
+| `text_weight` | `string` | CSS font weight |
+
+### Remove a state
+
+```js
+cursor.removeState('video');
+```
+
+---
+
+## 7) 🏷️ Data Attributes (per-element overrides)
+
+For quick one-off customizations without defining a full state, you can use data attributes directly on elements:
+
+```html
+<button
+  data-proteus-shapeSize="80px"
+  data-proteus-shapeColor="#ffffff"
+  data-proteus-text="Hello"
+  data-proteus-textColor="#000000"
+  data-proteus-textSize="14px"
+  data-proteus-textWeight="600"
+  data-proteus-shadowIsEnabled="true"
+>
+  Hover me
+</button>
+```
+
+---
+
 ## 📜 License
 This project is licensed under the MIT License.
 Feel free to use, modify, and share! 💫

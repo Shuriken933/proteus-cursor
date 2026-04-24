@@ -5,8 +5,10 @@
    "type": "module",
    "main": "./dist/proteus-cursor.umd.js",
    "module": "./dist/proteus-cursor.es.js",
+   "types": "./dist/proteus-cursor.d.ts",
    "exports": {
       ".": {
+         "types": "./dist/proteus-cursor.d.ts",
          "import": "./dist/proteus-cursor.es.js",
          "require": "./dist/proteus-cursor.umd.js"
       },
