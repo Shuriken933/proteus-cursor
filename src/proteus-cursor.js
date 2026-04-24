@@ -47,14 +47,9 @@ export default class ProteusCursor{
 
       // shadow
       this.hasShadow = options.hasShadow ?? true;
-      if (this.hasShadow){
-         this.shadow_delay = options.shadow_delay || '0.3s'
-         this.shadow_size = options.shadow_size || '40px'
-         this.shadow_color = options.shadow_color || '#ffffff'
-      } else {
-         this.shadow_delay = '0s'
-         document.querySelector('.proteus-cursor-shadow').style.display = 'none'
-      }
+      this.shadow_delay = this.hasShadow ? (options.shadow_delay || '0.3s') : '0s';
+      this.shadow_size = options.shadow_size || '40px';
+      this.shadow_color = options.shadow_color || '#ffffff';
 
 
       // text
@@ -66,7 +61,14 @@ export default class ProteusCursor{
       this.speed = 0.9;
       this.maxVelocity = 10;
 
-      this.isMagnetic = false
+      this.isMagnetic = options.magnetic ?? false;
+
+      // click animation
+      this.click_animation = options.click_animation || 'scale';
+      this.click_duration = options.click_duration ?? 300;
+
+      // state machine
+      this.states = {};
 
       // events
       this.eventListeners = [];
@@ -83,7 +85,11 @@ export default class ProteusCursor{
       this.boundAnimateFluid = this.animateFluidCursor.bind(this);
 
       this.init();
+      if (!this.hasShadow) {
+         this.$shadow.style.display = 'none';
+      }
       this.dataAttributeEvents();
+      this._initClickAnimation();
 
    }
    //endregion
@@ -146,7 +152,6 @@ export default class ProteusCursor{
    setShape(shape){
       document.querySelector('body').classList.remove('proteus-is-a-fluid');
       document.querySelector('body').classList.remove('proteus-is-a-circle');
-      console.log("setShape executed")
       this.shape = shape
       switch (this.shape) {
          case 'default':
@@ -159,7 +164,6 @@ export default class ProteusCursor{
             break;
       }
 
-      printShape(this.shape);
    }
    //endregion
 
@@ -379,7 +383,6 @@ export default class ProteusCursor{
 
    //region ❌ destroy Proteus
    destroy() {
-      console.log('🔴 Destroying ProteusCursor instance...');
 
       // Marca come distrutto per fermare tutte le operazioni
       this.isDestroyed = true;
@@ -465,7 +468,6 @@ export default class ProteusCursor{
       this.prevMouseY = 0;
       this.velocityInitialized = false;
 
-      console.log('✅ ProteusCursor instance completely destroyed');
    }
    //endregion
 
@@ -473,8 +475,6 @@ export default class ProteusCursor{
    //region 🏷️ Setters
    /* -------------------------------------------------------------------------------- */
    setShapeSize(width, height, isPermanent = false){
-      console.log("setShapeSize executed")
-      printAllProperties(this)
       if(isPermanent){
          this.shape_size = width || '20px';
          this.shadow_size = height || '20px';
@@ -511,11 +511,9 @@ export default class ProteusCursor{
             }
          }
       } else if(this.shape === 'fluid'){
-         if(isPermanent){
-            this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`;
-         } else{
-
-         }
+         const shadow = isEnabled ? `0 0 ${this.shadow_size} ${this.shadow_color}` : 'none';
+         if(isPermanent) this.hasShadow = isEnabled;
+         this.$shape.style.boxShadow = shadow;
       }
 
    }
@@ -567,6 +565,117 @@ export default class ProteusCursor{
    }
    setMaxVelocity(maxVelocity){
       this.maxVelocity = maxVelocity;
+   }
+
+   //endregion
+
+
+   /* -------------------------------------------------------------------------------- */
+   //region 🖱️ Click Animation
+   /* -------------------------------------------------------------------------------- */
+   _initClickAnimation() {
+      if (this.click_animation === 'none') return;
+
+      const handler = (e) => {
+         if (this.isDestroyed) return;
+         if (this.click_animation === 'scale') this._clickScale();
+         if (this.click_animation === 'ripple') this._clickRipple(e);
+      };
+      this.addEventListenerTracked(document, 'mousedown', handler);
+   }
+
+   _clickScale() {
+      if (!this.$shape) return;
+      const duration = this.click_duration;
+      this.$shape.style.transition = `transform ${duration / 2}ms cubic-bezier(.215,.61,.355,1)`;
+      this.$shape.style.transform = 'translate(-50%, -50%) scale(0.6)';
+      const tid = setTimeout(() => {
+         if (this.isDestroyed || !this.$shape) return;
+         this.$shape.style.transform = 'translate(-50%, -50%) scale(1)';
+      }, duration / 2);
+      this.timeouts.push(tid);
+   }
+
+   _clickRipple(e) {
+      const ripple = document.createElement('div');
+      ripple.className = 'proteus-ripple';
+      const size = parseInt(this.shape_size) || 10;
+      ripple.style.cssText = `
+         position: fixed;
+         left: ${e.clientX}px;
+         top: ${e.clientY}px;
+         width: ${size}px;
+         height: ${size}px;
+         border-radius: 50%;
+         background: ${this.shape_color};
+         opacity: 0.6;
+         pointer-events: none;
+         z-index: 9999999998;
+         transform: translate(-50%, -50%) scale(1);
+         transition: transform ${this.click_duration}ms ease-out, opacity ${this.click_duration}ms ease-out;
+      `;
+      document.body.appendChild(ripple);
+
+      // Trigger animation on next frame so transition fires
+      requestAnimationFrame(() => {
+         ripple.style.transform = 'translate(-50%, -50%) scale(6)';
+         ripple.style.opacity = '0';
+      });
+
+      const tid = setTimeout(() => ripple.remove(), this.click_duration);
+      this.timeouts.push(tid);
+   }
+   //endregion
+
+
+   /* -------------------------------------------------------------------------------- */
+   //region 🔁 State Machine
+   /* -------------------------------------------------------------------------------- */
+
+   /**
+    * Register a named cursor state. Elements with data-cursor-state="name"
+    * will activate it on mouseenter and restore defaults on mouseleave.
+    */
+   addState(name, options = {}) {
+      this.states[name] = options;
+      this._bindStateElements(name);
+      return this;
+   }
+
+   removeState(name) {
+      delete this.states[name];
+      return this;
+   }
+
+   _applyState(name) {
+      const state = this.states[name];
+      if (!state) return;
+      if (state.shape_size  !== undefined) this.setShapeSize(state.shape_size, state.shape_size);
+      if (state.shape_color !== undefined) this.setShapeColor(state.shape_color);
+      if (state.hasShadow   !== undefined) this.setShadowEnabled(state.hasShadow);
+      if (state.shadow_size !== undefined) this.setShadowSize(state.shadow_size, state.shadow_size);
+      if (state.text        !== undefined) this.setText(state.text);
+      if (state.text_color  !== undefined) this.setTextColor(state.text_color);
+      if (state.text_size   !== undefined) this.setTextSize(state.text_size);
+      if (state.text_weight !== undefined) this.setTextWeight(state.text_weight);
+   }
+
+   _resetState() {
+      this.setShapeSize(this.shape_size, this.shape_size);
+      this.setShapeColor(this.shape_color);
+      this.setShadowEnabled(this.hasShadow);
+      this.setText(this.text);
+      this.setTextColor(this.text_color);
+      this.setTextSize(this.text_size);
+      this.setTextWeight(this.text_weight);
+   }
+
+   _bindStateElements(name) {
+      if (this.isDestroyed) return;
+      document.querySelectorAll(`[data-cursor-state="${name}"]`).forEach(el => {
+         this.addEventListenerTracked(el, 'mouseenter', () => this._applyState(name));
+         this.addEventListenerTracked(el, 'mouseleave', () => this._resetState());
+      });
    }
 
    //endregion
@@ -690,22 +799,10 @@ export default class ProteusCursor{
 /* -------------------------------------------------------------------------------- */
 //region 🔹 Helper
 /* -------------------------------------------------------------------------------- */
-function showButtonTest(){
-   document.querySelector('#proteus-button-test').classList.add('active')
-}
-function hideButtonTest(){
-   document.querySelector('#proteus-button-test').classList.remove('active')
-}
-function printShape(shape){
-   console.log('This is the type: ', shape);
-}
 function hexToRgba(hex, alpha = 1) {
    const r = parseInt(hex.slice(1, 3), 16);
    const g = parseInt(hex.slice(3, 5), 16);
    const b = parseInt(hex.slice(5, 7), 16);
    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-function printAllProperties(object){
-   console.log(object);
 }
 //endregion

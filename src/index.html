@@ -118,6 +118,7 @@
             <li><a href="#hero">presentation</a></li>
             <li><a href="#features">features</a></li>
             <li><a href="#demo">demo</a></li>
+            <li><a href="#state-machine">state machine</a></li>
             <li><a href="#data-attributes">data-attributes</a></li>
          </ul>
       </nav>
@@ -153,13 +154,13 @@
             </div>
 
             <div class="features__grid__card">
-               <h3>🧲 Magnetic Behavior</h3>
-               <p>The cursor can be drawn to specific elements on the page, creating a smooth and intuitive navigation experience.</p>
+               <h3>🖱️ Click Animations</h3>
+               <p>Tactile feedback on every click with built-in animations: a spring-back scale effect or an expanding ripple wave from the click point.</p>
             </div>
 
             <div class="features__grid__card">
-               <h3>🌀 Magnetic Parallax</h3>
-               <p>Advanced effect that combines magnetic attraction with parallax movement of HTML elements for immersive interaction.</p>
+               <h3>🔁 State Machine API</h3>
+               <p>Define named cursor states in JS and attach them to elements with a single <code>data-cursor-state</code> attribute. Automatic enter/leave transitions included.</p>
             </div>
 
             <div class="features__grid__card">
@@ -261,8 +262,58 @@
                </div>
             </div>
 
+            <div class="demo__controls__group">
+               <p class="demo__controls__group__label">Click animation</p>
+               <div class="demo__controls__group__input">
+                  <label for="clickAnimation">effect</label>
+                  <select id="clickAnimation">
+                     <option value="scale" selected>scale</option>
+                     <option value="ripple">ripple</option>
+                     <option value="none">none</option>
+                  </select>
+               </div>
+               <div class="demo__controls__group__input">
+                  <label for="clickDuration">duration (ms)</label>
+                  <input type="range" id="clickDuration" min="50" max="800" value="300">
+               </div>
+            </div>
+
          </div>
 
+      </div>
+   </section>
+
+
+   <section id="state-machine">
+      <div class="container">
+         <h2 class="section-title">🔁 State <span>Machine</span></h2>
+         <p>Define named cursor states once in JS, then attach them to any element with a single <code>data-cursor-state</code> attribute. The cursor switches on hover and resets automatically on leave.</p>
+
+         <div class="features__grid" style="margin-top: 2rem;">
+            <div class="features__grid__card"
+                 data-cursor-state="card-view"
+                 style="cursor:none">
+               <h3>🖼️ Gallery Item</h3>
+               <p>Hover me — state: <code>card-view</code></p>
+            </div>
+            <div class="features__grid__card"
+                 data-cursor-state="card-play"
+                 style="cursor:none">
+               <h3>▶ Video Preview</h3>
+               <p>Hover me — state: <code>card-play</code></p>
+            </div>
+            <div class="features__grid__card"
+                 data-cursor-state="card-buy"
+                 style="cursor:none">
+               <h3>🛒 CTA Button</h3>
+               <p>Hover me — state: <code>card-buy</code></p>
+            </div>
+         </div>
+
+         <pre style="margin-top:2rem; background:rgba(255,255,255,0.07); border-radius:16px; padding:1.5rem; overflow-x:auto; font-size:0.85rem; line-height:1.6;"><code>cursor
+  .addState('card-view', { shape_size: '80px', text: 'Zoom', text_size: '13px' })
+  .addState('card-play', { shape_size: '90px', text: '▶ Play', hasShadow: false })
+  .addState('card-buy',  { shape_size: '70px', shape_color: '#ff4444', text: 'Buy' });</code></pre>
       </div>
    </section>
 
@@ -283,39 +334,44 @@
             </thead>
             <tbody>
             <tr>
-               <td><code>data-proteus-shape-size</code></td>
-               <td>Sets a custom text to display inside the cursor.</td>
-               <td><code>"Click me!"</code></td>
+               <td><code>data-proteus-shapeSize</code></td>
+               <td>Sets the cursor size on hover.</td>
+               <td><code>"60px"</code></td>
             </tr>
             <tr>
-               <td><code>data-proteus-shape-color</code></td>
-               <td>Defines the color (hexadecimal) of the text displayed.</td>
+               <td><code>data-proteus-shapeColor</code></td>
+               <td>Sets the cursor color on hover.</td>
                <td><code>"#ff00ff"</code></td>
             </tr>
             <tr>
-               <td><code>data-proteus-text-content</code></td>
-               <td>Sets the font size of the cursor text.</td>
-               <td><code>"30px"</code></td>
+               <td><code>data-proteus-text</code></td>
+               <td>Sets text displayed inside the cursor.</td>
+               <td><code>"Click me!"</code></td>
             </tr>
             <tr>
-               <td><code>data-proteus-text-color</code></td>
-               <td>Changes the color of shape text (hexadecimal)</td>
-               <td><code>"#aaa"</code></td>
+               <td><code>data-proteus-textColor</code></td>
+               <td>Color of the text inside the cursor.</td>
+               <td><code>"#000000"</code></td>
             </tr>
             <tr>
-               <td><code>data-proteus-text-size</code></td>
-               <td>Changes the size of shape text</td>
-               <td><code>"20px"</code></td>
+               <td><code>data-proteus-textSize</code></td>
+               <td>Font size of the text inside the cursor.</td>
+               <td><code>"14px"</code></td>
             </tr>
             <tr>
-               <td><code>data-proteus-text-weight</code></td>
-               <td>Changes the weight of shape text.</td>
-               <td><code>"400"</code></td>
+               <td><code>data-proteus-textWeight</code></td>
+               <td>Font weight of the text inside the cursor.</td>
+               <td><code>"600"</code></td>
             </tr>
             <tr>
-               <td><code>data-proteus-shadow-isEnabled</code></td>
-               <td>Enables the shadow.</td>
+               <td><code>data-proteus-shadowIsEnabled</code></td>
+               <td>Show or hide the shadow on hover.</td>
                <td><code>"true"</code></td>
+            </tr>
+            <tr>
+               <td><code>data-cursor-state</code></td>
+               <td>Activates a named state registered via <code>addState()</code>.</td>
+               <td><code>"card-buy"</code></td>
             </tr>
             </tbody>
          </table>
@@ -360,11 +416,24 @@
       let currentCursor = null;
       let isTransitioning = false;
 
+      function getClickOptions() {
+         return {
+            click_animation: document.querySelector('#clickAnimation').value,
+            click_duration: parseInt(document.querySelector('#clickDuration').value),
+         };
+      }
+
+      function registerStateMachineStates() {
+         if (!currentCursor) return;
+         currentCursor
+            .addState('card-view', { shape_size: '80px', text: 'Zoom', text_size: '13px' })
+            .addState('card-play', { shape_size: '90px', text: '▶ Play', hasShadow: false })
+            .addState('card-buy',  { shape_size: '70px', shape_color: '#ff4444', text: 'Buy' });
+      }
+
       // destroy
       function destroyCurrentCursor() {
          if (isTransitioning) return;
-
-         console.log('🔄 Starting cursor transition...');
          isTransitioning = true;
 
          if (currentCursor && !currentCursor.isDestroyed) {
@@ -372,62 +441,34 @@
          }
          currentCursor = null;
 
-         // Assicurati che tutto sia pulito
          document.body.style.cursor = '';
 
-         // Reset completo degli elementi
          const shape = document.getElementById('proteus-cursor-shape');
          const shadow = document.getElementById('proteus-cursor-shadow');
+         if (shape) { shape.style.cssText = ''; shape.style.display = 'none'; shape.textContent = ''; }
+         if (shadow) { shadow.style.cssText = ''; shadow.style.display = 'none'; }
 
-         if (shape) {
-            shape.style.cssText = '';
-            shape.style.display = 'none';
-            shape.textContent = '';
-         }
-
-         if (shadow) {
-            shadow.style.cssText = '';
-            shadow.style.display = 'none';
-         }
-
-         // Rimuovi tutte le classi proteus dal body
          document.body.classList.remove('proteus-is-a-fluid', 'proteus-is-a-circle');
-
-         // Aspetta un frame prima di permettere nuove transizioni
-         requestAnimationFrame(() => {
-            isTransitioning = false;
-            console.log('✅ Cursor transition completed');
-         });
+         requestAnimationFrame(() => { isTransitioning = false; });
       }
 
       // create cursor
       function createDefaultCursor() {
          if (isTransitioning) return;
-
          destroyCurrentCursor();
          setTimeout(() => {
             document.body.style.cursor = 'auto';
             updateButtonStates('default');
-            console.log('✅ Default cursor activated');
          }, 50);
       }
       function createCircleCursor() {
          if (isTransitioning) return;
-
          destroyCurrentCursor();
-
          setTimeout(() => {
             const shape = document.getElementById('proteus-cursor-shape');
             const shadow = document.getElementById('proteus-cursor-shadow');
-
-            if (shape) {
-               shape.style.display = 'flex';
-               shape.style.opacity = '1';
-            }
-            if (shadow) {
-               shadow.style.display = 'block';
-               shadow.style.opacity = '1';
-            }
+            if (shape) { shape.style.display = 'flex'; shape.style.opacity = '1'; }
+            if (shadow) { shadow.style.display = 'block'; shadow.style.opacity = '1'; }
 
             currentCursor = new ProteusCursor({
                shape: 'circle',
@@ -437,40 +478,33 @@
                shadow_delay: '0.3s',
                shadow_size: '40px',
                shadow_color: 'rgba(255, 255, 255, 0.5)',
-               magnetic: false,
                text: '',
+               ...getClickOptions(),
             });
 
             document.querySelector('#shadowEnabled').checked = true;
-
+            document.querySelector('#shadowEnabled').disabled = false;
+            registerStateMachineStates();
             updateButtonStates('circle');
-            setupDemoControls();
-            console.log('✅ Circle cursor activated');
          }, 50);
       }
       function createFluidCursor() {
          if (isTransitioning) return;
-
          destroyCurrentCursor();
-
          setTimeout(() => {
             const shape = document.getElementById('proteus-cursor-shape');
-            if (shape) {
-               shape.style.display = 'flex';
-               shape.style.opacity = '1';
-            }
+            if (shape) { shape.style.display = 'flex'; shape.style.opacity = '1'; }
 
             currentCursor = new ProteusCursor({
                shape: 'fluid',
                shape_size: '20px',
+               ...getClickOptions(),
             });
 
             document.querySelector('#shadowEnabled').checked = false;
             document.querySelector('#shadowEnabled').disabled = true;
-
+            registerStateMachineStates();
             updateButtonStates('fluid');
-            setupDemoControls();
-            console.log('✅ Fluid cursor activated');
          }, 50);
       }
 
@@ -547,9 +581,7 @@
 
          /* ! - shadow */
          document.querySelector('#shadowEnabled').addEventListener('input', e => {
-            const isEnabled = e.target.checked;
-            console.log("event listener isEnabled: "); console.log(isEnabled);
-            currentCursor.setShadowEnabled(isEnabled)
+            currentCursor.setShadowEnabled(e.target.checked);
          })
          document.querySelector('#shadowSize').addEventListener('input', e => {
             const size = e.target.value + 'px';
@@ -589,13 +621,20 @@
 
          //region 🔹 fluid cursor settings
          document.querySelector('#speedNumber').addEventListener('input', e => {
-            const speed = e.target.value;
-            currentCursor.setSpeed(speed)
-         })
+            if (currentCursor) currentCursor.setSpeed(e.target.value);
+         });
          document.querySelector('#velocityNumber').addEventListener('input', e => {
-            const maxVelocity = e.target.value;
-            currentCursor.setMaxVelocity(maxVelocity)
-         })
+            if (currentCursor) currentCursor.setMaxVelocity(e.target.value);
+         });
+         //endregion
+
+         //region 🖱️ click animation settings
+         document.querySelector('#clickAnimation').addEventListener('change', e => {
+            if (currentCursor) currentCursor.click_animation = e.target.value;
+         });
+         document.querySelector('#clickDuration').addEventListener('input', e => {
+            if (currentCursor) currentCursor.click_duration = parseInt(e.target.value);
+         });
          //endregion
 
 
