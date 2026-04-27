@@ -1,6 +1,8 @@
 {
   "permissions": {
     "allow": [
+      "Agent",
+      "Agent(*)",
       "WebFetch(domain:www.npmjs.com)",
       "Bash(gh api *)",
       "WebSearch",
@@ -9,7 +11,14 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:api.npmjs.org)",
       "WebFetch(domain:github.com)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(gh pr create --title 'feat: bug fixes, TypeScript types, state machine API, click animations' --body ' *)",
+      "Bash(where gh *)",
+      "Bash(winget list *)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('.claude/settings.json','utf8'\\)\\); console.log\\('settings.json OK'\\)\")",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('.claude/settings.local.json','utf8'\\)\\); console.log\\('settings.local.json OK'\\)\")"
     ]
   }
 }
