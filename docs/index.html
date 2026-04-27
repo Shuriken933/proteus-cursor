@@ -1,608 +1,2079 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <meta charset="UTF-8">
-   <title>Proteus Cursor</title>
-   <link rel="preconnect" href="https://fonts.googleapis.com">
-   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-   <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
-   <link rel="stylesheet" href="proteus-cursor.min.css">
-   <style>
-      .poppins-extralight { font-family: "Poppins", sans-serif; font-weight: 200; font-style: normal; }
-      .poppins-light { font-family: "Poppins", sans-serif; font-weight: 300; font-style: normal; }
-      .poppins-regular { font-family: "Poppins", sans-serif; font-weight: 400; font-style: normal; }
-      .poppins-medium { font-family: "Poppins", sans-serif; font-weight: 500; font-style: normal; }
-      .poppins-semibold { font-family: "Poppins", sans-serif; font-weight: 600; font-style: normal; }
-      .poppins-bold { font-family: "Poppins", sans-serif; font-weight: 700; font-style: normal; }
-      .poppins-extrabold { font-family: "Poppins", sans-serif; font-weight: 800; font-style: normal; }
-      .poppins-black { font-family: "Poppins", sans-serif; font-weight: 900; font-style: normal; }
-      .poppins-extralight-italic { font-family: "Poppins", sans-serif; font-weight: 200; font-style: italic; }
-      .poppins-light-italic { font-family: "Poppins", sans-serif; font-weight: 300; font-style: italic; }
-      .poppins-regular-italic { font-family: "Poppins", sans-serif; font-weight: 400; font-style: italic; }
-      .poppins-medium-italic { font-family: "Poppins", sans-serif; font-weight: 500; font-style: italic; }
-      .poppins-semibold-italic { font-family: "Poppins", sans-serif; font-weight: 600; font-style: italic; }
-      .poppins-bold-italic { font-family: "Poppins", sans-serif; font-weight: 700; font-style: italic; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Proteus Cursor — Shapeshifting cursor library</title>
+  <meta name="description" content="A shapeshifting cursor library inspired by the Greek god Proteus. Define shapes, states and click animations — then let the library do the rest." />
 
-      /* -------------------------------------------------------------------------------- */
-      /* ! General */
-      /* -------------------------------------------------------------------------------- */
-      html{scroll-behavior: smooth;}
-      body{background-color: #111; color: aliceblue; font-family: "Poppins", sans-serif; scroll-behavior: smooth}
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
-      section{ margin-bottom: 150px;}
+  <!-- Library CSS -->
+  <link rel="stylesheet" href="proteus-cursor.min.css" />
 
-      .container { width: 90%; max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
-      .section-title { font-size: 3rem; color: #fff; margin-bottom: 1rem; }
-      .section-title span { color: #007bff; }
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+    :root {
+      --color-bg-primary:    #080C14;
+      --color-bg-secondary:  #0D1421;
+      --color-accent:        #00D4AA;
+      --color-violet:        #9D6FE8;
+      --color-cyan:          #5BC8F5;
+      --color-cta:           #FF6B35;
+      --color-cta-hover:     #FF9A3C;
+      --color-text:          #E8F4F8;
+      --color-text-muted:    #8BA8B5;
+      --color-code-bg:       #060A10;
+      --color-border:        rgba(0,212,170,0.12);
+      --color-border-active: rgba(0,212,170,0.28);
+      --font-main:  'Poppins', sans-serif;
+      --font-code:  'JetBrains Mono', monospace;
+      --radius-card: 16px;
+      --radius-btn:  10px;
+    }
 
-      /* -------------------------------------------------------------------------------- */
-      /* ! Menu */
-      /* -------------------------------------------------------------------------------- */
-      header{ position: fixed; top: 50px; width: 100%; z-index: 999; }
-      header nav{ display: flex; justify-content: space-between; align-items: center; background: #000000; width: fit-content; margin: 0 auto; border-radius: 10px; box-shadow: 0px 0px 30px -15px #f25e36; }
-      header nav ul{ display: flex; flex-direction: row; list-style: none; gap: 0px; padding: 0; margin: 0; }
-      header nav ul li a{ display: block; padding: 10px 20px; text-decoration: none; color: #fff; font-size: 1rem; font-weight: 400; border-radius: 10px; transition: all 0.25s cubic-bezier(.215, .61, .355, 1); }
-      header nav ul li a:hover{ background: #007bff; }
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      background: var(--color-bg-primary);
+      color: var(--color-text);
+      font-family: var(--font-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    button { font-family: var(--font-main); }
+    input, select { font-family: var(--font-main); }
 
+    /* ============================================================
+       BANNERS (mobile / reduced-motion)
+    ============================================================ */
+    .banner-top {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 10000;
+      padding: 12px 24px;
+      background: var(--color-bg-secondary);
+      border-bottom: 1px solid var(--color-border-active);
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--color-text-muted);
+    }
+    .banner-top span { color: var(--color-accent); font-weight: 600; }
+    .banner-top.visible { display: block; }
 
+    /* ============================================================
+       LAYOUT UTILITIES
+    ============================================================ */
+    .container {
+      width: 92%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    .section { padding: 100px 0; }
+    .section-label {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 700;
+      color: var(--color-text);
+      line-height: 1.25;
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 1.05rem;
+      color: var(--color-text-muted);
+      max-width: 560px;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-violet) 60%, var(--color-cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-      /* -------------------------------------------------------------------------------- */
-      /* ! Sections */
-      /* -------------------------------------------------------------------------------- */
+    /* ============================================================
+       NAVIGATION
+    ============================================================ */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 9000;
+      padding: 16px 0;
+      transition: background 0.35s ease, border-color 0.35s ease, backdrop-filter 0.35s ease;
+    }
+    .nav.scrolled {
+      background: rgba(8,12,20,0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .nav__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+    }
+    .nav__logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: -0.02em;
+    }
+    .nav__logo span { color: var(--color-accent); }
+    .nav__links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      list-style: none;
+    }
+    .nav__links a {
+      display: block;
+      padding: 6px 14px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--color-text-muted);
+      border-radius: var(--radius-btn);
+      transition: color 0.2s, background 0.2s;
+    }
+    .nav__links a:hover { color: var(--color-text); background: rgba(255,255,255,0.05); }
+    .nav__right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav__npm {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: var(--color-code-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-btn);
+      font-family: var(--font-code);
+      font-size: 0.8rem;
+      color: var(--color-accent);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+    .nav__npm:hover { border-color: var(--color-border-active); background: rgba(0,212,170,0.05); }
+    .nav__npm .copy-icon {
+      opacity: 0.5;
+      transition: opacity 0.2s;
+      font-size: 0.75rem;
+    }
+    .nav__npm:hover .copy-icon { opacity: 1; }
+    .btn-github {
+      padding: 7px 18px;
+      border: 1px solid var(--color-border-active);
+      border-radius: var(--radius-btn);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-text);
+      background: transparent;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .btn-github:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.25); }
 
-      /* ! Hero */
-      .hero { display: flex; height: 100vh; align-items: center; justify-content: center; flex-direction: column; }
-      .hero h1{ font-size: 5rem; margin: 0; }
-      .hero h2{ font-size: 1.75rem; font-weight: 500; margin-top: 0;}
-      .hero p{ max-width: 600px; margin-bottom: 4rem; margin-top: 0; text-align: center; font-weight: 300; }
-      .cta-button { padding: 15px 25px; border-radius: 15px; background: linear-gradient(45deg, #ff6b6b, #ee5a24); border: none; color: white;font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.25s cubic-bezier(.215, .61, .355, 1); }
-      .cta-button:hover {transform: translateY(-3px); box-shadow: 0 15px 40px rgba(238, 90, 36, 0.5); }
+    /* ============================================================
+       HERO
+    ============================================================ */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+    .hero__orb {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(100px);
+      opacity: 0.18;
+    }
+    .hero__orb--teal {
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, var(--color-accent), transparent 70%);
+      top: -200px; left: -200px;
+    }
+    .hero__orb--violet {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, var(--color-violet), transparent 70%);
+      bottom: -200px; right: -100px;
+    }
+    .hero__inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 45fr 55fr;
+      gap: 64px;
+      align-items: center;
+      padding-top: 80px;
+    }
+    .hero__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(0,212,170,0.08);
+      border: 1px solid var(--color-border-active);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--color-accent);
+      margin-bottom: 24px;
+    }
+    .hero__h1 {
+      font-size: clamp(2.4rem, 5.5vw, 4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.025em;
+      margin-bottom: 20px;
+    }
+    .hero__sub {
+      font-size: 1.1rem;
+      color: var(--color-text-muted);
+      font-weight: 300;
+      margin-bottom: 36px;
+      max-width: 480px;
+      line-height: 1.7;
+    }
+    .hero__npm {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      background: var(--color-code-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-btn);
+      font-family: var(--font-code);
+      font-size: 0.9rem;
+      color: var(--color-accent);
+      cursor: pointer;
+      margin-bottom: 28px;
+      transition: border-color 0.2s, background 0.2s;
+      width: fit-content;
+    }
+    .hero__npm:hover { border-color: var(--color-border-active); background: rgba(0,212,170,0.06); }
+    .hero__ctas {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      padding: 12px 28px;
+      background: var(--color-cta);
+      border: none;
+      border-radius: var(--radius-btn);
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      background: var(--color-cta-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(255,107,53,0.35);
+    }
+    .btn-ghost {
+      padding: 12px 28px;
+      background: transparent;
+      border: 1px solid var(--color-border-active);
+      border-radius: var(--radius-btn);
+      color: var(--color-text);
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.3); transform: translateY(-2px); }
 
-      /* ! Features */
-      .features__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; margin-top: 4rem; }
-      .features__grid__card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 20px; padding: 2rem; border: 1px solid rgba(255, 255, 255, 0.2); transition: all 0.3s ease; position: relative;overflow: hidden; }
-      .features__grid__card::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent); transform: rotate(45deg); transition: all 0.6s ease; opacity: 0; }
-      .features__grid__card:hover::before { animation: shine 0.8s ease-in-out; }
-      .features__grid__card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); }
-      .features__grid__card h3 { font-size: 1.5rem; margin-bottom: 1rem; color: #fff; }
+    /* Hero right — Cursor Bait Zone */
+    .hero__bait {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .bait-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 24px;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      transition: border-color 0.25s, background 0.25s;
+      cursor: none;
+    }
+    .bait-item:hover { border-color: var(--color-border-active); background: rgba(0,212,170,0.04); }
+    .bait-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      flex-shrink: 0;
+    }
+    .bait-dot.violet { background: var(--color-violet); }
+    .bait-dot.cyan { background: var(--color-cyan); }
+    .bait-dot.cta { background: var(--color-cta); }
+    .bait-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .bait-desc {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      margin-left: auto;
+    }
+    .hero__state-label {
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--color-text-muted);
+      letter-spacing: 0.08em;
+      padding: 8px;
+    }
+    .hero__state-label span {
+      color: var(--color-accent);
+      font-family: var(--font-code);
+    }
+    .hero__scroll-arrow {
+      position: absolute;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: var(--color-text-muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      animation: bounce 2s ease-in-out infinite;
+      z-index: 1;
+    }
+    .hero__scroll-arrow svg { width: 20px; height: 20px; }
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(6px); }
+    }
 
-      @keyframes shine {
-         0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
-         50% { opacity: 1; }
-         100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
-      }
+    /* ============================================================
+       QUICK START
+    ============================================================ */
+    .quickstart__steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 48px;
+    }
+    .qs-card {
+      background: var(--color-code-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+    }
+    .qs-card__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--color-border);
+      background: rgba(255,255,255,0.02);
+    }
+    .qs-card__step {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .qs-card__dots { display: flex; gap: 5px; }
+    .qs-card__dots span {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+    }
+    .qs-card__dots span:nth-child(1) { background: #FF5F57; }
+    .qs-card__dots span:nth-child(2) { background: #FFBD2E; }
+    .qs-card__dots span:nth-child(3) { background: #28C840; }
+    .qs-card__code {
+      padding: 20px;
+      font-family: var(--font-code);
+      font-size: 0.85rem;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+    /* Syntax highlight classes */
+    .sh-keyword  { color: #9D6FE8; }
+    .sh-string   { color: #00D4AA; }
+    .sh-number   { color: #FF9A3C; }
+    .sh-comment  { color: #4A6070; font-style: italic; }
+    .sh-prop     { color: #E8F4F8; }
+    .sh-fn       { color: #5BC8F5; }
+    .sh-punct    { color: #8BA8B5; }
 
-      /* ! Demo */
-      .demo h3{ font-size: 1.5rem; font-weight: 400; }
-      .demo__controls,
-      .demo__select-cursor{ background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 20px; padding: 2rem; border: 1px solid rgba(255, 255, 255, 0.2); }
-      .demo__controls__group{ display: flex; flex-direction: row; align-items: center; gap: 25px; margin-left: 25px;}
-      .demo__controls__group__input{ display: flex; flex-direction: row; align-items: center; gap: 12px;}
-      .demo__controls__group__label{ width: 250px;}
+    /* ============================================================
+       SHAPES DEMO
+    ============================================================ */
+    .shapes__grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 48px;
+    }
+    .shape-card {
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .shape-card:hover { border-color: var(--color-border-active); }
+    .shape-card__body { padding: 28px 28px 20px; }
+    .shape-card__tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .shape-card__tag.circle { background: rgba(0,212,170,0.12); color: var(--color-accent); }
+    .shape-card__tag.fluid  { background: rgba(157,111,232,0.12); color: var(--color-violet); }
+    .shape-card__title { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
+    .shape-card__desc { font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.65; }
+    .shape-card__area {
+      margin: 20px 28px 28px;
+      height: 140px;
+      border: 1px dashed var(--color-border);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: border-color 0.25s, background 0.25s;
+      cursor: none;
+    }
+    .shape-card__area:hover {
+      border-color: var(--color-border-active);
+      background: rgba(0,212,170,0.03);
+    }
+    .shapes__toggle {
+      display: flex;
+      justify-content: center;
+      margin-top: 32px;
+    }
+    .btn-toggle {
+      padding: 12px 32px;
+      background: rgba(157,111,232,0.1);
+      border: 1px solid rgba(157,111,232,0.3);
+      border-radius: var(--radius-btn);
+      color: var(--color-violet);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    }
+    .btn-toggle:hover { background: rgba(157,111,232,0.18); transform: translateY(-2px); }
 
-      .demo__select-cursor{ display: flex; flex-direction: row; gap: 25px; margin-bottom: 25px; align-items: center; justify-content: space-between; }
+    /* ============================================================
+       CLICK ANIMATIONS
+    ============================================================ */
+    .click-anim__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 48px;
+    }
+    .anim-box {
+      position: relative;
+      height: 200px;
+      border-radius: var(--radius-card);
+      border: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      overflow: hidden;
+      cursor: none;
+      transition: border-color 0.25s, transform 0.2s;
+    }
+    .anim-box:hover { transform: translateY(-3px); }
+    .anim-box--scale {
+      background: linear-gradient(135deg, rgba(91,200,245,0.08), rgba(91,200,245,0.02));
+      border-color: rgba(91,200,245,0.2);
+    }
+    .anim-box--scale:hover { border-color: rgba(91,200,245,0.4); }
+    .anim-box--ripple {
+      background: linear-gradient(135deg, rgba(0,212,170,0.08), rgba(0,212,170,0.02));
+      border-color: rgba(0,212,170,0.2);
+    }
+    .anim-box--ripple:hover { border-color: rgba(0,212,170,0.4); }
+    .anim-box--none {
+      background: linear-gradient(135deg, rgba(139,168,181,0.08), rgba(139,168,181,0.02));
+      border-color: rgba(139,168,181,0.2);
+    }
+    .anim-box--none:hover { border-color: rgba(139,168,181,0.3); }
+    .anim-box__icon { font-size: 2.2rem; }
+    .anim-box__name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .anim-box--scale  .anim-box__name { color: var(--color-cyan); }
+    .anim-box--ripple .anim-box__name { color: var(--color-accent); }
+    .anim-box--none   .anim-box__name { color: var(--color-text-muted); }
+    .anim-box__sub { font-size: 0.8rem; color: var(--color-text-muted); }
+    /* Geometric bg elements */
+    .anim-box--scale::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(91,200,245,0.04) 12px, rgba(91,200,245,0.04) 13px);
+    }
+    .anim-box--ripple::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(0,212,170,0.1) 0%, transparent 70%);
+    }
+    .click-anim__hint {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+    }
 
-      .demo .color-input { width: 50px; height: 50px; border: none; border-radius: 18px; padding: 0; cursor: pointer; appearance: none; -webkit-appearance: none; background-color: #ffffff; box-shadow: 0 0 4px rgba(0,0,0,0.2); transition: all 0.25s cubic-bezier(.215, .61, .355, 1); }
-      .demo .color-input:focus { box-shadow: 0 0 0 2px #00ffff, 0 0 8px #00ffff; }
+    /* ============================================================
+       STATE MACHINE
+    ============================================================ */
+    .sm__cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 48px;
+    }
+    .sm-card {
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: 28px;
+      transition: border-color 0.25s, transform 0.2s;
+      cursor: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sm-card:hover { border-color: var(--color-border-active); transform: translateY(-3px); }
+    .sm-card__icon { font-size: 2rem; }
+    .sm-card__name {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .sm-card__state {
+      font-family: var(--font-code);
+      font-size: 0.75rem;
+      color: var(--color-accent);
+      background: rgba(0,212,170,0.08);
+      padding: 3px 10px;
+      border-radius: 999px;
+      display: inline-block;
+      width: fit-content;
+    }
+    .sm-card__desc { font-size: 0.85rem; color: var(--color-text-muted); }
+    .sm__active-label {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+    }
+    .sm__active-label span {
+      font-family: var(--font-code);
+      color: var(--color-accent);
+      font-weight: 500;
+    }
+    .sm__code-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 32px;
+    }
+    .code-block {
+      background: var(--color-code-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+    }
+    .code-block__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--color-border);
+      background: rgba(255,255,255,0.02);
+    }
+    .code-block__label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .code-block__body {
+      padding: 20px;
+      font-family: var(--font-code);
+      font-size: 0.82rem;
+      line-height: 1.75;
+      overflow-x: auto;
+    }
 
-      /* Per nascondere la palette nativa in WebKit (Chrome, Safari) */
-      .demo .color-input::-webkit-color-swatch-wrapper { padding: 0; }
-      .demo .color-input::-webkit-color-swatch { border: none; border-radius: 8px; }
+    /* ============================================================
+       PLAYGROUND
+    ============================================================ */
+    .playground__presets {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .preset-btn {
+      padding: 8px 20px;
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: 999px;
+      color: var(--color-text-muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .preset-btn:hover, .preset-btn.active {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+      background: rgba(0,212,170,0.07);
+    }
+    .playground__layout {
+      display: grid;
+      grid-template-columns: 300px 1fr 320px;
+      gap: 20px;
+      min-height: 520px;
+    }
+    .pg-panel {
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .pg-group { margin-bottom: 24px; }
+    .pg-group:last-child { margin-bottom: 0; }
+    .pg-group__label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: 12px;
+    }
+    .pg-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .pg-row label { font-size: 0.83rem; color: var(--color-text-muted); min-width: 60px; }
+    .pg-toggle {
+      display: flex;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 3px;
+    }
+    .pg-toggle button {
+      padding: 5px 14px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--color-text-muted);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .pg-toggle button.active {
+      background: var(--color-accent);
+      color: #080C14;
+    }
+    .pg-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.1);
+      outline: none;
+      cursor: pointer;
+    }
+    .pg-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .pg-slider::-webkit-slider-thumb:hover { transform: scale(1.25); }
+    .pg-slider-val {
+      font-family: var(--font-code);
+      font-size: 0.75rem;
+      color: var(--color-accent);
+      min-width: 36px;
+      text-align: right;
+    }
+    .pg-color {
+      width: 36px; height: 28px;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      cursor: pointer;
+      background: transparent;
+      padding: 2px;
+    }
+    .pg-radio-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pg-radio {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+    .pg-radio input[type="radio"] {
+      accent-color: var(--color-accent);
+      cursor: pointer;
+    }
+    .pg-radio span { font-size: 0.82rem; color: var(--color-text-muted); }
+    .pg-input-text {
+      width: 100%;
+      padding: 7px 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--color-border);
+      border-radius: 7px;
+      color: var(--color-text);
+      font-family: var(--font-main);
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .pg-input-text:focus { border-color: var(--color-border-active); }
+    .pg-switch {
+      position: relative;
+      display: inline-block;
+      width: 38px; height: 22px;
+      cursor: pointer;
+    }
+    .pg-switch input { opacity: 0; width: 0; height: 0; }
+    .pg-switch .slider {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.1);
+      border-radius: 999px;
+      transition: background 0.2s;
+    }
+    .pg-switch .slider::before {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      left: 3px; bottom: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .pg-switch input:checked + .slider { background: var(--color-accent); }
+    .pg-switch input:checked + .slider::before { transform: translateX(16px); }
 
-      /* Per Firefox */
-      .demo .color-input::-moz-color-swatch { border: none; border-radius: 8px; }
+    /* Playground Canvas */
+    .pg-canvas {
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      cursor: none;
+    }
+    .pg-canvas__inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      text-align: center;
+      pointer-events: none;
+    }
+    .pg-canvas__title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+    }
+    .pg-canvas__hint {
+      font-size: 0.8rem;
+      color: rgba(139,168,181,0.5);
+    }
+    .pg-canvas__targets {
+      display: flex;
+      gap: 16px;
+      pointer-events: all;
+    }
+    .pg-target {
+      width: 60px; height: 60px;
+      border-radius: 12px;
+      border: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      transition: border-color 0.25s, transform 0.2s;
+      cursor: none;
+    }
+    .pg-target:hover { border-color: var(--color-border-active); transform: scale(1.1); }
+    /* Canvas decorative bg */
+    .pg-canvas::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(0,212,170,0.04) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(157,111,232,0.04) 0%, transparent 50%);
+      pointer-events: none;
+    }
 
-      .demo #textContent,
-      .demo #cursorSizeNumber,
-      .demo #speedNumber{padding: 10px 15px; border-radius: 12px}
+    /* Playground output */
+    .pg-output {
+      background: var(--color-code-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .pg-output__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--color-border);
+      background: rgba(255,255,255,0.02);
+    }
+    .pg-output__label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .btn-copy {
+      padding: 4px 12px;
+      background: rgba(0,212,170,0.1);
+      border: 1px solid rgba(0,212,170,0.25);
+      border-radius: 6px;
+      color: var(--color-accent);
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      font-family: var(--font-main);
+    }
+    .btn-copy:hover { background: rgba(0,212,170,0.18); border-color: var(--color-accent); }
+    .btn-copy.copied { background: rgba(0,212,170,0.25); color: #fff; }
+    .pg-output__code {
+      flex: 1;
+      padding: 20px;
+      font-family: var(--font-code);
+      font-size: 0.8rem;
+      line-height: 1.75;
+      overflow: auto;
+    }
 
+    /* ============================================================
+       API REFERENCE
+    ============================================================ */
+    .api__tables {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      margin-top: 48px;
+    }
+    .api-table-wrap { overflow-x: auto; }
+    .api-table-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 12px;
+    }
+    .api-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      background: rgba(13,20,33,0.6);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+    }
+    .api-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .api-table td {
+      padding: 11px 16px;
+      border-bottom: 1px solid rgba(0,212,170,0.06);
+      color: var(--color-text);
+      vertical-align: top;
+    }
+    .api-table tr:last-child td { border-bottom: none; }
+    .api-table tr:hover td { background: rgba(0,212,170,0.03); }
+    .api-table code {
+      font-family: var(--font-code);
+      font-size: 0.8rem;
+      color: var(--color-accent);
+      background: rgba(0,212,170,0.08);
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+    .api-table .type {
+      font-family: var(--font-code);
+      font-size: 0.78rem;
+      color: var(--color-violet);
+    }
+    .api-table .default {
+      font-family: var(--font-code);
+      font-size: 0.78rem;
+      color: var(--color-text-muted);
+    }
 
-      /* ! Data Attribute */
-      .data-attributes{}
-      .data-attributes table { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);border-radius: 20px; padding: 2rem; border: 1px solid rgba(255, 255, 255, 0.2); overflow: hidden; margin-bottom: 25px; width: 100%; border-collapse: collapse; color: #fff;}
-      .data-attributes table th,
-      .data-attributes table td { padding: 1rem; border: 1px solid #444; text-align: left; }
-      .data-attributes table th { background-color: #222; font-weight: 600; }
-      .data-attributes table code { background: #222; padding: 2px 4px; border-radius: 4px; font-family: monospace; color: #00ffff; }
-      .data-attributes__demo{  display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 50px; margin-bottom: 25px; }
-      .data-attributes__demo__button{ padding: 10px 20px; border-radius: 10px; background: linear-gradient(45deg, #ff6b6b, #ee5a24); border: none; color: white; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.25s cubic-bezier(.215, .61, .355, 1); }
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    .footer {
+      padding: 60px 0;
+      border-top: 1px solid var(--color-border);
+      text-align: center;
+    }
+    .footer__tagline {
+      font-size: 1rem;
+      color: var(--color-text-muted);
+      margin-bottom: 24px;
+    }
+    .footer__links {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      margin-bottom: 28px;
+    }
+    .footer__links a {
+      font-size: 0.875rem;
+      color: var(--color-text-muted);
+      transition: color 0.2s;
+    }
+    .footer__links a:hover { color: var(--color-accent); }
+    .footer__copy {
+      font-size: 0.8rem;
+      color: rgba(139,168,181,0.45);
+    }
 
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 1100px) {
+      .playground__layout { grid-template-columns: 260px 1fr; }
+      .pg-output { display: none; }
+    }
+    @media (max-width: 900px) {
+      .hero__inner { grid-template-columns: 1fr; gap: 40px; }
+      .hero__bait { display: none; }
+      .quickstart__steps { grid-template-columns: 1fr; }
+      .shapes__grid { grid-template-columns: 1fr; }
+      .click-anim__grid { grid-template-columns: 1fr; }
+      .sm__cards { grid-template-columns: 1fr; }
+      .sm__code-grid { grid-template-columns: 1fr; }
+      .playground__layout { grid-template-columns: 1fr; }
+      .pg-canvas { min-height: 280px; }
+    }
+    @media (max-width: 600px) {
+      .nav__links { display: none; }
+      .nav__npm { display: none; }
+    }
 
-   </style>
+    /* ============================================================
+       TOAST NOTIFICATION
+    ============================================================ */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      padding: 10px 20px;
+      background: rgba(0,212,170,0.15);
+      border: 1px solid var(--color-accent);
+      border-radius: 10px;
+      color: var(--color-accent);
+      font-size: 0.85rem;
+      font-weight: 500;
+      z-index: 99999;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+      pointer-events: none;
+      backdrop-filter: blur(12px);
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
 </head>
 <body>
 
-   <header>
-      <nav>
-         <ul>
-            <li><a href="#hero">presentation</a></li>
-            <li><a href="#features">features</a></li>
-            <li><a href="#demo">demo</a></li>
-            <li><a href="#data-attributes">data-attributes</a></li>
-         </ul>
-      </nav>
-   </header>
+  <!-- Banners -->
+  <div id="banner-mobile" class="banner-top">
+    <span>Heads up!</span> Proteus Cursor is best experienced on a desktop with a real mouse.
+  </div>
+  <div id="banner-motion" class="banner-top">
+    <span>Reduced motion detected.</span> The custom cursor has been disabled to respect your system preferences.
+  </div>
 
-   <section id="hero" class="hero">
-      <h1>Proteus</h1>
-      <h2>The cursor that transforms with your imagination</h2>
-      <p>Inspired by the shape-shifting sea god, Proteus Cursor is a powerful JavaScript library that turns the standard mouse pointer into a dynamic, interactive design element</p>
-      <button class="cta-button">Discover all the features</button>
+  <!-- Toast -->
+  <div class="toast" id="toast">Copied to clipboard!</div>
 
-   </section>
-
-
-   <section id="features" class="features">
-      <div class="container">
-         <h2 class="section-title">Main Features</h2>
-
-         <div class="features__grid">
-            <div class="features__grid__card">
-               <h3>🎯 Customisable Circular Cursor</h3>
-               <p>Turns the default cursor into an elegant circle that is fully customizable with dynamic size, color and shadow effects.</p>
-            </div>
-
-            <div class="features__grid__card">
-               <h3>✨ Dynamic Shadow Effects</h3>
-               <p>Apply custom shadows to your cursor with complete control over color, intensity, and diffusion to create stunning visual effects</p>
-            </div>
-
-            <div class="features__grid__card">
-               <h3>📝 Integrated Text</h3>
-               <p>Enter text directly into the cursor to create interactive and informative experiences that follow your mouse movement.</p>
-            </div>
-
-            <div class="features__grid__card">
-               <h3>🧲 Magnetic Behavior</h3>
-               <p>The cursor can be drawn to specific elements on the page, creating a smooth and intuitive navigation experience.</p>
-            </div>
-
-            <div class="features__grid__card">
-               <h3>🌀 Magnetic Parallax</h3>
-               <p>Advanced effect that combines magnetic attraction with parallax movement of HTML elements for immersive interaction.</p>
-            </div>
-
-            <div class="features__grid__card">
-               <h3>🎨 Dynamic Colors</h3>
-               <p>Change cursor and shadow colors in real time, with support for gradients and smooth transitions.</p>
-            </div>
-         </div>
+  <!-- ============================================================
+       NAV
+  ============================================================ -->
+  <nav class="nav" id="nav">
+    <div class="container">
+      <div class="nav__inner">
+        <a href="#" class="nav__logo" data-cursor-state="nav-link">Proteus<span>.</span></a>
+        <ul class="nav__links">
+          <li><a href="#shapes"    data-cursor-state="nav-link">Shapes</a></li>
+          <li><a href="#playground" data-cursor-state="nav-link">Playground</a></li>
+          <li><a href="#states"    data-cursor-state="nav-link">States</a></li>
+          <li><a href="#api"       data-cursor-state="nav-link">API</a></li>
+        </ul>
+        <div class="nav__right">
+          <button class="nav__npm" id="nav-npm-copy" title="Copy install command">
+            <span>npm install proteuscursor</span>
+            <span class="copy-icon">⎘</span>
+          </button>
+          <a href="https://github.com/Shuriken933/proteus-cursor" target="_blank" rel="noopener">
+            <button class="btn-github" data-cursor-state="nav-link">GitHub →</button>
+          </a>
+        </div>
       </div>
-   </section>
+    </div>
+  </nav>
 
+  <!-- ============================================================
+       HERO
+  ============================================================ -->
+  <section class="hero" id="hero">
+    <div class="hero__orb hero__orb--teal"></div>
+    <div class="hero__orb hero__orb--violet"></div>
 
-   <section id="demo" class="demo">
-      <div class="container">
-         <h2 class="section-title">Interactive Demo</h2>
+    <div class="container">
+      <div class="hero__inner">
 
-         <div class="demo__select-cursor">
-            <h3>1) Select a type</h3>
-            <div class="demo__select-cursor__buttons">
-               <button id="btn-kill-proteus" class="demo__type-shape">🖱️default</button>
-               <button id="btn-create-proteus-circle" class="demo__type-shape">⚪circle</button>
-               <button id="btn-create-proteus-fluid" class="demo__type-shape">💧fluid</button>
-            </div>
+        <!-- Left column -->
+        <div class="hero__content">
+          <div class="hero__badge">✦ Zero dependencies &middot; TypeScript ready &middot; &lt; 20KB</div>
+          <h1 class="hero__h1">
+            Your Cursor.<br />
+            <span class="gradient-text">Fully Unleashed.</span>
+          </h1>
+          <p class="hero__sub">
+            A shapeshifting cursor library inspired by the Greek god Proteus.
+            Define shapes, states and click animations — then let the library do the rest.
+          </p>
+          <div class="hero__npm" id="hero-npm-copy">
+            <span style="color:var(--color-text-muted)">$</span>
+            <span>npm install proteuscursor</span>
+            <span style="opacity:0.4; font-size:0.8rem;">⎘</span>
+          </div>
+          <div class="hero__ctas">
+            <a href="#quickstart">
+              <button class="btn-primary" data-proteus-shapeColor="rgba(255,107,53,0.2)" data-proteus-shapeSize="56px">Get Started</button>
+            </a>
+            <a href="https://github.com/Shuriken933/proteus-cursor" target="_blank" rel="noopener">
+              <button class="btn-ghost">View on GitHub →</button>
+            </a>
+          </div>
+        </div>
 
-         </div>
-
-
-         <div class="demo__controls">
-            <h3>2) Modify the cursor</h3>
-
-            <h4 class="demo__controls__group-only-fluid__subtitle">All cursors</h4>
-
-            <div class="demo__controls__group">
-               <p class="demo__controls__group__label">Customize cursor</p>
-               <div class="demo__controls__group__input">
-                  <label for="cursorSize">size</label>
-                  <input type="range" id="cursorSize" min="10" max="100" value="20">
-               </div>
-               <div class="demo__controls__group__input">
-                  <label for="cursorSizeNumber">size</label>
-                  <input type="number" id="cursorSizeNumber" min="0" max="500" value="20">
-               </div>
-               <div class="demo__controls__group__input">
-                  <label for="cursorColor">color</label>
-                  <input type="color" id="cursorColor" value="#ffffff" class="color-input">
-               </div>
-            </div>
-
-            <div class="demo__controls__group">
-               <p class="demo__controls__group__label">Customize shadow</p>
-               <div class="demo__controls__group__input">
-                  <label for="shadowEnabled">enable</label>
-                  <input type="checkbox" id="shadowEnabled">
-               </div>
-               <div class="demo__controls__group__input">
-                  <label for="shadowSize">size</label>
-                  <input type="range" id="shadowSize" min="0" max="100" value="20">
-               </div>
-               <div class="demo__controls__group__input">
-                  <label for="shadowColor">color</label>
-                  <input type="color" id="shadowColor" value="#ffffff" class="color-input">
-               </div>
-               <div class="demo__controls__group__input">
-                  <label for="shadowAlpha">transparency</label>
-                  <input type="range" id="shadowAlpha" min="0" max="1" step="0.01" value="0.5">
-               </div>
-            </div>
-
-            <div class="demo__controls__group">
-               <p class="demo__controls__group__label">Customize the text</p>
-               <div class="demo__controls__group__input">
-                  <label for="textContent">text</label>
-                  <input type="text" id="textContent" placeholder="insert text...">
-               </div>
-               <div class="demo__controls__group__input">
-                  <label for="textSize">size</label>
-                  <input type="range" id="textSize" min="1" max="100" value="20">
-               </div>
-               <div class="demo__controls__group__input">
-                  <label for="textColor">color</label>
-                  <input type="color" id="textColor" value="#ffffff" class="color-input">
-               </div>
-               <div class="demo__controls__group__input">
-                  <label for="textWeight">weight</label>
-                  <input type="range" id="textWeight" min="100" max="900" step="100" value="400">
-               </div>
-            </div>
-
-
-            <div class="demo__controls__group-only-fluid">
-               <h4 class="demo__controls__group-only-fluid__subtitle">Fluid cursor</h4>
-               <p class="demo__controls__group-only-fluid__label"></p>
-               <div class="demo__controls__group__input">
-                  <label for="speedNumber">speed</label>
-                  <input type="number" id="speedNumber" name="ratio" min="0.1" max="1" step="0.1">
-               </div>
-               <div class="demo__controls__group__input">
-                  <label for="velocityNumber">velocity</label>
-                  <input type="range" id="velocityNumber" min="1" max="20" value="10">
-               </div>
-            </div>
-
-         </div>
+        <!-- Right column — Bait Zone -->
+        <div class="hero__bait" id="hero-bait">
+          <div
+            class="bait-item"
+            data-cursor-state="demo-circle"
+          >
+            <div class="bait-dot"></div>
+            <span class="bait-label">Circle</span>
+            <span class="bait-desc">Crisp rounded shape with optional shadow</span>
+          </div>
+          <div
+            class="bait-item"
+            data-cursor-state="hero-fluid"
+          >
+            <div class="bait-dot violet"></div>
+            <span class="bait-label">Fluid</span>
+            <span class="bait-desc">Physics-based morphing shape</span>
+          </div>
+          <div
+            class="bait-item"
+            data-cursor-state="hero-text"
+          >
+            <div class="bait-dot cyan"></div>
+            <span class="bait-label">Text</span>
+            <span class="bait-desc">Embed custom text inside the cursor</span>
+          </div>
+          <div
+            class="bait-item"
+            data-cursor-state="hero-cta"
+            id="bait-ripple"
+          >
+            <div class="bait-dot cta"></div>
+            <span class="bait-label">Click → Ripple</span>
+            <span class="bait-desc">Animated click feedback effects</span>
+          </div>
+          <div class="hero__state-label" id="hero-state-label">
+            Move cursor over a card &nbsp;·&nbsp; active state: <span id="hero-state-name">—</span>
+          </div>
+        </div>
 
       </div>
-   </section>
+    </div>
 
+    <div class="hero__scroll-arrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12l7 7 7-7"/>
+      </svg>
+      <span>scroll</span>
+    </div>
+  </section>
 
-   <section id="data-attributes" class="data-attributes">
-      <div class="container">
-<!--         <h2 class="section-title">Data-Attribute events</h2>-->
-         <h2 class="section-title">Available <code>data-proteus-*</code> Attributes</h2>
-         <p>You can insert these data attributes inside HTML tags to trigger a behaviour when the mouse hovers over them.</p>
+  <!-- ============================================================
+       QUICK START
+  ============================================================ -->
+  <section class="section" id="quickstart">
+    <div class="container">
+      <div class="section-label">Quick Start</div>
+      <h2 class="section-title">Up and running in 60 seconds</h2>
+      <p class="section-sub">Three steps. No build tools required. Works with any framework or vanilla HTML.</p>
 
-         <table>
+      <div class="quickstart__steps">
+
+        <!-- Step 1 -->
+        <div class="qs-card">
+          <div class="qs-card__header">
+            <span class="qs-card__step">Step 1 — Install</span>
+            <div class="qs-card__dots"><span></span><span></span><span></span></div>
+          </div>
+          <div class="qs-card__code">
+            <span class="sh-comment"># via npm</span><br />
+            <span class="sh-punct">$</span> <span class="sh-fn">npm</span> <span class="sh-keyword">install</span> <span class="sh-string">proteuscursor</span><br />
+            <br />
+            <span class="sh-comment"># or CDN</span><br />
+            <span class="sh-punct">&lt;</span><span class="sh-keyword">link</span> <span class="sh-prop">rel</span><span class="sh-punct">=</span><span class="sh-string">"stylesheet"</span><br />
+            &nbsp;&nbsp;<span class="sh-prop">href</span><span class="sh-punct">=</span><span class="sh-string">"proteus-cursor.min.css"</span><span class="sh-punct">&gt;</span>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="qs-card">
+          <div class="qs-card__header">
+            <span class="qs-card__step">Step 2 — Import</span>
+            <div class="qs-card__dots"><span></span><span></span><span></span></div>
+          </div>
+          <div class="qs-card__code">
+            <span class="sh-comment">// ES Module</span><br />
+            <span class="sh-keyword">import</span> <span class="sh-prop">ProteusCursor</span> <span class="sh-keyword">from</span><br />
+            &nbsp;&nbsp;<span class="sh-string">'proteuscursor'</span><span class="sh-punct">;</span><br />
+            <br />
+            <span class="sh-comment">// or UMD (script tag)</span><br />
+            <span class="sh-punct">&lt;</span><span class="sh-keyword">script</span> <span class="sh-prop">src</span><span class="sh-punct">=</span><span class="sh-string">"proteus-cursor.umd.js"</span><span class="sh-punct">&gt;&lt;/</span><span class="sh-keyword">script</span><span class="sh-punct">&gt;</span>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="qs-card">
+          <div class="qs-card__header">
+            <span class="qs-card__step">Step 3 — Initialize</span>
+            <div class="qs-card__dots"><span></span><span></span><span></span></div>
+          </div>
+          <div class="qs-card__code">
+            <span class="sh-comment">// Your first cursor in 3 lines</span><br />
+            <span class="sh-keyword">const</span> <span class="sh-prop">cursor</span> <span class="sh-punct">=</span> <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span><span class="sh-punct">({</span><br />
+            &nbsp;&nbsp;<span class="sh-prop">shape</span><span class="sh-punct">:</span> <span class="sh-string">'circle'</span><span class="sh-punct">,</span><br />
+            &nbsp;&nbsp;<span class="sh-prop">shape_color</span><span class="sh-punct">:</span> <span class="sh-string">'#00D4AA'</span><span class="sh-punct">,</span><br />
+            &nbsp;&nbsp;<span class="sh-prop">click_animation</span><span class="sh-punct">:</span> <span class="sh-string">'ripple'</span><span class="sh-punct">,</span><br />
+            <span class="sh-punct">});</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SHAPES DEMO
+  ============================================================ -->
+  <section class="section" id="shapes">
+    <div class="container">
+      <div class="section-label">Shapes</div>
+      <h2 class="section-title">Two shapes. Infinite personality.</h2>
+      <p class="section-sub">Choose between a crisp geometric circle or a physics-based fluid blob that stretches with velocity.</p>
+
+      <div class="shapes__grid">
+        <!-- Circle card -->
+        <div class="shape-card">
+          <div class="shape-card__body">
+            <div class="shape-card__tag circle">Circle</div>
+            <h3 class="shape-card__title">Precise. Clean. Iconic.</h3>
+            <p class="shape-card__desc">
+              The classic cursor shape — a perfectly round dot with a smooth trailing shadow.
+              Supports custom size, color, shadow glow, and embedded text.
+            </p>
+          </div>
+          <div class="shape-card__area" data-cursor-state="demo-circle">hover here</div>
+        </div>
+
+        <!-- Fluid card -->
+        <div class="shape-card">
+          <div class="shape-card__body">
+            <div class="shape-card__tag fluid">Fluid</div>
+            <h3 class="shape-card__title">Alive. Dynamic. Magnetic.</h3>
+            <p class="shape-card__desc">
+              A blob that squishes and stretches based on mouse velocity. Control its physics
+              with <code style="font-family:var(--font-code);color:var(--color-violet);font-size:0.82rem;">speed</code>
+              and <code style="font-family:var(--font-code);color:var(--color-violet);font-size:0.82rem;">maxVelocity</code>.
+            </p>
+          </div>
+          <div class="shape-card__area" data-cursor-state="demo-fluid">hover here</div>
+        </div>
+      </div>
+
+      <div class="shapes__toggle">
+        <button class="btn-toggle" id="shape-toggle-btn">Switch to fluid mode</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CLICK ANIMATIONS
+  ============================================================ -->
+  <section class="section" id="clickanim">
+    <div class="container">
+      <div class="section-label">Click Animations</div>
+      <h2 class="section-title">Every click, a choice.</h2>
+      <p class="section-sub">Pick the feedback style that fits your product. Each box uses a different animation.</p>
+
+      <div class="click-anim__grid">
+        <!-- Scale -->
+        <div class="anim-box anim-box--scale" id="box-scale" data-cursor-state="box-scale">
+          <div class="anim-box__icon">⊕</div>
+          <span class="anim-box__name">Scale</span>
+          <span class="anim-box__sub">Satisfying punch effect</span>
+        </div>
+
+        <!-- Ripple -->
+        <div class="anim-box anim-box--ripple" id="box-ripple" data-cursor-state="box-ripple">
+          <div class="anim-box__icon">◎</div>
+          <span class="anim-box__name">Ripple</span>
+          <span class="anim-box__sub">Expanding wave on click</span>
+        </div>
+
+        <!-- None -->
+        <div class="anim-box anim-box--none" id="box-none" data-cursor-state="box-none">
+          <div class="anim-box__icon">·</div>
+          <span class="anim-box__name">None</span>
+          <span class="anim-box__sub">For the purists.</span>
+        </div>
+      </div>
+
+      <p class="click-anim__hint">Click anywhere inside each box to feel the difference.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       STATE MACHINE
+  ============================================================ -->
+  <section class="section" id="states">
+    <div class="container">
+      <div class="section-label">State Machine</div>
+      <h2 class="section-title">One line of HTML. Infinite states.</h2>
+      <p class="section-sub">Register named cursor states in JS, attach them with a single <code style="font-family:var(--font-code);color:var(--color-accent);font-size:0.9rem;">data-cursor-state</code> attribute.</p>
+
+      <div class="sm__cards">
+        <div class="sm-card" data-cursor-state="sm-gallery">
+          <div class="sm-card__icon">🖼️</div>
+          <div class="sm-card__name">Gallery Item</div>
+          <div class="sm-card__state">sm-gallery</div>
+          <p class="sm-card__desc">Expands to 80px with "Zoom" text. Perfect for image grids and portfolios.</p>
+        </div>
+        <div class="sm-card" data-cursor-state="sm-video">
+          <div class="sm-card__icon">▶️</div>
+          <div class="sm-card__name">Video Preview</div>
+          <div class="sm-card__state">sm-video</div>
+          <p class="sm-card__desc">Shows ▶ Play at 90px with no shadow. Ideal for video thumbnails.</p>
+        </div>
+        <div class="sm-card" data-cursor-state="sm-cta">
+          <div class="sm-card__icon">🎯</div>
+          <div class="sm-card__name">CTA Button</div>
+          <div class="sm-card__state">sm-cta</div>
+          <p class="sm-card__desc">Orange tint at 70px with bold "Click". Drives action on key elements.</p>
+        </div>
+      </div>
+
+      <div class="sm__active-label" id="sm-active-label">
+        Active state: <span id="sm-active-name">—</span>
+      </div>
+
+      <div class="sm__code-grid">
+        <div class="code-block">
+          <div class="code-block__header">
+            <span class="code-block__label">JavaScript — addState()</span>
+          </div>
+          <div class="code-block__body">
+            <span class="sh-prop">cursor</span><br />
+            &nbsp;&nbsp;<span class="sh-punct">.</span><span class="sh-fn">addState</span><span class="sh-punct">(</span><span class="sh-string">'sm-gallery'</span><span class="sh-punct">, {</span><br />
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="sh-prop">shape_size</span><span class="sh-punct">:</span> <span class="sh-string">'80px'</span><span class="sh-punct">,</span><br />
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="sh-prop">text</span><span class="sh-punct">:</span> <span class="sh-string">'Zoom'</span><span class="sh-punct">,</span><br />
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="sh-prop">text_size</span><span class="sh-punct">:</span> <span class="sh-string">'13px'</span><span class="sh-punct">,</span><br />
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="sh-prop">text_color</span><span class="sh-punct">:</span> <span class="sh-string">'#fff'</span><span class="sh-punct">,</span><br />
+            &nbsp;&nbsp;<span class="sh-punct">})</span><br />
+            &nbsp;&nbsp;<span class="sh-punct">.</span><span class="sh-fn">addState</span><span class="sh-punct">(</span><span class="sh-string">'sm-video'</span><span class="sh-punct">, {</span><br />
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="sh-prop">shape_size</span><span class="sh-punct">:</span> <span class="sh-string">'90px'</span><span class="sh-punct">,</span><br />
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="sh-prop">text</span><span class="sh-punct">:</span> <span class="sh-string">'▶ Play'</span><span class="sh-punct">,</span><br />
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="sh-prop">hasShadow</span><span class="sh-punct">:</span> <span class="sh-keyword">false</span><span class="sh-punct">,</span><br />
+            &nbsp;&nbsp;<span class="sh-punct">})</span><span class="sh-punct">;</span>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block__header">
+            <span class="code-block__label">HTML — data-cursor-state</span>
+          </div>
+          <div class="code-block__body">
+            <span class="sh-comment">&lt;!-- Gallery thumbnail --&gt;</span><br />
+            <span class="sh-punct">&lt;</span><span class="sh-keyword">div</span><br />
+            &nbsp;&nbsp;<span class="sh-prop">class</span><span class="sh-punct">=</span><span class="sh-string">"gallery-item"</span><br />
+            &nbsp;&nbsp;<span class="sh-prop">data-cursor-state</span><span class="sh-punct">=</span><span class="sh-string">"sm-gallery"</span><br />
+            <span class="sh-punct">&gt;</span><br />
+            &nbsp;&nbsp;<span class="sh-punct">&lt;</span><span class="sh-keyword">img</span> <span class="sh-prop">src</span><span class="sh-punct">=</span><span class="sh-string">"photo.jpg"</span> <span class="sh-punct">/&gt;</span><br />
+            <span class="sh-punct">&lt;/</span><span class="sh-keyword">div</span><span class="sh-punct">&gt;</span><br />
+            <br />
+            <span class="sh-comment">&lt;!-- Video card --&gt;</span><br />
+            <span class="sh-punct">&lt;</span><span class="sh-keyword">div</span> <span class="sh-prop">data-cursor-state</span><span class="sh-punct">=</span><span class="sh-string">"sm-video"</span><span class="sh-punct">&gt;</span><br />
+            &nbsp;&nbsp;<span class="sh-punct">&lt;</span><span class="sh-keyword">video</span> <span class="sh-prop">src</span><span class="sh-punct">=</span><span class="sh-string">"clip.mp4"</span><span class="sh-punct">/&gt;</span><br />
+            <span class="sh-punct">&lt;/</span><span class="sh-keyword">div</span><span class="sh-punct">&gt;</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       PLAYGROUND
+  ============================================================ -->
+  <section class="section" id="playground">
+    <div class="container">
+      <div class="section-label">Playground</div>
+      <h2 class="section-title">Cursor Sandbox</h2>
+      <p class="section-sub">Tune every parameter live. Copy the generated code and drop it into your project.</p>
+
+      <!-- Presets bar -->
+      <div class="playground__presets" style="margin-top:32px;">
+        <button class="preset-btn" data-preset="ghost">Ghost</button>
+        <button class="preset-btn" data-preset="neon">Neon</button>
+        <button class="preset-btn" data-preset="inkdrop">Ink Drop</button>
+        <button class="preset-btn" data-preset="chrome">Chrome</button>
+        <button class="preset-btn" data-preset="minimal">Minimal</button>
+      </div>
+
+      <div class="playground__layout">
+
+        <!-- Left Panel -->
+        <div class="pg-panel">
+
+          <div class="pg-group">
+            <div class="pg-group__label">Shape</div>
+            <div class="pg-toggle">
+              <button id="pg-shape-circle" class="active" onclick="pgSetShape('circle')">Circle</button>
+              <button id="pg-shape-fluid" onclick="pgSetShape('fluid')">Fluid</button>
+            </div>
+          </div>
+
+          <div class="pg-group">
+            <div class="pg-group__label">Click Animation</div>
+            <div class="pg-radio-group">
+              <label class="pg-radio">
+                <input type="radio" name="pg-click" value="scale" checked onchange="pgSetClickAnim(this.value)" />
+                <span>Scale</span>
+              </label>
+              <label class="pg-radio">
+                <input type="radio" name="pg-click" value="ripple" onchange="pgSetClickAnim(this.value)" />
+                <span>Ripple</span>
+              </label>
+              <label class="pg-radio">
+                <input type="radio" name="pg-click" value="none" onchange="pgSetClickAnim(this.value)" />
+                <span>None</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="pg-group">
+            <div class="pg-group__label">Size</div>
+            <div class="pg-row">
+              <label>Size</label>
+              <input type="range" class="pg-slider" id="pg-size" min="6" max="100" value="10" oninput="pgSetSize(this.value)" />
+              <span class="pg-slider-val" id="pg-size-val">10px</span>
+            </div>
+          </div>
+
+          <div class="pg-group">
+            <div class="pg-group__label">Color</div>
+            <div class="pg-row">
+              <label>Shape</label>
+              <input type="color" class="pg-color" id="pg-color" value="#00D4AA" oninput="pgSetColor(this.value)" />
+              <span style="font-size:0.8rem;color:var(--color-text-muted);" id="pg-color-val">#00D4AA</span>
+            </div>
+          </div>
+
+          <div class="pg-group">
+            <div class="pg-group__label">Shadow</div>
+            <div class="pg-row">
+              <label>Enable</label>
+              <label class="pg-switch">
+                <input type="checkbox" id="pg-shadow-on" checked onchange="pgSetShadowEnabled(this.checked)" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="pg-row">
+              <label>Size</label>
+              <input type="range" class="pg-slider" id="pg-shadow-size" min="10" max="120" value="40" oninput="pgSetShadowSize(this.value)" />
+              <span class="pg-slider-val" id="pg-shadow-size-val">40px</span>
+            </div>
+            <div class="pg-row">
+              <label>Color</label>
+              <input type="color" class="pg-color" id="pg-shadow-color" value="#00D4AA" oninput="pgSetShadowColor(this.value)" />
+              <span style="font-size:0.8rem;color:var(--color-text-muted);" id="pg-shadow-color-val">#00D4AA</span>
+            </div>
+            <div class="pg-row">
+              <label>Alpha</label>
+              <input type="range" class="pg-slider" id="pg-shadow-alpha" min="0" max="100" value="60" oninput="pgSetShadowAlpha(this.value)" />
+              <span class="pg-slider-val" id="pg-shadow-alpha-val">0.60</span>
+            </div>
+          </div>
+
+          <div class="pg-group">
+            <div class="pg-group__label">Text</div>
+            <div class="pg-row">
+              <label>Content</label>
+              <input type="text" class="pg-input-text" id="pg-text" placeholder="Hello" maxlength="20" oninput="pgSetText(this.value)" />
+            </div>
+            <div class="pg-row">
+              <label>Size</label>
+              <input type="range" class="pg-slider" id="pg-text-size" min="8" max="32" value="12" oninput="pgSetTextSize(this.value)" />
+              <span class="pg-slider-val" id="pg-text-size-val">12px</span>
+            </div>
+            <div class="pg-row">
+              <label>Weight</label>
+              <div class="pg-toggle" style="flex:1;">
+                <button id="pg-tw-400" class="active" onclick="pgSetTextWeight('400')">400</button>
+                <button id="pg-tw-600" onclick="pgSetTextWeight('600')">600</button>
+                <button id="pg-tw-800" onclick="pgSetTextWeight('800')">800</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Canvas -->
+        <div class="pg-canvas" id="pg-canvas">
+          <div class="pg-canvas__inner">
+            <p class="pg-canvas__title">Move your cursor here</p>
+            <div class="pg-canvas__targets">
+              <div class="pg-target" title="Hover me!">🎨</div>
+              <div class="pg-target" title="And me!">⚡</div>
+              <div class="pg-target" title="Click me!">✦</div>
+              <div class="pg-target" title="Hi there!">🌊</div>
+            </div>
+            <p class="pg-canvas__hint">Click anywhere to test the animation</p>
+          </div>
+        </div>
+
+        <!-- Output Code -->
+        <div class="pg-output">
+          <div class="pg-output__header">
+            <span class="pg-output__label">Generated Code</span>
+            <button class="btn-copy" id="pg-copy-btn" onclick="pgCopyCode()">Copy</button>
+          </div>
+          <div class="pg-output__code" id="pg-code-output"></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       API REFERENCE
+  ============================================================ -->
+  <section class="section" id="api">
+    <div class="container">
+      <div class="section-label">Reference</div>
+      <h2 class="section-title">API at a glance</h2>
+      <p class="section-sub">Every option, setter, and data attribute documented in one place.</p>
+
+      <div class="api__tables">
+
+        <!-- Constructor Options -->
+        <div class="api-table-wrap">
+          <div class="api-table-title">Constructor Options</div>
+          <table class="api-table">
             <thead>
-            <tr>
-               <th>Attribute</th>
-               <th>Description</th>
-               <th>Example</th>
-            </tr>
+              <tr>
+                <th>Option</th>
+                <th>Type</th>
+                <th>Default</th>
+                <th>Description</th>
+              </tr>
             </thead>
             <tbody>
-            <tr>
-               <td><code>data-proteus-shape-size</code></td>
-               <td>Sets a custom text to display inside the cursor.</td>
-               <td><code>"Click me!"</code></td>
-            </tr>
-            <tr>
-               <td><code>data-proteus-shape-color</code></td>
-               <td>Defines the color (hexadecimal) of the text displayed.</td>
-               <td><code>"#ff00ff"</code></td>
-            </tr>
-            <tr>
-               <td><code>data-proteus-text-content</code></td>
-               <td>Sets the font size of the cursor text.</td>
-               <td><code>"30px"</code></td>
-            </tr>
-            <tr>
-               <td><code>data-proteus-text-color</code></td>
-               <td>Changes the color of shape text (hexadecimal)</td>
-               <td><code>"#aaa"</code></td>
-            </tr>
-            <tr>
-               <td><code>data-proteus-text-size</code></td>
-               <td>Changes the size of shape text</td>
-               <td><code>"20px"</code></td>
-            </tr>
-            <tr>
-               <td><code>data-proteus-text-weight</code></td>
-               <td>Changes the weight of shape text.</td>
-               <td><code>"400"</code></td>
-            </tr>
-            <tr>
-               <td><code>data-proteus-shadow-isEnabled</code></td>
-               <td>Enables the shadow.</td>
-               <td><code>"true"</code></td>
-            </tr>
+              <tr><td><code>shape</code></td><td class="type">string</td><td class="default">'default'</td><td>Cursor shape: <code>circle</code>, <code>fluid</code>, or <code>default</code>.</td></tr>
+              <tr><td><code>shape_size</code></td><td class="type">string</td><td class="default">'10px'</td><td>Width and height of the cursor shape.</td></tr>
+              <tr><td><code>shape_color</code></td><td class="type">string</td><td class="default">'#fff'</td><td>CSS color of the cursor element.</td></tr>
+              <tr><td><code>hasShadow</code></td><td class="type">boolean</td><td class="default">true</td><td>Whether to show the trailing shadow element.</td></tr>
+              <tr><td><code>shadow_delay</code></td><td class="type">string</td><td class="default">'0.3s'</td><td>CSS transition delay for shadow lag effect.</td></tr>
+              <tr><td><code>shadow_size</code></td><td class="type">string</td><td class="default">'40px'</td><td>Width and height of the shadow element.</td></tr>
+              <tr><td><code>shadow_color</code></td><td class="type">string</td><td class="default">'#ffffff'</td><td>Hex color for the shadow glow.</td></tr>
+              <tr><td><code>text</code></td><td class="type">string</td><td class="default">''</td><td>Text rendered inside the cursor shape.</td></tr>
+              <tr><td><code>text_color</code></td><td class="type">string</td><td class="default">''</td><td>Color of the cursor text.</td></tr>
+              <tr><td><code>text_weight</code></td><td class="type">string</td><td class="default">''</td><td>Font weight of the cursor text.</td></tr>
+              <tr><td><code>text_size</code></td><td class="type">string</td><td class="default">''</td><td>Font size of the cursor text.</td></tr>
+              <tr><td><code>speed</code></td><td class="type">number</td><td class="default">0.9</td><td>Lerp factor for fluid shape movement (0–1).</td></tr>
+              <tr><td><code>maxVelocity</code></td><td class="type">number</td><td class="default">10</td><td>Maximum velocity cap for fluid deformation.</td></tr>
+              <tr><td><code>click_animation</code></td><td class="type">string</td><td class="default">'scale'</td><td>Click feedback: <code>scale</code>, <code>ripple</code>, or <code>none</code>.</td></tr>
+              <tr><td><code>click_duration</code></td><td class="type">number</td><td class="default">300</td><td>Duration in milliseconds for click animation.</td></tr>
+              <tr><td><code>magnetic</code></td><td class="type">boolean</td><td class="default">false</td><td>Enables magnetic attraction to nearby elements.</td></tr>
             </tbody>
-         </table>
+          </table>
+        </div>
 
+        <!-- Setters -->
+        <div class="api-table-wrap">
+          <div class="api-table-title">Setters</div>
+          <table class="api-table">
+            <thead>
+              <tr><th>Method</th><th>Parameters</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>setShape(shape)</code></td><td class="type">string</td><td>Switch the cursor shape at runtime.</td></tr>
+              <tr><td><code>setShapeSize(w, h, isPermanent?)</code></td><td class="type">string, string, bool?</td><td>Resize the cursor shape. Set isPermanent to persist after state resets.</td></tr>
+              <tr><td><code>setShapeColor(color, isPermanent?)</code></td><td class="type">string, bool?</td><td>Change cursor fill color.</td></tr>
+              <tr><td><code>setShadowEnabled(bool, isPermanent?)</code></td><td class="type">boolean, bool?</td><td>Show or hide the shadow element.</td></tr>
+              <tr><td><code>setShadowSize(w, h)</code></td><td class="type">string, string</td><td>Resize the shadow blob.</td></tr>
+              <tr><td><code>setShadowColor(hex, alpha?)</code></td><td class="type">string, number?</td><td>Set shadow color and optional opacity.</td></tr>
+              <tr><td><code>setText(text, isPermanent?)</code></td><td class="type">string, bool?</td><td>Embed text inside the cursor.</td></tr>
+              <tr><td><code>setTextColor(color, isPermanent?)</code></td><td class="type">string, bool?</td><td>Set text color.</td></tr>
+              <tr><td><code>setTextWeight(weight, isPermanent?)</code></td><td class="type">string, bool?</td><td>Set font weight of cursor text.</td></tr>
+              <tr><td><code>setTextSize(size, isPermanent?)</code></td><td class="type">string, bool?</td><td>Set font size of cursor text.</td></tr>
+              <tr><td><code>setSpeed(speed)</code></td><td class="type">number</td><td>Adjust fluid interpolation speed (0–1).</td></tr>
+              <tr><td><code>setMaxVelocity(max)</code></td><td class="type">number</td><td>Cap maximum fluid deformation.</td></tr>
+              <tr><td><code>addState(name, config)</code></td><td class="type">string, object</td><td>Register a named state. Chainable. Activated via <code>data-cursor-state</code>.</td></tr>
+              <tr><td><code>destroy()</code></td><td class="type">—</td><td>Remove cursor elements and all event listeners.</td></tr>
+            </tbody>
+          </table>
+        </div>
 
-         <div class="data-attributes__demo">
-            <button
-                  data-proteus-shapeSize="80px"
-                  data-proteus-shapeColor="#fff"
-                  data-proteus-text="Hello"
-                  data-proteus-textColor="#162394"
-                  data-proteus-textSize="25px"
-                  data-proteus-textWeight="500"
-                  data-proteus-shadowIsEnabled="true"
-                  class="data-attributes__demo__button">
-               Hover me
-            </button>
-
-            <p class="demo-caption">
-               <code>data-proteus-shapeSize="80px"</code> <br>
-               <code>data-proteus-shapeColor="#fff"</code> <br>
-
-               <code>data-proteus-text="Hello"</code> <br>
-               <code>data-proteus-textColor="#162394"</code> <br>
-               <code>data-proteus-textSize="25px"</code> <br>
-               <code>data-proteus-textWeight="500"</code> <br>
-
-               <code>data-proteus-shadowIsEnabled="500"</code> <br>
-            </p>
-         </div>
-
-
+        <!-- Data Attributes -->
+        <div class="api-table-wrap">
+          <div class="api-table-title">Data Attributes</div>
+          <table class="api-table">
+            <thead>
+              <tr><th>Attribute</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>data-cursor-state="name"</code></td><td>Activates a registered state on hover. Reverts on mouse leave.</td></tr>
+              <tr><td><code>data-proteus-shapeSize="40px"</code></td><td>Override shape size on hover for this specific element.</td></tr>
+              <tr><td><code>data-proteus-shapeColor="#FF0"</code></td><td>Override shape color on hover for this specific element.</td></tr>
+              <tr><td><code>data-proteus-text="Open"</code></td><td>Display text inside cursor when hovering this element.</td></tr>
+              <tr><td><code>data-proteus-textColor="#fff"</code></td><td>Text color override for this element's hover state.</td></tr>
+              <tr><td><code>data-proteus-textSize="14px"</code></td><td>Text size override for this element's hover state.</td></tr>
+              <tr><td><code>data-proteus-textWeight="700"</code></td><td>Text weight override for this element's hover state.</td></tr>
+              <tr><td><code>data-proteus-shadowIsEnabled="false"</code></td><td>Disable shadow when hovering this element.</td></tr>
+            </tbody>
+          </table>
+        </div>
 
       </div>
-   </section>
+    </div>
+  </section>
 
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+  <footer class="footer">
+    <div class="container">
+      <p class="footer__tagline">Shape-shifting cursors for the modern web.</p>
+      <div class="footer__links">
+        <a href="https://github.com/Shuriken933/proteus-cursor" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.npmjs.com/package/proteuscursor" target="_blank" rel="noopener">npm</a>
+        <a href="https://github.com/Shuriken933/proteus-cursor/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+      </div>
+      <p class="footer__copy">Built by Eros Agostini &nbsp;·&nbsp; Proteus Cursor v1.1.5</p>
+    </div>
+  </footer>
 
-   <script type="module">
-      import ProteusCursor from './proteus-cursor.es.min.js';
+  <!-- ============================================================
+       SCRIPT
+  ============================================================ -->
+  <script type="module">
+    import ProteusCursor from './proteus-cursor.es.js';
 
+    /* ------------------------------------------------------------------
+       TOUCH & REDUCED MOTION DETECTION
+    ------------------------------------------------------------------ */
+    const isTouchDevice = () => window.matchMedia('(hover: none)').matches || ('ontouchstart' in window);
+    const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      let currentCursor = null;
-      let isTransitioning = false;
+    if (isTouchDevice()) {
+      document.getElementById('banner-mobile').classList.add('visible');
+    }
+    if (prefersReducedMotion()) {
+      document.getElementById('banner-motion').classList.add('visible');
+    }
 
-      // destroy
-      function destroyCurrentCursor() {
-         if (isTransitioning) return;
+    /* ------------------------------------------------------------------
+       CURSOR INIT (only on non-touch, non-reduced-motion devices)
+    ------------------------------------------------------------------ */
+    let cursor = null;
+    let currentShape = 'circle';
+    let isPlaygroundMode = false;
 
-         console.log('🔄 Starting cursor transition...');
-         isTransitioning = true;
-
-         if (currentCursor && !currentCursor.isDestroyed) {
-            currentCursor.destroy();
-         }
-         currentCursor = null;
-
-         // Assicurati che tutto sia pulito
-         document.body.style.cursor = '';
-
-         // Reset completo degli elementi
-         const shape = document.getElementById('proteus-cursor-shape');
-         const shadow = document.getElementById('proteus-cursor-shadow');
-
-         if (shape) {
-            shape.style.cssText = '';
-            shape.style.display = 'none';
-            shape.textContent = '';
-         }
-
-         if (shadow) {
-            shadow.style.cssText = '';
-            shadow.style.display = 'none';
-         }
-
-         // Rimuovi tutte le classi proteus dal body
-         document.body.classList.remove('proteus-is-a-fluid', 'proteus-is-a-circle');
-
-         // Aspetta un frame prima di permettere nuove transizioni
-         requestAnimationFrame(() => {
-            isTransitioning = false;
-            console.log('✅ Cursor transition completed');
-         });
-      }
-
-      // create cursor
-      function createDefaultCursor() {
-         if (isTransitioning) return;
-
-         destroyCurrentCursor();
-         setTimeout(() => {
-            document.body.style.cursor = 'auto';
-            updateButtonStates('default');
-            console.log('✅ Default cursor activated');
-         }, 50);
-      }
-      function createCircleCursor() {
-         if (isTransitioning) return;
-
-         destroyCurrentCursor();
-
-         setTimeout(() => {
-            const shape = document.getElementById('proteus-cursor-shape');
-            const shadow = document.getElementById('proteus-cursor-shadow');
-
-            if (shape) {
-               shape.style.display = 'flex';
-               shape.style.opacity = '1';
-            }
-            if (shadow) {
-               shadow.style.display = 'block';
-               shadow.style.opacity = '1';
-            }
-
-            currentCursor = new ProteusCursor({
-               shape: 'circle',
-               shape_size: '10px',
-               shape_color: '#ffffff',
-               hasShadow: true,
-               shadow_delay: '0.3s',
-               shadow_size: '40px',
-               shadow_color: 'rgba(255, 255, 255, 0.5)',
-               magnetic: false,
-               text: '',
-            });
-
-            document.querySelector('#shadowEnabled').checked = true;
-
-            updateButtonStates('circle');
-            setupDemoControls();
-            console.log('✅ Circle cursor activated');
-         }, 50);
-      }
-      function createFluidCursor() {
-         if (isTransitioning) return;
-
-         destroyCurrentCursor();
-
-         setTimeout(() => {
-            const shape = document.getElementById('proteus-cursor-shape');
-            if (shape) {
-               shape.style.display = 'flex';
-               shape.style.opacity = '1';
-            }
-
-            currentCursor = new ProteusCursor({
-               shape: 'fluid',
-               shape_size: '20px',
-            });
-
-            document.querySelector('#shadowEnabled').checked = false;
-            document.querySelector('#shadowEnabled').disabled = true;
-
-            updateButtonStates('fluid');
-            setupDemoControls();
-            console.log('✅ Fluid cursor activated');
-         }, 50);
-      }
-
-
-      // make the create button Active
-      function updateButtonStates(activeType) {
-         const buttons = document.querySelectorAll('.demo__type-shape');
-         buttons.forEach(btn => btn.classList.remove('active'));
-         const activeButton = document.getElementById( activeType === 'default' ? 'btn-kill-proteus' : `btn-create-proteus-${activeType}` );
-         if (activeButton) {
-            activeButton.classList.add('active');
-         }
-      }
-
-      function setupDemoControls() {
-         if (!currentCursor || currentCursor.isDestroyed) return;
-         // implements the controls...
-      }
-
-      // Event listeners buttons
-      document.addEventListener("DOMContentLoaded", () => {
-         updateButtonStates('default');
-
-         document.getElementById('btn-kill-proteus').addEventListener('click', createDefaultCursor);
-         document.getElementById('btn-create-proteus-circle').addEventListener('click', createCircleCursor);
-         document.getElementById('btn-create-proteus-fluid').addEventListener('click', createFluidCursor);
-
-         // Clean before the refresh page
-         window.addEventListener('beforeunload', () => {
-            destroyCurrentCursor();
-         });
-
-         // Clean when the page is changing
-         window.addEventListener('pagehide', () => {
-            destroyCurrentCursor();
-         });
+    if (!isTouchDevice() && !prefersReducedMotion()) {
+      cursor = new ProteusCursor({
+        shape: 'circle',
+        shape_size: '10px',
+        shape_color: '#00D4AA',
+        hasShadow: true,
+        shadow_size: '40px',
+        shadow_color: '#00D4AA',
+        click_animation: 'ripple',
+        click_duration: 350,
       });
 
-      document.addEventListener("DOMContentLoaded", () => {
+      cursor
+        // Hero bait zone
+        .addState('hero-fluid', { shape_size: '24px', shape_color: '#9D6FE8', hasShadow: false })
+        .addState('hero-text', { shape_size: '60px', shape_color: 'rgba(0,212,170,0.1)', text: 'Hello', text_size: '12px', text_color: '#00D4AA' })
+        .addState('hero-cta', { shape_size: '56px', shape_color: 'rgba(255,107,53,0.15)', text: 'Click', text_size: '12px', text_color: '#FF6B35' })
+        // Demo shapes
+        .addState('demo-circle', { shape_size: '20px', shape_color: '#fff', hasShadow: true })
+        .addState('demo-fluid', { shape_size: '28px', shape_color: '#9D6FE8', hasShadow: false })
+        // Click animation boxes
+        .addState('box-scale',  { shape_size: '16px', shape_color: '#5BC8F5' })
+        .addState('box-ripple', { shape_size: '16px', shape_color: '#00D4AA' })
+        .addState('box-none',   { shape_size: '16px', shape_color: '#8BA8B5' })
+        // State machine demo
+        .addState('sm-gallery', { shape_size: '80px', shape_color: 'rgba(255,255,255,0.08)', text: 'Zoom',   text_size: '13px', text_color: '#fff' })
+        .addState('sm-video',   { shape_size: '90px', shape_color: 'rgba(255,255,255,0.1)',  text: '▶ Play', text_size: '12px', hasShadow: false })
+        .addState('sm-cta',     { shape_size: '70px', shape_color: 'rgba(255,107,53,0.2)',   text: 'Click',  text_size: '13px', text_weight: '600', text_color: '#FF6B35' })
+        // Navbar links
+        .addState('nav-link', { shape_size: '8px', shape_color: '#00D4AA', hasShadow: false });
 
+      // Expose globally for DevTools usage
+      window.cursor = cursor;
 
-         /* -------------------------------------------------------------------------------- */
-         /* ! Buttons for initialize Proteus Cursor (2 types: default, circle, fluid) */
-         /* -------------------------------------------------------------------------------- */
+      /* ------------------------------------------------------------------
+         CLICK ANIMATION BOXES — switch animation on mouseenter
+      ------------------------------------------------------------------ */
+      const boxScale  = document.getElementById('box-scale');
+      const boxRipple = document.getElementById('box-ripple');
+      const boxNone   = document.getElementById('box-none');
 
-         document.querySelector('.cta-button').addEventListener('click', () => {
-            const target = document.querySelector('.features');
-            if (target) {
-               target.scrollIntoView({ behavior: 'smooth' });
-            }
-         });
+      boxScale.addEventListener('mouseenter', () => {
+        if (cursor) cursor.click_animation = 'scale';
+      });
+      boxRipple.addEventListener('mouseenter', () => {
+        if (cursor) cursor.click_animation = 'ripple';
+      });
+      boxNone.addEventListener('mouseenter', () => {
+        if (cursor) cursor.click_animation = 'none';
+      });
+      boxScale.addEventListener('mouseleave', () => {
+        if (cursor && !isPlaygroundMode) cursor.click_animation = 'ripple';
+      });
+      boxRipple.addEventListener('mouseleave', () => {
+        if (cursor && !isPlaygroundMode) cursor.click_animation = 'ripple';
+      });
+      boxNone.addEventListener('mouseleave', () => {
+        if (cursor && !isPlaygroundMode) cursor.click_animation = 'ripple';
+      });
 
+      /* ------------------------------------------------------------------
+         HERO — active state label
+      ------------------------------------------------------------------ */
+      const heroStateName = document.getElementById('hero-state-name');
+      const baitItems = document.querySelectorAll('.bait-item');
 
-         /* -------------------------------------------------------------------------------- */
-         /* ! DEMO */
-         /* -------------------------------------------------------------------------------- */
+      baitItems.forEach(item => {
+        const stateName = item.getAttribute('data-cursor-state');
+        item.addEventListener('mouseenter', () => {
+          if (heroStateName) heroStateName.textContent = stateName;
+        });
+        item.addEventListener('mouseleave', () => {
+          if (heroStateName) heroStateName.textContent = '—';
+        });
+      });
 
-         /* ! - shape */
-         document.querySelector('#cursorSize').addEventListener('input', e => {
-            const size = e.target.value + 'px';
-            document.querySelector('#cursorSizeNumber').value = e.target.value;
-            currentCursor.setShapeSize(size, size, true)
-         })
-         document.querySelector('#cursorSizeNumber').addEventListener('input', e => {
-            const size = e.target.value + 'px';
-            document.querySelector('#cursorSize').value = e.target.value;
-            currentCursor.setShapeSize(size, size, true)
-         })
-         document.querySelector('#cursorColor').addEventListener('input', e => {
-            const color = e.target.value;
-            e.target.style.backgroundColor = color;
-            currentCursor.setShapeColor(color, true)
-         })
+      /* ------------------------------------------------------------------
+         STATE MACHINE DEMO — active state label
+      ------------------------------------------------------------------ */
+      const smActiveName = document.getElementById('sm-active-name');
+      const smCards = document.querySelectorAll('.sm-card');
 
-         /* ! - shadow */
-         document.querySelector('#shadowEnabled').addEventListener('input', e => {
-            const isEnabled = e.target.checked;
-            console.log("event listener isEnabled: "); console.log(isEnabled);
-            currentCursor.setShadowEnabled(isEnabled)
-         })
-         document.querySelector('#shadowSize').addEventListener('input', e => {
-            const size = e.target.value + 'px';
-            currentCursor.setShadowSize(size, size)
-         })
+      smCards.forEach(card => {
+        const stateName = card.getAttribute('data-cursor-state');
+        card.addEventListener('mouseenter', () => {
+          if (smActiveName) smActiveName.textContent = stateName;
+        });
+        card.addEventListener('mouseleave', () => {
+          if (smActiveName) smActiveName.textContent = '—';
+        });
+      });
 
-         let shadowColor = '#ffffff';
-         let shadowAlpha = 0.5;
+      /* ------------------------------------------------------------------
+         SHAPES TOGGLE BUTTON
+      ------------------------------------------------------------------ */
+      const shapeToggleBtn = document.getElementById('shape-toggle-btn');
+      shapeToggleBtn.addEventListener('click', () => {
+        if (!cursor) return;
+        if (currentShape === 'circle') {
+          cursor.setShape('fluid');
+          currentShape = 'fluid';
+          shapeToggleBtn.textContent = 'Switch to circle mode';
+        } else {
+          cursor.setShape('circle');
+          currentShape = 'circle';
+          shapeToggleBtn.textContent = 'Switch to fluid mode';
+        }
+      });
 
-         document.querySelector('#shadowColor').addEventListener('input', e => {
-            shadowColor = e.target.value;
-            e.target.style.backgroundColor = shadowColor;
-            currentCursor.setShadowColor(shadowColor)
-         })
-         document.querySelector('#shadowAlpha').addEventListener('input', e => {
-            shadowAlpha = parseFloat(e.target.value);
-            currentCursor.setShadowColor(shadowColor, shadowAlpha);
-         });
+    } // end non-touch/non-reduced-motion block
 
-         /* ! - text */
-         document.querySelector('#textContent').addEventListener('input', e => {
-            const text = e.target.value;
-            currentCursor.setText(text, true)
-         });
-         document.querySelector('#textSize').addEventListener('input', e => {
-            const textSize = e.target.value + 'px';
-            currentCursor.setTextSize(textSize, true)
-         });
-         document.querySelector('#textColor').addEventListener('input', e => {
-            const color = e.target.value;
-            currentCursor.setTextColor(color, true)
-         });
-         document.querySelector('#textWeight').addEventListener('input', e => {
-            const weight = e.target.value;
-            currentCursor.setTextWeight(weight, true)
-         })
+    /* ------------------------------------------------------------------
+       NAV SCROLL EFFECT
+    ------------------------------------------------------------------ */
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 40) {
+        nav.classList.add('scrolled');
+      } else {
+        nav.classList.remove('scrolled');
+      }
+    }, { passive: true });
 
-         //region 🔹 fluid cursor settings
-         document.querySelector('#speedNumber').addEventListener('input', e => {
-            const speed = e.target.value;
-            currentCursor.setSpeed(speed)
-         })
-         document.querySelector('#velocityNumber').addEventListener('input', e => {
-            const maxVelocity = e.target.value;
-            currentCursor.setMaxVelocity(maxVelocity)
-         })
-         //endregion
+    /* ------------------------------------------------------------------
+       TOAST UTILITY
+    ------------------------------------------------------------------ */
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
 
+    /* ------------------------------------------------------------------
+       COPY HELPERS
+    ------------------------------------------------------------------ */
+    function copyText(text, label) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(label || 'Copied to clipboard!');
+      }).catch(() => {
+        showToast('Copy failed. Please copy manually.');
+      });
+    }
 
-      }); // end DOMContentLoaded
+    document.getElementById('nav-npm-copy').addEventListener('click', () => {
+      copyText('npm install proteuscursor', 'Install command copied!');
+    });
+    document.getElementById('hero-npm-copy').addEventListener('click', () => {
+      copyText('npm install proteuscursor', 'Install command copied!');
+    });
 
-   </script>
+    /* ------------------------------------------------------------------
+       PLAYGROUND
+    ------------------------------------------------------------------ */
+    const PRESETS = {
+      ghost:   { shape: 'fluid',  shape_size: '30px', shape_color: 'rgba(200,220,255,0.25)', hasShadow: false, click_animation: 'ripple', shadow_color: '#ffffff', shadow_size: '40px', shadow_alpha: 60, text: '', text_size: '12', text_weight: '400' },
+      neon:    { shape: 'circle', shape_size: '14px', shape_color: '#FF006E', hasShadow: true, shadow_color: '#FF006E', shadow_size: '50px', click_animation: 'ripple', shadow_alpha: 70, text: '', text_size: '12', text_weight: '400' },
+      inkdrop: { shape: 'fluid',  shape_size: '22px', shape_color: '#1a1a2e', hasShadow: false, click_animation: 'ripple', shadow_color: '#ffffff', shadow_size: '40px', shadow_alpha: 60, text: '', text_size: '12', text_weight: '400' },
+      chrome:  { shape: 'circle', shape_size: '16px', shape_color: '#E8F4F8', hasShadow: true, shadow_color: '#5BC8F5', shadow_size: '40px', click_animation: 'scale', shadow_alpha: 60, text: '', text_size: '12', text_weight: '400' },
+      minimal: { shape: 'circle', shape_size: '6px',  shape_color: '#fff', hasShadow: false, click_animation: 'none', shadow_color: '#ffffff', shadow_size: '40px', shadow_alpha: 60, text: '', text_size: '12', text_weight: '400' },
+    };
 
+    // Current playground state
+    const pgState = {
+      shape: 'circle',
+      shape_size: '10',
+      shape_color: '#00D4AA',
+      hasShadow: true,
+      shadow_size: '40',
+      shadow_color: '#00D4AA',
+      shadow_alpha: 60,
+      click_animation: 'scale',
+      text: '',
+      text_size: '12',
+      text_weight: '400',
+    };
 
+    function pgUpdateCode() {
+      const alpha = (pgState.shadow_alpha / 100).toFixed(2);
+      const shadowColorHex = pgState.shadow_color;
+      const textLine = pgState.text ? `\n  <span class="sh-prop">text</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.text}'</span><span class="sh-punct">,</span>` : '';
+      const textSizeLine = pgState.text ? `\n  <span class="sh-prop">text_size</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.text_size}px'</span><span class="sh-punct">,</span>` : '';
+      const textWeightLine = pgState.text_weight !== '400' ? `\n  <span class="sh-prop">text_weight</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.text_weight}'</span><span class="sh-punct">,</span>` : '';
+      const shadowLines = pgState.hasShadow ? `\n  <span class="sh-prop">hasShadow</span><span class="sh-punct">:</span> <span class="sh-keyword">true</span><span class="sh-punct">,</span>\n  <span class="sh-prop">shadow_size</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.shadow_size}px'</span><span class="sh-punct">,</span>\n  <span class="sh-prop">shadow_color</span><span class="sh-punct">:</span> <span class="sh-string">'${shadowColorHex}'</span><span class="sh-punct">,</span>` : `\n  <span class="sh-prop">hasShadow</span><span class="sh-punct">:</span> <span class="sh-keyword">false</span><span class="sh-punct">,</span>`;
+
+      const html = `<span class="sh-keyword">const</span> <span class="sh-prop">cursor</span> <span class="sh-punct">=</span> <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span><span class="sh-punct">({</span>\n  <span class="sh-prop">shape</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.shape}'</span><span class="sh-punct">,</span>\n  <span class="sh-prop">shape_size</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.shape_size}px'</span><span class="sh-punct">,</span>\n  <span class="sh-prop">shape_color</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.shape_color}'</span><span class="sh-punct">,</span>${shadowLines}\n  <span class="sh-prop">click_animation</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.click_animation}'</span><span class="sh-punct">,</span>${textLine}${textSizeLine}${textWeightLine}\n<span class="sh-punct">});</span>`;
+
+      document.getElementById('pg-code-output').innerHTML = html;
+    }
+
+    function pgApplyToCursor() {
+      if (!cursor) return;
+      const sizeStr = pgState.shape_size + 'px';
+      cursor.setShapeColor(pgState.shape_color, true);
+      cursor.setShapeSize(sizeStr, sizeStr, true);
+      cursor.setShadowEnabled(pgState.hasShadow, true);
+      if (pgState.hasShadow) {
+        const sz = pgState.shadow_size + 'px';
+        cursor.setShadowSize(sz, sz);
+        cursor.setShadowColor(pgState.shadow_color, pgState.shadow_alpha / 100);
+      }
+      cursor.click_animation = pgState.click_animation;
+      cursor.setText(pgState.text, true);
+      cursor.setTextSize(pgState.text ? pgState.text_size + 'px' : '', true);
+      cursor.setTextWeight(pgState.text_weight, true);
+    }
+
+    function pgSync() {
+      pgApplyToCursor();
+      pgUpdateCode();
+    }
+
+    // Shape toggle
+    window.pgSetShape = function(shape) {
+      pgState.shape = shape;
+      document.getElementById('pg-shape-circle').classList.toggle('active', shape === 'circle');
+      document.getElementById('pg-shape-fluid').classList.toggle('active', shape === 'fluid');
+      if (cursor) cursor.setShape(shape);
+      currentShape = shape;
+      isPlaygroundMode = true;
+      pgUpdateCode();
+    };
+
+    // Click animation
+    window.pgSetClickAnim = function(val) {
+      pgState.click_animation = val;
+      pgSync();
+    };
+
+    // Size
+    window.pgSetSize = function(val) {
+      pgState.shape_size = val;
+      document.getElementById('pg-size-val').textContent = val + 'px';
+      pgSync();
+    };
+
+    // Color
+    window.pgSetColor = function(val) {
+      pgState.shape_color = val;
+      document.getElementById('pg-color-val').textContent = val;
+      pgSync();
+    };
+
+    // Shadow enabled
+    window.pgSetShadowEnabled = function(checked) {
+      pgState.hasShadow = checked;
+      pgSync();
+    };
+
+    // Shadow size
+    window.pgSetShadowSize = function(val) {
+      pgState.shadow_size = val;
+      document.getElementById('pg-shadow-size-val').textContent = val + 'px';
+      pgSync();
+    };
+
+    // Shadow color
+    window.pgSetShadowColor = function(val) {
+      pgState.shadow_color = val;
+      document.getElementById('pg-shadow-color-val').textContent = val;
+      pgSync();
+    };
+
+    // Shadow alpha
+    window.pgSetShadowAlpha = function(val) {
+      pgState.shadow_alpha = parseInt(val, 10);
+      document.getElementById('pg-shadow-alpha-val').textContent = (val / 100).toFixed(2);
+      pgSync();
+    };
+
+    // Text content
+    window.pgSetText = function(val) {
+      pgState.text = val;
+      pgSync();
+    };
+
+    // Text size
+    window.pgSetTextSize = function(val) {
+      pgState.text_size = val;
+      document.getElementById('pg-text-size-val').textContent = val + 'px';
+      pgSync();
+    };
+
+    // Text weight
+    window.pgSetTextWeight = function(val) {
+      pgState.text_weight = val;
+      ['400','600','800'].forEach(w => {
+        document.getElementById('pg-tw-' + w).classList.toggle('active', w === val);
+      });
+      pgSync();
+    };
+
+    // Apply preset
+    function applyPreset(name) {
+      const p = PRESETS[name];
+      if (!p) return;
+
+      pgState.shape          = p.shape;
+      pgState.shape_size     = parseInt(p.shape_size, 10).toString();
+      pgState.shape_color    = p.shape_color;
+      pgState.hasShadow      = p.hasShadow;
+      pgState.shadow_color   = p.shadow_color || '#ffffff';
+      pgState.shadow_size    = parseInt(p.shadow_size || '40', 10).toString();
+      pgState.shadow_alpha   = p.shadow_alpha || 60;
+      pgState.click_animation = p.click_animation;
+      pgState.text           = p.text || '';
+      pgState.text_size      = p.text_size || '12';
+      pgState.text_weight    = p.text_weight || '400';
+
+      // Update UI controls
+      document.getElementById('pg-shape-circle').classList.toggle('active', pgState.shape === 'circle');
+      document.getElementById('pg-shape-fluid').classList.toggle('active', pgState.shape === 'fluid');
+
+      const clickRadios = document.querySelectorAll('input[name="pg-click"]');
+      clickRadios.forEach(r => { r.checked = r.value === pgState.click_animation; });
+
+      document.getElementById('pg-size').value        = pgState.shape_size;
+      document.getElementById('pg-size-val').textContent = pgState.shape_size + 'px';
+
+      document.getElementById('pg-color').value       = /^#[0-9a-f]{6}$/i.test(pgState.shape_color) ? pgState.shape_color : '#00D4AA';
+      document.getElementById('pg-color-val').textContent = pgState.shape_color;
+
+      document.getElementById('pg-shadow-on').checked = pgState.hasShadow;
+      document.getElementById('pg-shadow-size').value = pgState.shadow_size;
+      document.getElementById('pg-shadow-size-val').textContent = pgState.shadow_size + 'px';
+      document.getElementById('pg-shadow-color').value = /^#[0-9a-f]{6}$/i.test(pgState.shadow_color) ? pgState.shadow_color : '#ffffff';
+      document.getElementById('pg-shadow-color-val').textContent = pgState.shadow_color;
+      document.getElementById('pg-shadow-alpha').value = pgState.shadow_alpha;
+      document.getElementById('pg-shadow-alpha-val').textContent = (pgState.shadow_alpha / 100).toFixed(2);
+
+      document.getElementById('pg-text').value        = pgState.text;
+      document.getElementById('pg-text-size').value   = pgState.text_size;
+      document.getElementById('pg-text-size-val').textContent = pgState.text_size + 'px';
+      ['400','600','800'].forEach(w => {
+        document.getElementById('pg-tw-' + w).classList.toggle('active', w === pgState.text_weight);
+      });
+
+      if (cursor) cursor.setShape(pgState.shape);
+      currentShape = pgState.shape;
+      isPlaygroundMode = true;
+
+      pgSync();
+
+      // Highlight active preset
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-preset') === name);
+      });
+    }
+
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => applyPreset(btn.getAttribute('data-preset')));
+    });
+
+    // Copy playground code
+    window.pgCopyCode = function() {
+      const codeEl = document.getElementById('pg-code-output');
+      const plainText = codeEl.innerText || codeEl.textContent;
+      navigator.clipboard.writeText(plainText).then(() => {
+        const btn = document.getElementById('pg-copy-btn');
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        showToast('Code copied to clipboard!');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      }).catch(() => {
+        showToast('Copy failed. Please copy manually.');
+      });
+    };
+
+    // Initialize playground code display
+    pgUpdateCode();
+
+    /* ------------------------------------------------------------------
+       EASTER EGG — DevTools Console
+    ------------------------------------------------------------------ */
+    console.log('%c🌊 Proteus Cursor', 'font-size:24px; color:#00D4AA; font-weight:bold;');
+    console.log('%cHello, curious developer. You found the debug state.', 'color:#8BA8B5');
+    console.log('%cTry: cursor.setShape("fluid") in the console.', 'color:#9D6FE8');
+
+  </script>
 </body>
 </html>

@@ -19,7 +19,7 @@
  *
  * © 2025 Eros Agostini. All rights reserved.
  */
-class x {
+class S {
   //region 🔹 initialization
   // internal state
   velocity = 0;
@@ -33,7 +33,7 @@ class x {
   prevMouseY = 0;
   //region 🏗️ constructor
   constructor(t = {}) {
-    this.testMode = !1, this.shape = t.shape || "default", this.shape_size = t.shape_size || "10px", this.shape_color = t.shape_color || "#fff", this.hasShadow = t.hasShadow ?? !0, this.hasShadow ? (this.shadow_delay = t.shadow_delay || "0.3s", this.shadow_size = t.shadow_size || "40px", this.shadow_color = t.shadow_color || "#ffffff") : (this.shadow_delay = "0s", document.querySelector(".proteus-cursor-shadow").style.display = "none"), this.text = "", this.text_color = "", this.text_weight = "", this.text_size = "", this.speed = 0.9, this.maxVelocity = 10, this.isMagnetic = !1, this.eventListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.dataAttributeEvents();
+    this.testMode = !1, this.shape = t.shape || "default", this.shape_size = t.shape_size || "10px", this.shape_color = t.shape_color || "#fff", this.hasShadow = t.hasShadow ?? !0, this.shadow_delay = this.hasShadow ? t.shadow_delay || "0.3s" : "0s", this.shadow_size = t.shadow_size || "40px", this.shadow_color = t.shadow_color || "#ffffff", this.text = "", this.text_color = "", this.text_weight = "", this.text_size = "", this.speed = 0.9, this.maxVelocity = 10, this.isMagnetic = t.magnetic ?? !1, this.click_animation = t.click_animation || "scale", this.click_duration = t.click_duration ?? 300, this.states = {}, this.eventListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.hasShadow || (this.$shadow.style.display = "none"), this.dataAttributeEvents(), this._initClickAnimation();
   }
   //endregion
   init() {
@@ -64,7 +64,7 @@ class x {
     return this.animationIds.push(e), e;
   }
   setShape(t) {
-    switch (document.querySelector("body").classList.remove("proteus-is-a-fluid"), document.querySelector("body").classList.remove("proteus-is-a-circle"), console.log("setShape executed"), this.shape = t, this.shape) {
+    switch (document.querySelector("body").classList.remove("proteus-is-a-fluid"), document.querySelector("body").classList.remove("proteus-is-a-circle"), this.shape = t, this.shape) {
       case "default":
         break;
       case "circle":
@@ -74,7 +74,6 @@ class x {
         this.setShape__fluid();
         break;
     }
-    $(this.shape);
   }
   //endregion
   /* -------------------------------------------------------------------------------- */
@@ -128,7 +127,7 @@ class x {
     if (t > 0.01) {
       const e = this.mouseX - this.cursorX, s = this.mouseY - this.cursorY, i = Math.sqrt(e * e + s * s);
       if (i > 0) {
-        const o = e / i, h = s / i, r = 1 + t * 1.5, n = 1 - t * 0.3, d = o * o * (r - 1) + 1, c = o * h * (r - 1), p = o * h * (r - 1), y = h * h * (r - 1) + 1, l = -h, u = o, f = d + l * l * (n - 1), m = c + l * u * (n - 1), _ = p + l * u * (n - 1), b = y + u * u * (n - 1);
+        const o = e / i, h = s / i, a = 1 + t * 1.5, r = 1 - t * 0.3, c = o * o * (a - 1) + 1, u = o * h * (a - 1), p = o * h * (a - 1), y = h * h * (a - 1) + 1, l = -h, d = o, f = c + l * l * (r - 1), m = u + l * d * (r - 1), _ = p + l * d * (r - 1), b = y + d * d * (r - 1);
         this.$shape && (this.$shape.style.transform = `matrix(${f}, ${m}, ${_}, ${b}, 0, 0)`);
       } else this.$shape && (this.$shape.style.transform = "matrix(1, 0, 0, 1, 0, 0)");
     } else this.$shape && (this.$shape.style.transform = "matrix(1, 0, 0, 1, 0, 0)");
@@ -147,7 +146,7 @@ class x {
   //endregion
   //region ❌ destroy Proteus
   destroy() {
-    console.log("🔴 Destroying ProteusCursor instance..."), this.isDestroyed = !0, this.animationIds.forEach((e) => {
+    this.isDestroyed = !0, this.animationIds.forEach((e) => {
       cancelAnimationFrame(e);
     }), this.animationIds = [], this.intervals.forEach((e) => clearInterval(e)), this.timeouts.forEach((e) => clearTimeout(e)), this.intervals = [], this.timeouts = [], this.eventListeners.forEach(({ element: e, event: s, handler: i, options: o }) => {
       try {
@@ -157,26 +156,31 @@ class x {
       }
     }), this.eventListeners = [], document.body.style.cursor = "";
     const t = document.querySelector("body");
-    t && (t.classList.remove("proteus-is-a-fluid"), t.classList.remove("proteus-is-a-circle")), this.$shape && (this.$shape.style.cssText = "", this.$shape.style.display = "none", this.$shape.style.opacity = "0", this.$shape.style.transform = "", this.$shape.style.left = "", this.$shape.style.top = "", this.$shape.style.width = "", this.$shape.style.height = "", this.$shape.style.backgroundColor = "", this.$shape.style.borderRadius = "", this.$shape.style.boxShadow = "", this.$shape.textContent = ""), this.$shadow && (this.$shadow.style.cssText = "", this.$shadow.style.display = "none", this.$shadow.style.opacity = "0", this.$shadow.style.transform = "", this.$shadow.style.left = "", this.$shadow.style.top = "", this.$shadow.style.width = "", this.$shadow.style.height = "", this.$shadow.style.backgroundColor = ""), this.$shape = null, this.$shadow = null, this.boundMouseMove = null, this.boundMouseEnter = null, this.boundMouseLeave = null, this.boundAnimateCircle = null, this.boundAnimateFluid = null, this.velocity = 0, this._x = 0, this._y = 0, this.mouseX = 0, this.mouseY = 0, this.cursorX = 0, this.cursorY = 0, this.prevMouseX = 0, this.prevMouseY = 0, this.velocityInitialized = !1, console.log("✅ ProteusCursor instance completely destroyed");
+    t && (t.classList.remove("proteus-is-a-fluid"), t.classList.remove("proteus-is-a-circle")), this.$shape && (this.$shape.style.cssText = "", this.$shape.style.display = "none", this.$shape.style.opacity = "0", this.$shape.style.transform = "", this.$shape.style.left = "", this.$shape.style.top = "", this.$shape.style.width = "", this.$shape.style.height = "", this.$shape.style.backgroundColor = "", this.$shape.style.borderRadius = "", this.$shape.style.boxShadow = "", this.$shape.textContent = ""), this.$shadow && (this.$shadow.style.cssText = "", this.$shadow.style.display = "none", this.$shadow.style.opacity = "0", this.$shadow.style.transform = "", this.$shadow.style.left = "", this.$shadow.style.top = "", this.$shadow.style.width = "", this.$shadow.style.height = "", this.$shadow.style.backgroundColor = ""), this.$shape = null, this.$shadow = null, this.boundMouseMove = null, this.boundMouseEnter = null, this.boundMouseLeave = null, this.boundAnimateCircle = null, this.boundAnimateFluid = null, this.velocity = 0, this._x = 0, this._y = 0, this.mouseX = 0, this.mouseY = 0, this.cursorX = 0, this.cursorY = 0, this.prevMouseX = 0, this.prevMouseY = 0, this.velocityInitialized = !1;
   }
   //endregion
   /* -------------------------------------------------------------------------------- */
   //region 🏷️ Setters
   /* -------------------------------------------------------------------------------- */
   setShapeSize(t, e, s = !1) {
-    console.log("setShapeSize executed"), S(this), s ? (this.shape_size = t || "20px", this.shadow_size = e || "20px", this.$shape.style.width = t || "20px", this.$shape.style.height = e || "20px") : (this.$shape.style.width = t || "20px", this.$shape.style.height = e || "20px");
+    s ? (this.shape_size = t || "20px", this.shadow_size = e || "20px", this.$shape.style.width = t || "20px", this.$shape.style.height = e || "20px") : (this.$shape.style.width = t || "20px", this.$shape.style.height = e || "20px");
   }
   setShapeColor(t, e = !1) {
     e ? (this.shape_color = t, this.$shape.style.backgroundColor = t) : this.$shape.style.backgroundColor = t;
   }
   setShadowEnabled(t, e = !1) {
-    this.shape === "circle" ? e ? (this.hasShadow = t, this.hasShadow ? this.$shadow.style.display = "block" : this.$shadow.style.display = "none") : t ? this.$shadow.style.display = "block" : this.$shadow.style.display = "none" : this.shape === "fluid" && e && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`);
+    if (this.shape === "circle")
+      e ? (this.hasShadow = t, this.hasShadow ? this.$shadow.style.display = "block" : this.$shadow.style.display = "none") : t ? this.$shadow.style.display = "block" : this.$shadow.style.display = "none";
+    else if (this.shape === "fluid") {
+      const s = t ? `0 0 ${this.shadow_size} ${this.shadow_color}` : "none";
+      e && (this.hasShadow = t), this.$shape.style.boxShadow = s;
+    }
   }
   setShadowSize(t, e) {
     this.$shadow.style.width = t || "20px", this.$shadow.style.height = e || "20px";
   }
   setShadowColor(t, e = 0.5) {
-    const s = w(t, e);
+    const s = x(t, e);
     this.$shadow.style.backgroundColor = s;
   }
   setText(t, e = !1) {
@@ -199,6 +203,75 @@ class x {
   }
   //endregion
   /* -------------------------------------------------------------------------------- */
+  //region 🖱️ Click Animation
+  /* -------------------------------------------------------------------------------- */
+  _initClickAnimation() {
+    if (this.click_animation === "none") return;
+    const t = (e) => {
+      this.isDestroyed || (this.click_animation === "scale" && this._clickScale(), this.click_animation === "ripple" && this._clickRipple(e));
+    };
+    this.addEventListenerTracked(document, "mousedown", t);
+  }
+  _clickScale() {
+    if (!this.$shape) return;
+    const t = this.click_duration;
+    this.$shape.style.transition = `transform ${t / 2}ms cubic-bezier(.215,.61,.355,1)`, this.$shape.style.transform = "translate(-50%, -50%) scale(0.6)";
+    const e = setTimeout(() => {
+      this.isDestroyed || !this.$shape || (this.$shape.style.transform = "translate(-50%, -50%) scale(1)");
+    }, t / 2);
+    this.timeouts.push(e);
+  }
+  _clickRipple(t) {
+    const e = document.createElement("div");
+    e.className = "proteus-ripple";
+    const s = parseInt(this.shape_size) || 10;
+    e.style.cssText = `
+         position: fixed;
+         left: ${t.clientX}px;
+         top: ${t.clientY}px;
+         width: ${s}px;
+         height: ${s}px;
+         border-radius: 50%;
+         background: ${this.shape_color};
+         opacity: 0.6;
+         pointer-events: none;
+         z-index: 9999999998;
+         transform: translate(-50%, -50%) scale(1);
+         transition: transform ${this.click_duration}ms ease-out, opacity ${this.click_duration}ms ease-out;
+      `, document.body.appendChild(e), requestAnimationFrame(() => {
+      e.style.transform = "translate(-50%, -50%) scale(6)", e.style.opacity = "0";
+    });
+    const i = setTimeout(() => e.remove(), this.click_duration);
+    this.timeouts.push(i);
+  }
+  //endregion
+  /* -------------------------------------------------------------------------------- */
+  //region 🔁 State Machine
+  /* -------------------------------------------------------------------------------- */
+  /**
+   * Register a named cursor state. Elements with data-cursor-state="name"
+   * will activate it on mouseenter and restore defaults on mouseleave.
+   */
+  addState(t, e = {}) {
+    return this.states[t] = e, this._bindStateElements(t), this;
+  }
+  removeState(t) {
+    return delete this.states[t], this;
+  }
+  _applyState(t) {
+    const e = this.states[t];
+    e && (e.shape_size !== void 0 && this.setShapeSize(e.shape_size, e.shape_size), e.shape_color !== void 0 && this.setShapeColor(e.shape_color), e.hasShadow !== void 0 && this.setShadowEnabled(e.hasShadow), e.shadow_size !== void 0 && this.setShadowSize(e.shadow_size, e.shadow_size), e.text !== void 0 && this.setText(e.text), e.text_color !== void 0 && this.setTextColor(e.text_color), e.text_size !== void 0 && this.setTextSize(e.text_size), e.text_weight !== void 0 && this.setTextWeight(e.text_weight));
+  }
+  _resetState() {
+    this.setShapeSize(this.shape_size, this.shape_size), this.setShapeColor(this.shape_color), this.setShadowEnabled(this.hasShadow), this.setText(this.text), this.setTextColor(this.text_color), this.setTextSize(this.text_size), this.setTextWeight(this.text_weight);
+  }
+  _bindStateElements(t) {
+    this.isDestroyed || document.querySelectorAll(`[data-cursor-state="${t}"]`).forEach((e) => {
+      this.addEventListenerTracked(e, "mouseenter", () => this._applyState(t)), this.addEventListenerTracked(e, "mouseleave", () => this._resetState());
+    });
+  }
+  //endregion
+  /* -------------------------------------------------------------------------------- */
   //region ✨ Data Attribute
   /* -------------------------------------------------------------------------------- */
   dataAttributeEvents() {
@@ -206,8 +279,8 @@ class x {
       "[data-proteus-shapeSize], [data-proteus-shapeColor], [data-proteus-text], [data-proteus-textColor], [data-proteus-textSize], [data-proteus-textWeight]"
     ).forEach((t) => {
       t.addEventListener("mouseenter", () => {
-        const e = t.getAttribute("data-proteus-shapeSize"), s = t.getAttribute("data-proteus-shapeColor"), i = t.getAttribute("data-proteus-text"), o = t.getAttribute("data-proteus-textColor"), h = t.getAttribute("data-proteus-textSize"), r = t.getAttribute("data-proteus-textWeight"), n = t.getAttribute("data-proteus-shadowIsEnabled");
-        e && this.setShapeSize(e, e), s && this.setShapeColor(s), i && this.setText(i), o && this.setTextColor(o), h && this.setTextSize(h), r && this.setTextWeight(r), n && this.setShadowEnabled(!0);
+        const e = t.getAttribute("data-proteus-shapeSize"), s = t.getAttribute("data-proteus-shapeColor"), i = t.getAttribute("data-proteus-text"), o = t.getAttribute("data-proteus-textColor"), h = t.getAttribute("data-proteus-textSize"), a = t.getAttribute("data-proteus-textWeight"), r = t.getAttribute("data-proteus-shadowIsEnabled");
+        e && this.setShapeSize(e, e), s && this.setShapeColor(s), i && this.setText(i), o && this.setTextColor(o), h && this.setTextSize(h), a && this.setTextWeight(a), r && this.setShadowEnabled(!0);
       }), t.addEventListener("mouseleave", () => {
         this.setShapeSize(this.shape_size, this.shape_size), this.setShapeColor(this.shape_color), this.setText(this.text), this.setTextColor(this.text_color), this.setTextSize(this.text_size), this.setTextWeight(this.text_weight);
       });
@@ -253,16 +326,10 @@ class x {
     this.testMode = !1, document.querySelector("#proteus-button-test").classList.remove("active");
   }
 }
-function $(a) {
-  console.log("This is the type: ", a);
-}
-function w(a, t = 1) {
-  const e = parseInt(a.slice(1, 3), 16), s = parseInt(a.slice(3, 5), 16), i = parseInt(a.slice(5, 7), 16);
+function x(n, t = 1) {
+  const e = parseInt(n.slice(1, 3), 16), s = parseInt(n.slice(3, 5), 16), i = parseInt(n.slice(5, 7), 16);
   return `rgba(${e}, ${s}, ${i}, ${t})`;
 }
-function S(a) {
-  console.log(a);
-}
 export {
-  x as default
+  S as default
 };
