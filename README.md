@@ -14,11 +14,11 @@ npm i proteuscursor
 ```
 
 ## 2) 📦 Import Files
-There are two different import style
+There are two different import styles.
 
 - ### 🧪 Without bundler
     Ideal for simple projects
-    ```
+    ```html
     <!-- Add minified CSS -->
     <link rel="stylesheet" href="dist/proteus-cursor.min.css" />
 
@@ -28,22 +28,22 @@ There are two different import style
     <script>
         // Global initialization
         const cursor = new ProteusCursor({
-        // proteus options
-    });
+            // proteus options
+        });
     </script>
     ```
 
 - ### 🧪 With bundler
-    Ideal for modular projects with Vite, Webpack, Nuxt, ecc.
-    #### 📁 1. install with npm
+    Ideal for modular projects with Vite, Webpack, Nuxt, etc.
+    #### 📁 1. Install with npm
     ```bash
     npm install proteuscursor
     ```
 
     #### ✍️ 2. Import in your JS modules
-    ```
+    ```js
     import ProteusCursor from 'proteuscursor';
-    import 'proteuscursor/style'; // importa lo stile CSS minificato
+    import 'proteuscursor/style'; // import minified CSS
     
     const cursor = new ProteusCursor({
       // proteus options
@@ -64,7 +64,7 @@ npm install proteuscursor
 
 ```jsx
 import { useProteusCursor } from 'proteuscursor/react';
-import 'proteuscursor/style';
+import 'proteuscursor/style'; // import minified CSS
 
 export default function App() {
   const cursor = useProteusCursor({
@@ -176,45 +176,46 @@ const cursor = new ProteusCursor(ProteusCursor.getPreset('ghost'));
 
 ---
 
-## 5) ⚙️ Proteus options
+## 5) ⚙️ Constructor Options
 There are a lot of options ✨ for Proteus.
-First of all you can set a cursor type:
-- circle
-- fluid
+First of all you can set a cursor mode:
+- `circle`
+- `fluid`
+
 ##### 🔵 Circle Cursor
-```
-currentCursor = new ProteusCursor({
-               shape: 'circle',
-               shape_size: '10px',
-               shape_color: '#ffffff',
-               hasShadow: true,
-               shadow_delay: '0.3s',
-               shadow_size: '40px',
-               shadow_color: 'rgba(255, 255, 255, 0.5)',
-               magnetic: false,
-               text: '',
-            });
+```js
+const cursor = new ProteusCursor({
+    shape: 'circle',
+    shape_size: '10px',
+    shape_color: '#ffffff',
+    hasShadow: true,
+    shadow_delay: '0.3s',
+    shadow_size: '40px',
+    shadow_color: 'rgba(255, 255, 255, 0.5)',
+    magnetic: false,
+    text: '',
+});
 ```
 
 ##### 🌊 Fluid Cursor
-```
-currentCursor = new ProteusCursor({
-               shape: 'fluid',
-               shape_size: '10px',
-               shape_color: '#ffffff',
-               hasShadow: true,
-               shadow_delay: '0.3s',
-               shadow_size: '40px',
-               shadow_color: 'rgba(255, 255, 255, 0.5)',
-               magnetic: false,
-               text: '',
-            });
+```js
+const cursor = new ProteusCursor({
+    shape: 'fluid',
+    shape_size: '10px',
+    shape_color: '#ffffff',
+    hasShadow: true,
+    shadow_delay: '0.3s',
+    shadow_size: '40px',
+    shadow_color: 'rgba(255, 255, 255, 0.5)',
+    magnetic: false,
+    text: '',
+});
 ```
 
 
 ---
 
-## 4) 🖱️ Click Animations
+## 6) 🖱️ Click Animations
 
 Proteus plays a small animation on every `mousedown` to give tactile feedback. Choose between two built-in effects or disable them entirely.
 
@@ -367,7 +368,7 @@ if (!ProteusCursor.prefersReducedMotion()) {
 
 ---
 
-## 8) 📱 Touch Device Support
+## 9) 📱 Touch Device Support
 
 Proteus Cursor automatically detects touch-only devices (phones, tablets without a paired mouse) and **skips initialization entirely** — no DOM elements are injected, no event listeners are registered, and the native cursor behaviour is preserved.
 
@@ -397,7 +398,7 @@ if (!ProteusCursor.isTouchOnly()) {
 
 ---
 
-## 8) 🏷️ Data Attributes (per-element overrides)
+## 10) 🏷️ Data Attributes (per-element overrides)
 
 For quick one-off customizations without defining a full state, you can use data attributes directly on elements:
 
