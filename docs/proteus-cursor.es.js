@@ -10,13 +10,16 @@ var e = class e {
 	prevMouseX = 0;
 	prevMouseY = 0;
 	constructor(t = {}) {
-		this.testMode = !1, this.shape = t.shape || "default", this.shape_size = t.shape_size || "10px", this.shape_color = t.shape_color || "#fff", this.hasShadow = t.hasShadow ?? !0, this.shadow_delay = this.hasShadow ? t.shadow_delay || "0.3s" : "0s", this.shadow_size = t.shadow_size || "40px", this.shadow_color = t.shadow_color || "#ffffff", this.text = "", this.text_color = "", this.text_weight = "", this.text_size = "", this.speed = .9, this.maxVelocity = 10, this.isMagnetic = t.magnetic ?? !1, this.click_animation = t.click_animation || "scale", this.click_duration = t.click_duration ?? 300, this.states = {}, this.eventListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.isTouch = e.isTouchOnly(), !this.isTouch && (this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.hasShadow || (this.$shadow.style.display = "none"), this.dataAttributeEvents(), this._initClickAnimation());
+		this.testMode = !1, this.shape = t.shape || "default", this.shape_size = t.shape_size || "10px", this.shape_color = t.shape_color || "#fff", this.hasShadow = t.hasShadow ?? !0, this.shadow_delay = this.hasShadow ? t.shadow_delay || "0.3s" : "0s", this.shadow_size = t.shadow_size || "40px", this.shadow_color = t.shadow_color || "#ffffff", this.text = "", this.text_color = "", this.text_weight = "", this.text_size = "", this.speed = .9, this.maxVelocity = 10, this.isMagnetic = t.magnetic ?? !1, this.click_animation = t.click_animation || "scale", this.click_duration = t.click_duration ?? 300, this.states = {}, this.eventListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.isTouch = e.isTouchOnly(), !this.isTouch && (this.respectReducedMotion = t.respectReducedMotion ?? !0, this.isReducedMotion = this.respectReducedMotion && e.prefersReducedMotion(), !this.isReducedMotion && (this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.hasShadow || (this.$shadow.style.display = "none"), this.dataAttributeEvents(), this._initClickAnimation()));
 	}
 	static isTouchOnly() {
 		return typeof window > "u" ? !1 : window.matchMedia("(pointer: coarse)").matches;
 	}
+	static prefersReducedMotion() {
+		return typeof window > "u" ? !1 : window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	}
 	_isActive() {
-		return !this.isDestroyed && !this.isTouch;
+		return !this.isDestroyed && !this.isTouch && !this.isReducedMotion;
 	}
 	init() {
 		this.init_HTMLcursorAndShadow(), this.$shape = document.getElementById("proteus-cursor-shape"), this.$shadow = document.getElementById("proteus-cursor-shadow"), this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shadow.style.width = this.shadow_size || "40px", this.$shadow.style.height = this.shadow_size || "40px", this.setShape(this.shape);
@@ -114,7 +117,7 @@ var e = class e {
 		this.$shape.style.position = "fixed", this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shape.style.backgroundColor = this.shape_color || "#fff", this.$shape.style.borderRadius = "50%", this.$shape.style.pointerEvents = "none", this.$shape.style.zIndex = "9999", this.$shape.style.transition = "all 0.3s cubic-bezier(0.23, 1, 0.320, 1)", this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`), this.velocityInitialized = !1, this.cursorX = window.innerWidth / 2, this.cursorY = window.innerHeight / 2, this.setShape__fluid__animateCursor();
 	}
 	destroy() {
-		if (this.isTouch) return;
+		if (this.isTouch || this.isReducedMotion) return;
 		this.isDestroyed = !0, this.animationIds.forEach((e) => {
 			cancelAnimationFrame(e);
 		}), this.animationIds = [], this.intervals.forEach((e) => clearInterval(e)), this.timeouts.forEach((e) => clearTimeout(e)), this.intervals = [], this.timeouts = [], this.eventListeners.forEach(({ element: e, event: t, handler: n, options: r }) => {
@@ -206,10 +209,10 @@ var e = class e {
 		this.timeouts.push(r);
 	}
 	addState(e, t = {}) {
-		return this.isTouch ? this : (this.states[e] = t, this._bindStateElements(e), this);
+		return this.isTouch || this.isReducedMotion ? this : (this.states[e] = t, this._bindStateElements(e), this);
 	}
 	removeState(e) {
-		return this.isTouch || delete this.states[e], this;
+		return this.isTouch || this.isReducedMotion || delete this.states[e], this;
 	}
 	_applyState(e) {
 		let t = this.states[e];

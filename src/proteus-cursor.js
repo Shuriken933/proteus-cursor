@@ -82,6 +82,14 @@ export default class ProteusCursor{
       this.isTouch = ProteusCursor.isTouchOnly();
       if (this.isTouch) return;
 
+      // Reduced-motion: respect the user's OS-level accessibility preference.
+      // When prefers-reduced-motion: reduce is active we skip initialization
+      // entirely so no animations, RAF loops or overlay elements are created.
+      // Can be opted-out by passing respectReducedMotion: false.
+      this.respectReducedMotion = options.respectReducedMotion ?? true;
+      this.isReducedMotion = this.respectReducedMotion && ProteusCursor.prefersReducedMotion();
+      if (this.isReducedMotion) return;
+
       // Bind dei metodi per poterli rimuovere correttamente
       this.boundMouseMove = this.handleMouseMove.bind(this);
       this.boundMouseEnter = this.handleMouseEnter.bind(this);
@@ -110,9 +118,19 @@ export default class ProteusCursor{
       return window.matchMedia('(pointer: coarse)').matches;
    }
 
-   /** @private — returns true when the cursor is active (not destroyed, not touch). */
+   /**
+    * Returns true when the user has requested reduced motion at the OS level
+    * (`prefers-reduced-motion: reduce`). ProteusCursor calls this automatically;
+    * you can use it for your own conditional logic.
+    */
+   static prefersReducedMotion() {
+      if (typeof window === 'undefined') return false;
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+   }
+
+   /** @private — returns true when the cursor is active (not destroyed, not touch, not reduced-motion). */
    _isActive() {
-      return !this.isDestroyed && !this.isTouch;
+      return !this.isDestroyed && !this.isTouch && !this.isReducedMotion;
    }
    //endregion
 
@@ -407,8 +425,8 @@ export default class ProteusCursor{
    //region ❌ destroy Proteus
    destroy() {
 
-      // No-op on touch: nothing was created, nothing to tear down.
-      if (this.isTouch) return;
+      // No-op on touch or reduced-motion: nothing was created, nothing to tear down.
+      if (this.isTouch || this.isReducedMotion) return;
 
       // Marca come distrutto per fermare tutte le operazioni
       this.isDestroyed = true;
@@ -672,14 +690,14 @@ export default class ProteusCursor{
     * will activate it on mouseenter and restore defaults on mouseleave.
     */
    addState(name, options = {}) {
-      if (this.isTouch) return this;
+      if (this.isTouch || this.isReducedMotion) return this;
       this.states[name] = options;
       this._bindStateElements(name);
       return this;
    }
 
    removeState(name) {
-      if (this.isTouch) return this;
+      if (this.isTouch || this.isReducedMotion) return this;
       delete this.states[name];
       return this;
    }

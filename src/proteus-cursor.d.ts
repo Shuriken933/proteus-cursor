@@ -48,6 +48,14 @@ export interface ProteusCursorOptions {
   click_animation?: 'scale' | 'ripple' | 'none';
   /** Duration of the click animation in ms. Default: `300` */
   click_duration?: number;
+
+  /**
+   * When `true` (default), the library skips initialization if the user has
+   * enabled "reduce motion" at the OS level (`prefers-reduced-motion: reduce`).
+   * Set to `false` to opt-out of this behaviour.
+   * Default: `true`
+   */
+  respectReducedMotion?: boolean;
 }
 
 export default class ProteusCursor {
@@ -79,6 +87,14 @@ export default class ProteusCursor {
    * initialization. All API methods are safe to call — they are no-ops.
    */
   readonly isTouch: boolean;
+  /**
+   * `true` when `respectReducedMotion` is enabled and the user's OS has
+   * `prefers-reduced-motion: reduce` set. Initialization was skipped;
+   * all API methods are safe to call as no-ops.
+   */
+  readonly isReducedMotion: boolean;
+  /** Whether the library will respect the reduced-motion OS preference. Default: `true` */
+  respectReducedMotion: boolean;
 
   // ── Shape ────────────────────────────────────────────────────────────────
   /** Switch cursor shape at runtime */
@@ -143,7 +159,7 @@ export default class ProteusCursor {
    */
   removeState(name: string): this;
 
-  // ── Touch detection ──────────────────────────────────────────────────────
+  // ── Device & accessibility detection ────────────────────────────────────
   /**
    * Returns `true` when the primary pointing device is coarse (touch/finger).
    * ProteusCursor calls this automatically; you can use it for your own
@@ -155,6 +171,18 @@ export default class ProteusCursor {
    * }
    */
   static isTouchOnly(): boolean;
+
+  /**
+   * Returns `true` when the user has enabled "reduce motion" at the OS level
+   * (`prefers-reduced-motion: reduce`). ProteusCursor calls this automatically;
+   * you can use it for your own conditional logic.
+   *
+   * @example
+   * if (!ProteusCursor.prefersReducedMotion()) {
+   *   cursor.addState('hero', { shape_size: '80px' });
+   * }
+   */
+  static prefersReducedMotion(): boolean;
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
   /** Remove all event listeners, cancel animations and restore the native cursor */

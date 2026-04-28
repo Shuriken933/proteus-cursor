@@ -169,7 +169,40 @@ cursor.removeState('video');
 
 ---
 
-## 7) 📱 Touch Device Support
+## 7) ♿ Accessibility — Reduced Motion
+
+Some users enable **"Reduce Motion"** in their OS accessibility settings (macOS → Accessibility → Display, Windows → Accessibility → Visual Effects). This signals that animations may cause discomfort (vestibular disorders, epilepsy, motion sensitivity).
+
+By default Proteus Cursor **respects this preference** and skips initialization entirely when `prefers-reduced-motion: reduce` is detected — no DOM elements, no RAF loops, native cursor preserved.
+
+```js
+// Default — respects the OS preference automatically
+const cursor = new ProteusCursor({ shape: 'circle' });
+
+// Opt-out: always run regardless of OS setting
+const cursor = new ProteusCursor({
+  shape: 'circle',
+  respectReducedMotion: false,
+});
+```
+
+All API methods remain **safe to call** when reduced motion is active — they are no-ops:
+
+```js
+cursor.addState('cta', { shape_size: '60px' }); // silent no-op
+```
+
+Use the static helper for your own conditional logic:
+
+```js
+if (!ProteusCursor.prefersReducedMotion()) {
+  // extra animation logic
+}
+```
+
+---
+
+## 8) 📱 Touch Device Support
 
 Proteus Cursor automatically detects touch-only devices (phones, tablets without a paired mouse) and **skips initialization entirely** — no DOM elements are injected, no event listeners are registered, and the native cursor behaviour is preserved.
 
