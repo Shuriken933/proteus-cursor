@@ -174,6 +174,22 @@ var e = class e {
 	setBlendMode(e, t = !1) {
 		this._isActive() && (t && (this.blend_mode = e), this.$shape.style.mixBlendMode = e);
 	}
+	_applyShadowColor(e) {
+		this._isActive() && (this.shadow_color = e, this.shape === "circle" ? this.$shadow.style.backgroundColor = e : this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${e}`));
+	}
+	loadPreset(t, n = {}) {
+		if (!this._isActive()) return this;
+		let r = e.PRESETS[t];
+		if (!r) return console.warn(`[ProteusCursor] Unknown preset: "${t}". Available: ${Object.keys(e.PRESETS).join(", ")}`), this;
+		let i = {
+			...r,
+			...n
+		};
+		return i.shape !== void 0 && i.shape !== this.shape && this.setShape(i.shape), i.shape_size !== void 0 && this.setShapeSize(i.shape_size, i.shape_size, !0), i.shape_color !== void 0 && this.setShapeColor(i.shape_color, !0), i.hasShadow !== void 0 && this.setShadowEnabled(i.hasShadow, !0), i.shadow_size !== void 0 && this.setShadowSize(i.shadow_size, i.shadow_size), i.shadow_color !== void 0 && this._applyShadowColor(i.shadow_color), i.blend_mode !== void 0 && this.setBlendMode(i.blend_mode, !0), i.click_animation !== void 0 && (this.click_animation = i.click_animation), this;
+	}
+	static getPreset(t) {
+		return e.PRESETS[t];
+	}
 	_initClickAnimation() {
 		this.click_animation !== "none" && this.addEventListenerTracked(document, "mousedown", (e) => {
 			this.isDestroyed || (this.click_animation === "scale" && this._clickScale(), this.click_animation === "ripple" && this._clickRipple(e));
@@ -252,6 +268,54 @@ var e = class e {
 	}
 	disableTestMode() {
 		this.testMode = !1, document.querySelector("#proteus-button-test").classList.remove("active");
+	}
+};
+e.PRESETS = {
+	ghost: {
+		shape: "circle",
+		shape_size: "12px",
+		shape_color: "rgba(255,255,255,0.55)",
+		hasShadow: !0,
+		shadow_size: "44px",
+		shadow_color: "rgba(255,255,255,0.10)",
+		blend_mode: "normal",
+		click_animation: "scale"
+	},
+	neon: {
+		shape: "circle",
+		shape_size: "10px",
+		shape_color: "#00D4AA",
+		hasShadow: !0,
+		shadow_size: "52px",
+		shadow_color: "rgba(0,212,170,0.30)",
+		blend_mode: "normal",
+		click_animation: "ripple"
+	},
+	minimal: {
+		shape: "circle",
+		shape_size: "6px",
+		shape_color: "#ffffff",
+		hasShadow: !1,
+		blend_mode: "normal",
+		click_animation: "none"
+	},
+	chrome: {
+		shape: "circle",
+		shape_size: "48px",
+		shape_color: "#ffffff",
+		hasShadow: !1,
+		blend_mode: "difference",
+		click_animation: "scale"
+	},
+	ink: {
+		shape: "fluid",
+		shape_size: "24px",
+		shape_color: "#e8e8e8",
+		hasShadow: !0,
+		shadow_size: "60px",
+		shadow_color: "rgba(232,232,232,0.18)",
+		blend_mode: "normal",
+		click_animation: "ripple"
 	}
 };
 function t(e, t = 1) {

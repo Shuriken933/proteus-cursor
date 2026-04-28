@@ -132,7 +132,51 @@ npm install proteuscursor
 
 ---
 
-## 4) Proteus options
+## 4) 🎨 Preset System
+
+Five built-in presets let you get a polished cursor in one line — no manual configuration required.
+
+| Preset | Description |
+|---|---|
+| `'ghost'` | Translucent circle — blends into any design |
+| `'neon'` | Teal dot with glowing halo — for dark creative sites |
+| `'minimal'` | Tiny dot, no shadow, no animation — zero visual noise |
+| `'chrome'` | Large circle with `mix-blend-mode: difference` — auto color inversion |
+| `'ink'` | Fluid morphing blob — stretches and squeezes with movement |
+
+### Apply to a live instance
+
+```js
+const cursor = new ProteusCursor({ shape: 'circle' });
+
+cursor.loadPreset('neon');                         // apply preset
+cursor.loadPreset('chrome', { shape_size: '64px' }); // preset + overrides
+```
+
+> `loadPreset()` is chainable and returns `this`.
+
+### Use a preset as a constructor base
+
+```js
+const cursor = new ProteusCursor({
+  ...ProteusCursor.getPreset('neon'),  // spread the raw config
+  shape_color: '#ff4444',              // override what you want
+});
+```
+
+### Access all presets
+
+```js
+// All presets as a static property
+console.log(ProteusCursor.PRESETS); // { ghost: {...}, neon: {...}, ... }
+
+// Initialize directly from a preset object
+const cursor = new ProteusCursor(ProteusCursor.getPreset('ghost'));
+```
+
+---
+
+## 5) ⚙️ Proteus options
 There are a lot of options ✨ for Proteus.
 First of all you can set a cursor type:
 - circle

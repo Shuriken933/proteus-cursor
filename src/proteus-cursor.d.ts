@@ -1,3 +1,6 @@
+/** Names of the five built-in presets */
+export type PresetName = 'ghost' | 'neon' | 'minimal' | 'chrome' | 'ink';
+
 /** Visual properties that can be applied as a named cursor state */
 export interface CursorStateOptions {
   shape_size?: string;
@@ -181,6 +184,35 @@ export default class ProteusCursor {
    * @returns `this` for chaining
    */
   removeState(name: string): this;
+
+  // ── Preset system ────────────────────────────────────────────────────────
+  /**
+   * Apply a named built-in preset to the live cursor instance.
+   * Optionally pass `overrides` to customise individual properties.
+   * @returns `this` for chaining
+   *
+   * @example
+   * cursor.loadPreset('neon');
+   * cursor.loadPreset('chrome', { shape_size: '64px' });
+   */
+  loadPreset(name: PresetName | string, overrides?: ProteusCursorOptions): this;
+
+  /**
+   * Return the raw configuration object for a named preset.
+   * Useful for using a preset as a base in the constructor:
+   *
+   * @example
+   * const cursor = new ProteusCursor({
+   *   ...ProteusCursor.getPreset('neon'),
+   *   shape_color: '#ff4444',
+   * });
+   */
+  static getPreset(name: PresetName | string): ProteusCursorOptions | undefined;
+
+  /**
+   * All built-in preset configurations, keyed by name.
+   */
+  static readonly PRESETS: Record<PresetName, ProteusCursorOptions>;
 
   // ── Device & accessibility detection ────────────────────────────────────
   /**

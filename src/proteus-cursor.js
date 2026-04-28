@@ -637,6 +637,76 @@ export default class ProteusCursor{
       this.$shape.style.mixBlendMode = mode;
    }
 
+   /**
+    * Apply a shadow color given as a direct CSS color string (rgb, rgba, hex, keyword…).
+    * Works for both circle (backgroundColor on $shadow) and fluid (boxShadow on $shape).
+    * @private
+    */
+   _applyShadowColor(cssColor) {
+      if (!this._isActive()) return;
+      this.shadow_color = cssColor;
+      if (this.shape === 'circle') {
+         this.$shadow.style.backgroundColor = cssColor;
+      } else if (this.shape === 'fluid') {
+         if (this.hasShadow) {
+            this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${cssColor}`;
+         }
+      }
+   }
+
+   // ── Preset system ──────────────────────────────────────────────────────────
+
+   /**
+    * Apply a named built-in preset to the live cursor instance.
+    * Optionally pass an `overrides` object to customise individual properties.
+    *
+    * @param {keyof typeof ProteusCursor.PRESETS | string} name
+    * @param {import('./proteus-cursor.d.ts').ProteusCursorOptions} [overrides]
+    * @returns {this}
+    *
+    * @example
+    * cursor.loadPreset('neon');
+    * cursor.loadPreset('chrome', { shape_size: '64px' });
+    */
+   loadPreset(name, overrides = {}) {
+      if (!this._isActive()) return this;
+      const base = ProteusCursor.PRESETS[name];
+      if (!base) {
+         console.warn(`[ProteusCursor] Unknown preset: "${name}". Available: ${Object.keys(ProteusCursor.PRESETS).join(', ')}`);
+         return this;
+      }
+      const preset = { ...base, ...overrides };
+
+      if (preset.shape       !== undefined && preset.shape !== this.shape) this.setShape(preset.shape);
+      if (preset.shape_size  !== undefined) this.setShapeSize(preset.shape_size, preset.shape_size, true);
+      if (preset.shape_color !== undefined) this.setShapeColor(preset.shape_color, true);
+      if (preset.hasShadow   !== undefined) this.setShadowEnabled(preset.hasShadow, true);
+      if (preset.shadow_size !== undefined) this.setShadowSize(preset.shadow_size, preset.shadow_size);
+      if (preset.shadow_color !== undefined) this._applyShadowColor(preset.shadow_color);
+      if (preset.blend_mode  !== undefined) this.setBlendMode(preset.blend_mode, true);
+      if (preset.click_animation !== undefined) this.click_animation = preset.click_animation;
+
+      return this;
+   }
+
+   /**
+    * Return the raw configuration object for a named preset.
+    * Useful for constructing a cursor with a preset as a base and then overriding
+    * individual properties:
+    *
+    * @example
+    * const cursor = new ProteusCursor({
+    *   ...ProteusCursor.getPreset('neon'),
+    *   shape_color: '#ff4444',
+    * });
+    *
+    * @param {string} name
+    * @returns {import('./proteus-cursor.d.ts').ProteusCursorOptions | undefined}
+    */
+   static getPreset(name) {
+      return ProteusCursor.PRESETS[name];
+   }
+
    //endregion
 
 
@@ -871,6 +941,90 @@ export default class ProteusCursor{
 
 
 /* -------------------------------------------------------------------------------- */
+//region 🎨 Built-in Presets
+/* -------------------------------------------------------------------------------- */
+
+/**
+ * Five ready-to-use cursor presets.
+ * Access them via:
+ *   - `cursor.loadPreset('neon')`           — apply to a live instance
+ *   - `ProteusCursor.getPreset('neon')`     — get the raw config object
+ *   - `import { PRESETS } from 'proteuscursor'` — named export
+ */
+ProteusCursor.PRESETS = {
+   /**
+    * Subtle translucent circle — blends into any design without demanding attention.
+    */
+   ghost: {
+      shape:           'circle',
+      shape_size:      '12px',
+      shape_color:     'rgba(255,255,255,0.55)',
+      hasShadow:       true,
+      shadow_size:     '44px',
+      shadow_color:    'rgba(255,255,255,0.10)',
+      blend_mode:      'normal',
+      click_animation: 'scale',
+   },
+
+   /**
+    * Vibrant teal dot with a glowing halo — great for dark, creative sites.
+    */
+   neon: {
+      shape:           'circle',
+      shape_size:      '10px',
+      shape_color:     '#00D4AA',
+      hasShadow:       true,
+      shadow_size:     '52px',
+      shadow_color:    'rgba(0,212,170,0.30)',
+      blend_mode:      'normal',
+      click_animation: 'ripple',
+   },
+
+   /**
+    * Bare-minimum dot, no shadow, no animation — zero visual noise.
+    */
+   minimal: {
+      shape:           'circle',
+      shape_size:      '6px',
+      shape_color:     '#ffffff',
+      hasShadow:       false,
+      blend_mode:      'normal',
+      click_animation: 'none',
+   },
+
+   /**
+    * Large white circle with mix-blend-mode: difference — automatically inverts
+    * the colors underneath, creating perfect contrast on any background.
+    */
+   chrome: {
+      shape:           'circle',
+      shape_size:      '48px',
+      shape_color:     '#ffffff',
+      hasShadow:       false,
+      blend_mode:      'difference',
+      click_animation: 'scale',
+   },
+
+   /**
+    * Fluid morphing blob — dynamic shape that stretches and squeezes with movement.
+    * Best used when the cursor is initialised with shape: 'fluid'.
+    */
+   ink: {
+      shape:           'fluid',
+      shape_size:      '24px',
+      shape_color:     '#e8e8e8',
+      hasShadow:       true,
+      shadow_size:     '60px',
+      shadow_color:    'rgba(232,232,232,0.18)',
+      blend_mode:      'normal',
+      click_animation: 'ripple',
+   },
+};
+
+//endregion
+
+
+/* -------------------------------------------------------------------------------- */
 //region 🔹 Helper
 /* -------------------------------------------------------------------------------- */
 function hexToRgba(hex, alpha = 1) {
@@ -880,3 +1034,4 @@ function hexToRgba(hex, alpha = 1) {
    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 //endregion
+
