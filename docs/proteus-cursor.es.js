@@ -59,7 +59,7 @@ var e = class e {
 		}
 	}
 	setShape__circle(e) {
-		this.delay = 8, this._x = 0, this._y = 0, this.endX = window.innerWidth / 2, this.endY = window.innerHeight / 2, this.cursorVisible = !0, this.cursorEnlarged = !1, document.querySelector("body").classList.add("proteus-is-a-circle"), document.body.style.cursor = "none", this.shape__circle__interactions(), this.shape__circle__animateShadow();
+		this.animationIds.forEach((e) => cancelAnimationFrame(e)), this.animationIds = [], this.delay = 8, this._x = 0, this._y = 0, this.endX = this.mouseX > 0 ? this.mouseX : window.innerWidth / 2, this.endY = this.mouseY > 0 ? this.mouseY : window.innerHeight / 2, this.cursorVisible = !0, this.cursorEnlarged = !1, document.querySelector("body").classList.add("proteus-is-a-circle"), document.body.style.cursor = "none", this.shape__circle__interactions(), this.shape__circle__animateShadow();
 	}
 	shape__circle__interactions() {
 		this.isDestroyed || (document.querySelectorAll("a, button, input").forEach((e) => {
@@ -111,11 +111,13 @@ var e = class e {
 		this.setShape__fluid__animateCursor();
 	}
 	setShape__fluid() {
-		if (document.querySelector("body").classList.add("proteus-is-a-fluid"), document.body.style.cursor = "none", !this.$shape) {
+		if (this.animationIds.forEach((e) => cancelAnimationFrame(e)), this.animationIds = [], document.querySelector("body").classList.add("proteus-is-a-fluid"), document.body.style.cursor = "none", !this.$shape) {
 			console.error("Elemento con id 'cursor' non trovato!");
 			return;
 		}
-		this.$shape.style.position = "fixed", this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shape.style.backgroundColor = this.shape_color || "#fff", this.$shape.style.borderRadius = "50%", this.$shape.style.pointerEvents = "none", this.$shape.style.zIndex = "9999", this.$shape.style.transition = "all 0.3s cubic-bezier(0.23, 1, 0.320, 1)", this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`), this.velocityInitialized = !1, this.cursorX = window.innerWidth / 2, this.cursorY = window.innerHeight / 2, this.setShape__fluid__animateCursor();
+		this.$shape.style.position = "fixed", this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shape.style.backgroundColor = this.shape_color || "#fff", this.$shape.style.borderRadius = "50%", this.$shape.style.pointerEvents = "none", this.$shape.style.zIndex = "9999", this.$shape.style.transition = "none", this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`);
+		let e = window.scrollX || 0, t = window.scrollY || 0;
+		this.velocityInitialized = !1, this.cursorX = this.endX > 0 ? this.endX - e : this.mouseX || window.innerWidth / 2, this.cursorY = this.endY > 0 ? this.endY - t : this.mouseY || window.innerHeight / 2, this.setShape__fluid__animateCursor();
 	}
 	destroy() {
 		if (this.isTouch || this.isReducedMotion) return;

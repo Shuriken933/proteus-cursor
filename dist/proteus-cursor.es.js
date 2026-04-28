@@ -1,5 +1,6 @@
+/*! Proteus Cursor v2.0.0 | https://github.com/Shuriken933/proteus-cursor | MIT */
 //#region src/proteus-cursor.js
-var e = class {
+var e = class e {
 	velocity = 0;
 	_x = 0;
 	_y = 0;
@@ -9,11 +10,20 @@ var e = class {
 	cursorY = 0;
 	prevMouseX = 0;
 	prevMouseY = 0;
-	constructor(e = {}) {
-		this.testMode = !1, this.shape = e.shape || "default", this.shape_size = e.shape_size || "10px", this.shape_color = e.shape_color || "#fff", this.hasShadow = e.hasShadow ?? !0, this.shadow_delay = this.hasShadow ? e.shadow_delay || "0.3s" : "0s", this.shadow_size = e.shadow_size || "40px", this.shadow_color = e.shadow_color || "#ffffff", this.text = "", this.text_color = "", this.text_weight = "", this.text_size = "", this.speed = .9, this.maxVelocity = 10, this.isMagnetic = e.magnetic ?? !1, this.click_animation = e.click_animation || "scale", this.click_duration = e.click_duration ?? 300, this.states = {}, this.eventListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.hasShadow || (this.$shadow.style.display = "none"), this.dataAttributeEvents(), this._initClickAnimation();
+	constructor(t = {}) {
+		this.testMode = !1, this.shape = t.shape || "default", this.shape_size = t.shape_size || "10px", this.shape_color = t.shape_color || "#fff", this.hasShadow = t.hasShadow ?? !0, this.shadow_delay = this.hasShadow ? t.shadow_delay || "0.3s" : "0s", this.shadow_size = t.shadow_size || "40px", this.shadow_color = t.shadow_color || "#ffffff", this.text = "", this.text_color = "", this.text_weight = "", this.text_size = "", this.speed = .9, this.maxVelocity = 10, this.isMagnetic = t.magnetic ?? !1, this.blend_mode = t.blend_mode || "normal", this.click_animation = t.click_animation || "scale", this.click_duration = t.click_duration ?? 300, this.states = {}, this.eventListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.isTouch = e.isTouchOnly(), !this.isTouch && (this.respectReducedMotion = t.respectReducedMotion ?? !0, this.isReducedMotion = this.respectReducedMotion && e.prefersReducedMotion(), !this.isReducedMotion && (this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.hasShadow || (this.$shadow.style.display = "none"), this.dataAttributeEvents(), this._initClickAnimation()));
+	}
+	static isTouchOnly() {
+		return typeof window > "u" ? !1 : window.matchMedia("(pointer: coarse)").matches;
+	}
+	static prefersReducedMotion() {
+		return typeof window > "u" ? !1 : window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	}
+	_isActive() {
+		return !this.isDestroyed && !this.isTouch && !this.isReducedMotion;
 	}
 	init() {
-		this.init_HTMLcursorAndShadow(), this.$shape = document.getElementById("proteus-cursor-shape"), this.$shadow = document.getElementById("proteus-cursor-shadow"), this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shadow.style.width = this.shadow_size || "40px", this.$shadow.style.height = this.shadow_size || "40px", this.setShape(this.shape);
+		this.init_HTMLcursorAndShadow(), this.$shape = document.getElementById("proteus-cursor-shape"), this.$shadow = document.getElementById("proteus-cursor-shadow"), this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shadow.style.width = this.shadow_size || "40px", this.$shadow.style.height = this.shadow_size || "40px", this.setShape(this.shape), this.blend_mode && this.blend_mode !== "normal" && (this.$shape.style.mixBlendMode = this.blend_mode);
 	}
 	init_HTMLcursorAndShadow() {
 		if (document.getElementById("proteus-cursor-shape")) return;
@@ -38,7 +48,7 @@ var e = class {
 		return this.animationIds.push(t), t;
 	}
 	setShape(e) {
-		switch (document.querySelector("body").classList.remove("proteus-is-a-fluid"), document.querySelector("body").classList.remove("proteus-is-a-circle"), this.shape = e, this.shape) {
+		if (this._isActive()) switch (document.querySelector("body").classList.remove("proteus-is-a-fluid"), document.querySelector("body").classList.remove("proteus-is-a-circle"), this.shape = e, this.shape) {
 			case "default": break;
 			case "circle":
 				this.setShape__circle(this.shape);
@@ -49,7 +59,7 @@ var e = class {
 		}
 	}
 	setShape__circle(e) {
-		this.delay = 8, this._x = 0, this._y = 0, this.endX = window.innerWidth / 2, this.endY = window.innerHeight / 2, this.cursorVisible = !0, this.cursorEnlarged = !1, document.querySelector("body").classList.add("proteus-is-a-circle"), document.body.style.cursor = "none", this.shape__circle__interactions(), this.shape__circle__animateShadow();
+		this.animationIds.forEach((e) => cancelAnimationFrame(e)), this.animationIds = [], this.delay = 8, this._x = 0, this._y = 0, this.endX = this.mouseX > 0 ? this.mouseX : window.innerWidth / 2, this.endY = this.mouseY > 0 ? this.mouseY : window.innerHeight / 2, this.cursorVisible = !0, this.cursorEnlarged = !1, document.querySelector("body").classList.add("proteus-is-a-circle"), document.body.style.cursor = "none", this.shape__circle__interactions(), this.shape__circle__animateShadow();
 	}
 	shape__circle__interactions() {
 		this.isDestroyed || (document.querySelectorAll("a, button, input").forEach((e) => {
@@ -101,13 +111,16 @@ var e = class {
 		this.setShape__fluid__animateCursor();
 	}
 	setShape__fluid() {
-		if (document.querySelector("body").classList.add("proteus-is-a-fluid"), document.body.style.cursor = "none", !this.$shape) {
+		if (this.animationIds.forEach((e) => cancelAnimationFrame(e)), this.animationIds = [], document.querySelector("body").classList.add("proteus-is-a-fluid"), document.body.style.cursor = "none", !this.$shape) {
 			console.error("Elemento con id 'cursor' non trovato!");
 			return;
 		}
-		this.$shape.style.position = "fixed", this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shape.style.backgroundColor = this.shape_color || "#fff", this.$shape.style.borderRadius = "50%", this.$shape.style.pointerEvents = "none", this.$shape.style.zIndex = "9999", this.$shape.style.transition = "all 0.3s cubic-bezier(0.23, 1, 0.320, 1)", this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`), this.velocityInitialized = !1, this.cursorX = window.innerWidth / 2, this.cursorY = window.innerHeight / 2, this.setShape__fluid__animateCursor();
+		this.$shape.style.position = "fixed", this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shape.style.backgroundColor = this.shape_color || "#fff", this.$shape.style.borderRadius = "50%", this.$shape.style.pointerEvents = "none", this.$shape.style.zIndex = "9999", this.$shape.style.transition = "none", this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`);
+		let e = window.scrollX || 0, t = window.scrollY || 0;
+		this.velocityInitialized = !1, this.cursorX = this.endX > 0 ? this.endX - e : this.mouseX || window.innerWidth / 2, this.cursorY = this.endY > 0 ? this.endY - t : this.mouseY || window.innerHeight / 2, this.setShape__fluid__animateCursor();
 	}
 	destroy() {
+		if (this.isTouch || this.isReducedMotion) return;
 		this.isDestroyed = !0, this.animationIds.forEach((e) => {
 			cancelAnimationFrame(e);
 		}), this.animationIds = [], this.intervals.forEach((e) => clearInterval(e)), this.timeouts.forEach((e) => clearTimeout(e)), this.intervals = [], this.timeouts = [], this.eventListeners.forEach(({ element: e, event: t, handler: n, options: r }) => {
@@ -121,42 +134,64 @@ var e = class {
 		e && (e.classList.remove("proteus-is-a-fluid"), e.classList.remove("proteus-is-a-circle")), this.$shape && (this.$shape.style.cssText = "", this.$shape.style.display = "none", this.$shape.style.opacity = "0", this.$shape.style.transform = "", this.$shape.style.left = "", this.$shape.style.top = "", this.$shape.style.width = "", this.$shape.style.height = "", this.$shape.style.backgroundColor = "", this.$shape.style.borderRadius = "", this.$shape.style.boxShadow = "", this.$shape.textContent = ""), this.$shadow && (this.$shadow.style.cssText = "", this.$shadow.style.display = "none", this.$shadow.style.opacity = "0", this.$shadow.style.transform = "", this.$shadow.style.left = "", this.$shadow.style.top = "", this.$shadow.style.width = "", this.$shadow.style.height = "", this.$shadow.style.backgroundColor = ""), this.$shape = null, this.$shadow = null, this.boundMouseMove = null, this.boundMouseEnter = null, this.boundMouseLeave = null, this.boundAnimateCircle = null, this.boundAnimateFluid = null, this.velocity = 0, this._x = 0, this._y = 0, this.mouseX = 0, this.mouseY = 0, this.cursorX = 0, this.cursorY = 0, this.prevMouseX = 0, this.prevMouseY = 0, this.velocityInitialized = !1;
 	}
 	setShapeSize(e, t, n = !1) {
-		n ? (this.shape_size = e || "20px", this.shadow_size = t || "20px", this.$shape.style.width = e || "20px", this.$shape.style.height = t || "20px") : (this.$shape.style.width = e || "20px", this.$shape.style.height = t || "20px");
+		this._isActive() && (n ? (this.shape_size = e || "20px", this.shadow_size = t || "20px", this.$shape.style.width = e || "20px", this.$shape.style.height = t || "20px") : (this.$shape.style.width = e || "20px", this.$shape.style.height = t || "20px"));
 	}
 	setShapeColor(e, t = !1) {
-		t && (this.shape_color = e), this.$shape.style.backgroundColor = e;
+		this._isActive() && (t && (this.shape_color = e), this.$shape.style.backgroundColor = e);
 	}
 	setShadowEnabled(e, t = !1) {
-		if (this.shape === "circle") t ? (this.hasShadow = e, this.hasShadow ? this.$shadow.style.display = "block" : this.$shadow.style.display = "none") : e ? this.$shadow.style.display = "block" : this.$shadow.style.display = "none";
-		else if (this.shape === "fluid") {
-			let n = e ? `0 0 ${this.shadow_size} ${this.shadow_color}` : "none";
-			t && (this.hasShadow = e), this.$shape.style.boxShadow = n;
+		if (this._isActive()) {
+			if (this.shape === "circle") t ? (this.hasShadow = e, this.hasShadow ? this.$shadow.style.display = "block" : this.$shadow.style.display = "none") : e ? this.$shadow.style.display = "block" : this.$shadow.style.display = "none";
+			else if (this.shape === "fluid") {
+				let n = e ? `0 0 ${this.shadow_size} ${this.shadow_color}` : "none";
+				t && (this.hasShadow = e), this.$shape.style.boxShadow = n;
+			}
 		}
 	}
 	setShadowSize(e, t) {
-		this.$shadow.style.width = e || "20px", this.$shadow.style.height = t || "20px";
+		this._isActive() && (this.$shadow.style.width = e || "20px", this.$shadow.style.height = t || "20px");
 	}
 	setShadowColor(e, n = .5) {
+		if (!this._isActive()) return;
 		let r = t(e, n);
 		this.$shadow.style.backgroundColor = r;
 	}
 	setText(e, t = !1) {
-		t ? (this.text = e, document.querySelector(".proteus-cursor-shape").textContent = this.text) : document.querySelector(".proteus-cursor-shape").textContent = e;
+		this._isActive() && (t ? (this.text = e, document.querySelector(".proteus-cursor-shape").textContent = this.text) : document.querySelector(".proteus-cursor-shape").textContent = e);
 	}
 	setTextColor(e, t = !1) {
-		t && (this.text_color = e), document.querySelector(".proteus-cursor-shape").style.color = e;
+		this._isActive() && (t && (this.text_color = e), document.querySelector(".proteus-cursor-shape").style.color = e);
 	}
 	setTextWeight(e, t = !1) {
-		t && (this.text_weight = e), document.querySelector(".proteus-cursor-shape").style.fontWeight = e;
+		this._isActive() && (t && (this.text_weight = e), document.querySelector(".proteus-cursor-shape").style.fontWeight = e);
 	}
 	setTextSize(e, t = !1) {
-		t && (this.text_size = e), document.querySelector(".proteus-cursor-shape").style.fontSize = e;
+		this._isActive() && (t && (this.text_size = e), document.querySelector(".proteus-cursor-shape").style.fontSize = e);
 	}
 	setSpeed(e) {
 		this.speed = e;
 	}
 	setMaxVelocity(e) {
 		this.maxVelocity = e;
+	}
+	setBlendMode(e, t = !1) {
+		this._isActive() && (t && (this.blend_mode = e), this.$shape.style.mixBlendMode = e);
+	}
+	_applyShadowColor(e) {
+		this._isActive() && (this.shadow_color = e, this.shape === "circle" ? this.$shadow.style.backgroundColor = e : this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${e}`));
+	}
+	loadPreset(t, n = {}) {
+		if (!this._isActive()) return this;
+		let r = e.PRESETS[t];
+		if (!r) return console.warn(`[ProteusCursor] Unknown preset: "${t}". Available: ${Object.keys(e.PRESETS).join(", ")}`), this;
+		let i = {
+			...r,
+			...n
+		};
+		return i.shape !== void 0 && i.shape !== this.shape && this.setShape(i.shape), i.shape_size !== void 0 && this.setShapeSize(i.shape_size, i.shape_size, !0), i.shape_color !== void 0 && this.setShapeColor(i.shape_color, !0), i.hasShadow !== void 0 && this.setShadowEnabled(i.hasShadow, !0), i.shadow_size !== void 0 && this.setShadowSize(i.shadow_size, i.shadow_size), i.shadow_color !== void 0 && this._applyShadowColor(i.shadow_color), i.blend_mode !== void 0 && this.setBlendMode(i.blend_mode, !0), i.click_animation !== void 0 && (this.click_animation = i.click_animation), this;
+	}
+	static getPreset(t) {
+		return e.PRESETS[t];
 	}
 	_initClickAnimation() {
 		this.click_animation !== "none" && this.addEventListenerTracked(document, "mousedown", (e) => {
@@ -196,17 +231,17 @@ var e = class {
 		this.timeouts.push(r);
 	}
 	addState(e, t = {}) {
-		return this.states[e] = t, this._bindStateElements(e), this;
+		return this.isTouch || this.isReducedMotion ? this : (this.states[e] = t, this._bindStateElements(e), this);
 	}
 	removeState(e) {
-		return delete this.states[e], this;
+		return this.isTouch || this.isReducedMotion || delete this.states[e], this;
 	}
 	_applyState(e) {
 		let t = this.states[e];
-		t && (t.shape_size !== void 0 && this.setShapeSize(t.shape_size, t.shape_size), t.shape_color !== void 0 && this.setShapeColor(t.shape_color), t.hasShadow !== void 0 && this.setShadowEnabled(t.hasShadow), t.shadow_size !== void 0 && this.setShadowSize(t.shadow_size, t.shadow_size), t.text !== void 0 && this.setText(t.text), t.text_color !== void 0 && this.setTextColor(t.text_color), t.text_size !== void 0 && this.setTextSize(t.text_size), t.text_weight !== void 0 && this.setTextWeight(t.text_weight));
+		t && (t.shape_size !== void 0 && this.setShapeSize(t.shape_size, t.shape_size), t.shape_color !== void 0 && this.setShapeColor(t.shape_color), t.hasShadow !== void 0 && this.setShadowEnabled(t.hasShadow), t.shadow_size !== void 0 && this.setShadowSize(t.shadow_size, t.shadow_size), t.text !== void 0 && this.setText(t.text), t.text_color !== void 0 && this.setTextColor(t.text_color), t.text_size !== void 0 && this.setTextSize(t.text_size), t.text_weight !== void 0 && this.setTextWeight(t.text_weight), t.blend_mode !== void 0 && this.setBlendMode(t.blend_mode));
 	}
 	_resetState() {
-		this.setShapeSize(this.shape_size, this.shape_size), this.setShapeColor(this.shape_color), this.setShadowEnabled(this.hasShadow), this.setText(this.text), this.setTextColor(this.text_color), this.setTextSize(this.text_size), this.setTextWeight(this.text_weight);
+		this.setShapeSize(this.shape_size, this.shape_size), this.setShapeColor(this.shape_color), this.setShadowEnabled(this.hasShadow), this.setText(this.text), this.setTextColor(this.text_color), this.setTextSize(this.text_size), this.setTextWeight(this.text_weight), this.setBlendMode(this.blend_mode);
 	}
 	_bindStateElements(e) {
 		this.isDestroyed || document.querySelectorAll(`[data-cursor-state="${e}"]`).forEach((t) => {
@@ -236,6 +271,54 @@ var e = class {
 	}
 	disableTestMode() {
 		this.testMode = !1, document.querySelector("#proteus-button-test").classList.remove("active");
+	}
+};
+e.PRESETS = {
+	ghost: {
+		shape: "circle",
+		shape_size: "12px",
+		shape_color: "rgba(255,255,255,0.55)",
+		hasShadow: !0,
+		shadow_size: "44px",
+		shadow_color: "rgba(255,255,255,0.10)",
+		blend_mode: "normal",
+		click_animation: "scale"
+	},
+	neon: {
+		shape: "circle",
+		shape_size: "10px",
+		shape_color: "#00D4AA",
+		hasShadow: !0,
+		shadow_size: "52px",
+		shadow_color: "rgba(0,212,170,0.30)",
+		blend_mode: "normal",
+		click_animation: "ripple"
+	},
+	minimal: {
+		shape: "circle",
+		shape_size: "6px",
+		shape_color: "#ffffff",
+		hasShadow: !1,
+		blend_mode: "normal",
+		click_animation: "none"
+	},
+	chrome: {
+		shape: "circle",
+		shape_size: "48px",
+		shape_color: "#ffffff",
+		hasShadow: !1,
+		blend_mode: "difference",
+		click_animation: "scale"
+	},
+	ink: {
+		shape: "fluid",
+		shape_size: "24px",
+		shape_color: "#e8e8e8",
+		hasShadow: !0,
+		shadow_size: "60px",
+		shadow_color: "rgba(232,232,232,0.18)",
+		blend_mode: "normal",
+		click_animation: "ripple"
 	}
 };
 function t(e, t = 1) {

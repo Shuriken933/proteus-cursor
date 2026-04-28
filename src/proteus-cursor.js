@@ -220,11 +220,17 @@ export default class ProteusCursor{
 
    //region 🧩 Type shape CIRCLE
    setShape__circle(shape){
+      // Stop any running animation frames (e.g. fluid loop) before starting circle.
+      this.animationIds.forEach(id => cancelAnimationFrame(id));
+      this.animationIds = [];
+
       this.delay = 8;
       this._x = 0
       this._y = 0;
-      this.endX = (window.innerWidth / 2);
-      this.endY = (window.innerHeight / 2);
+      // Seed circle shadow at current mouse position (clientX = viewport coords).
+      // Falls back to centre only when the mouse has never moved.
+      this.endX = this.mouseX > 0 ? this.mouseX : (window.innerWidth / 2);
+      this.endY = this.mouseY > 0 ? this.mouseY : (window.innerHeight / 2);
       this.cursorVisible = true;
       this.cursorEnlarged = false;
       // this.$shape = document.querySelector('.proteus-cursor-shape');
@@ -394,8 +400,12 @@ export default class ProteusCursor{
       this.setShape__fluid__animateCursor();
    }
    setShape__fluid() {
+      // Stop any running animation frames (e.g. circle shadow loop) before starting fluid.
+      this.animationIds.forEach(id => cancelAnimationFrame(id));
+      this.animationIds = [];
+
       document.querySelector('body').classList.add('proteus-is-a-fluid');
-      // hyde cursor system
+      // hide cursor system
       document.body.style.cursor = 'none';
       // Assicurati che l'elemento cursor esista
       if (!this.$shape) {
@@ -411,16 +421,23 @@ export default class ProteusCursor{
       this.$shape.style.borderRadius = '50%';
       this.$shape.style.pointerEvents = 'none';
       this.$shape.style.zIndex = '9999';
-      this.$shape.style.transition = 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)';
+      // Use 'none' — a CSS transition on left/top conflicts with the RAF loop
+      // and causes visible jitter when switching from circle to fluid mode.
+      this.$shape.style.transition = 'none';
 
       if (this.hasShadow) {
          this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`;
       }
 
-      // initialize the variables
+      // Seed fluid cursor at the current mouse position so there's no jump to
+      // the centre of the viewport when switching from circle to fluid mode.
+      // endX/endY are set in page-coordinates by the circle mousemove handler;
+      // fluid uses fixed (viewport) coordinates, so subtract current scroll.
+      const scrollX = window.scrollX || 0;
+      const scrollY = window.scrollY || 0;
       this.velocityInitialized = false;
-      this.cursorX = window.innerWidth / 2;
-      this.cursorY = window.innerHeight / 2;
+      this.cursorX = this.endX > 0 ? (this.endX - scrollX) : (this.mouseX || window.innerWidth / 2);
+      this.cursorY = this.endY > 0 ? (this.endY - scrollY) : (this.mouseY || window.innerHeight / 2);
 
       // start animation
       this.setShape__fluid__animateCursor();
