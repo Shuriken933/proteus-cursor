@@ -51,7 +51,6 @@ export default class ProteusCursor{
       this.shadow_size = options.shadow_size || '40px';
       this.shadow_color = options.shadow_color || '#ffffff';
 
-
       // text
       this.text = ''
       this.text_color = ''
@@ -77,6 +76,12 @@ export default class ProteusCursor{
       this.timeouts = [];
       this.isDestroyed = false;
 
+      // Touch-only devices: skip DOM creation and event binding entirely.
+      // The native cursor works fine on touch; injecting overlay elements
+      // wastes resources and serves no purpose.
+      this.isTouch = ProteusCursor.isTouchOnly();
+      if (this.isTouch) return;
+
       // Bind dei metodi per poterli rimuovere correttamente
       this.boundMouseMove = this.handleMouseMove.bind(this);
       this.boundMouseEnter = this.handleMouseEnter.bind(this);
@@ -91,6 +96,23 @@ export default class ProteusCursor{
       this.dataAttributeEvents();
       this._initClickAnimation();
 
+   }
+
+   /**
+    * Returns true when the primary pointing device is coarse (touch / finger).
+    * Uses the CSS pointer media feature which is the most reliable heuristic:
+    * - phones, tablets without a paired mouse  → true  (skip cursor)
+    * - laptops with touchscreen                → false (primary pointer is mouse)
+    * - iPad/Surface with paired mouse/stylus   → false (fine pointer available)
+    */
+   static isTouchOnly() {
+      if (typeof window === 'undefined') return false;
+      return window.matchMedia('(pointer: coarse)').matches;
+   }
+
+   /** @private — returns true when the cursor is active (not destroyed, not touch). */
+   _isActive() {
+      return !this.isDestroyed && !this.isTouch;
    }
    //endregion
 
@@ -150,6 +172,7 @@ export default class ProteusCursor{
    }
 
    setShape(shape){
+      if (!this._isActive()) return;
       document.querySelector('body').classList.remove('proteus-is-a-fluid');
       document.querySelector('body').classList.remove('proteus-is-a-circle');
       this.shape = shape
@@ -384,6 +407,9 @@ export default class ProteusCursor{
    //region ❌ destroy Proteus
    destroy() {
 
+      // No-op on touch: nothing was created, nothing to tear down.
+      if (this.isTouch) return;
+
       // Marca come distrutto per fermare tutte le operazioni
       this.isDestroyed = true;
 
@@ -475,6 +501,7 @@ export default class ProteusCursor{
    //region 🏷️ Setters
    /* -------------------------------------------------------------------------------- */
    setShapeSize(width, height, isPermanent = false){
+      if (!this._isActive()) return;
       if(isPermanent){
          this.shape_size = width || '20px';
          this.shadow_size = height || '20px';
@@ -486,6 +513,7 @@ export default class ProteusCursor{
       }
    }
    setShapeColor(color, isPermanent = false){
+      if (!this._isActive()) return;
       if(isPermanent){
          this.shape_color = color;
          this.$shape.style.backgroundColor = color;
@@ -495,6 +523,7 @@ export default class ProteusCursor{
    }
 
    setShadowEnabled(isEnabled, isPermanent = false){
+      if (!this._isActive()) return;
       if(this.shape === 'circle'){
          if(isPermanent){
             this.hasShadow = isEnabled;
@@ -518,15 +547,18 @@ export default class ProteusCursor{
 
    }
    setShadowSize(width, height){
+      if (!this._isActive()) return;
       this.$shadow.style.width = width || '20px';
       this.$shadow.style.height = height || '20px';
    }
    setShadowColor(hexColor, alpha = 0.5){
+      if (!this._isActive()) return;
       const rgba = hexToRgba(hexColor, alpha);
       this.$shadow.style.backgroundColor = rgba;
    }
 
    setText(text, isPermanent = false){
+      if (!this._isActive()) return;
       if(isPermanent){
          this.text = text;
          document.querySelector('.proteus-cursor-shape').textContent = this.text;
@@ -535,6 +567,7 @@ export default class ProteusCursor{
       }
    }
    setTextColor(color, permanent = false){
+      if (!this._isActive()) return;
       if(permanent){
          this.text_color = color;
          document.querySelector('.proteus-cursor-shape').style.color = color;
@@ -544,6 +577,7 @@ export default class ProteusCursor{
 
    }
    setTextWeight(weight, isPermanent = false){
+      if (!this._isActive()) return;
       if(isPermanent){
          this.text_weight = weight;
          document.querySelector('.proteus-cursor-shape').style.fontWeight = weight;
@@ -552,6 +586,7 @@ export default class ProteusCursor{
       }
    }
    setTextSize(size, isPermanent = false){
+      if (!this._isActive()) return;
       if(isPermanent){
          this.text_size = size;
          document.querySelector('.proteus-cursor-shape').style.fontSize = size;
@@ -637,12 +672,14 @@ export default class ProteusCursor{
     * will activate it on mouseenter and restore defaults on mouseleave.
     */
    addState(name, options = {}) {
+      if (this.isTouch) return this;
       this.states[name] = options;
       this._bindStateElements(name);
       return this;
    }
 
    removeState(name) {
+      if (this.isTouch) return this;
       delete this.states[name];
       return this;
    }

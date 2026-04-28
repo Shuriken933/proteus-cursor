@@ -169,7 +169,37 @@ cursor.removeState('video');
 
 ---
 
-## 7) 🏷️ Data Attributes (per-element overrides)
+## 7) 📱 Touch Device Support
+
+Proteus Cursor automatically detects touch-only devices (phones, tablets without a paired mouse) and **skips initialization entirely** — no DOM elements are injected, no event listeners are registered, and the native cursor behaviour is preserved.
+
+Detection is based on the CSS `pointer: coarse` media feature, which correctly handles hybrid devices:
+
+| Device | Primary pointer | Proteus active? |
+|---|---|---|
+| Phone / tablet (no mouse) | coarse | ❌ skipped |
+| Laptop with touchscreen | fine (mouse) | ✅ active |
+| iPad / Surface + paired mouse | fine | ✅ active |
+
+All API methods remain **safe to call** on touch devices — they are no-ops that return without error. This means you never need to guard your initialization code:
+
+```js
+// Safe on every device — no try/catch or feature checks needed
+const cursor = new ProteusCursor({ shape: 'circle' });
+cursor.addState('cta', { shape_size: '60px' }); // no-op on touch
+```
+
+If you need to branch your own logic based on the device type, use the static helper:
+
+```js
+if (!ProteusCursor.isTouchOnly()) {
+  // desktop-only logic
+}
+```
+
+---
+
+## 8) 🏷️ Data Attributes (per-element overrides)
 
 For quick one-off customizations without defining a full state, you can use data attributes directly on elements:
 

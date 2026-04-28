@@ -74,6 +74,11 @@ export default class ProteusCursor {
   click_animation: 'scale' | 'ripple' | 'none';
   click_duration: number;
   isDestroyed: boolean;
+  /**
+   * `true` when the library detected a touch-only device and skipped
+   * initialization. All API methods are safe to call — they are no-ops.
+   */
+  readonly isTouch: boolean;
 
   // ── Shape ────────────────────────────────────────────────────────────────
   /** Switch cursor shape at runtime */
@@ -137,6 +142,19 @@ export default class ProteusCursor {
    * @returns `this` for chaining
    */
   removeState(name: string): this;
+
+  // ── Touch detection ──────────────────────────────────────────────────────
+  /**
+   * Returns `true` when the primary pointing device is coarse (touch/finger).
+   * ProteusCursor calls this automatically; you can use it for your own
+   * conditional logic.
+   *
+   * @example
+   * if (!ProteusCursor.isTouchOnly()) {
+   *   const cursor = new ProteusCursor({ shape: 'circle' });
+   * }
+   */
+  static isTouchOnly(): boolean;
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
   /** Remove all event listeners, cancel animations and restore the native cursor */
