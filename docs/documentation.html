@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Proteus Cursor — Documentation</title>
+  <meta name="description" content="Full API reference for Proteus Cursor. Constructor options, setters, state machine, presets, blend mode, framework adapters, accessibility." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+    :root {
+      --color-bg-primary:    #080C14;
+      --color-bg-secondary:  #0D1421;
+      --color-accent:        #00D4AA;
+      --color-violet:        #9D6FE8;
+      --color-cyan:          #5BC8F5;
+      --color-cta:           #FF6B35;
+      --color-text:          #E8F4F8;
+      --color-text-muted:    #8BA8B5;
+      --color-code-bg:       #060A10;
+      --color-border:        rgba(0,212,170,0.12);
+      --color-border-active: rgba(0,212,170,0.28);
+      --font-main:  'Poppins', sans-serif;
+      --font-code:  'JetBrains Mono', monospace;
+      --radius-card: 16px;
+      --radius-btn:  10px;
+      --sidebar-w:   260px;
+      --topbar-h:    60px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      background: var(--color-bg-primary);
+      color: var(--color-text);
+      font-family: var(--font-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* ============================================================
+       TOP BAR
+    ============================================================ */
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--topbar-h);
+      background: rgba(8,12,20,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--color-border);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 24px;
+    }
+    .topbar__logo {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+    .topbar__logo span { color: var(--color-accent); }
+    .topbar__divider {
+      width: 1px; height: 20px;
+      background: var(--color-border);
+    }
+    .topbar__title {
+      font-size: 0.875rem;
+      color: var(--color-text-muted);
+      font-weight: 500;
+    }
+    .topbar__right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .topbar__back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-btn);
+      font-size: 0.83rem;
+      font-weight: 500;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .topbar__back:hover { border-color: var(--color-border-active); color: var(--color-text); background: rgba(255,255,255,0.04); }
+    .topbar__gh {
+      padding: 6px 14px;
+      border: 1px solid var(--color-border-active);
+      border-radius: var(--radius-btn);
+      font-size: 0.83rem;
+      font-weight: 500;
+      color: var(--color-text);
+      background: transparent;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .topbar__gh:hover { background: rgba(255,255,255,0.06); }
+    .topbar__npm {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--color-code-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-btn);
+      font-family: var(--font-code);
+      font-size: 0.76rem;
+      color: var(--color-accent);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .topbar__npm:hover { border-color: var(--color-border-active); }
+
+    /* ============================================================
+       LAYOUT
+    ============================================================ */
+    .docs-layout {
+      display: flex;
+      padding-top: var(--topbar-h);
+      min-height: 100vh;
+    }
+
+    /* ============================================================
+       SIDEBAR
+    ============================================================ */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      position: fixed;
+      top: var(--topbar-h);
+      left: 0;
+      bottom: 0;
+      overflow-y: auto;
+      border-right: 1px solid var(--color-border);
+      background: var(--color-bg-secondary);
+      padding: 24px 0 40px;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 2px; }
+
+    .sidebar__section {
+      padding: 0 16px;
+      margin-bottom: 8px;
+    }
+    .sidebar__heading {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      padding: 14px 8px 6px;
+    }
+    .sidebar__link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      border-radius: 8px;
+      transition: color 0.15s, background 0.15s;
+      cursor: pointer;
+    }
+    .sidebar__link:hover { color: var(--color-text); background: rgba(255,255,255,0.04); }
+    .sidebar__link.active { color: var(--color-accent); background: rgba(0,212,170,0.08); font-weight: 500; }
+    .sidebar__link .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.5;
+      flex-shrink: 0;
+    }
+    .sidebar__divider {
+      height: 1px;
+      background: var(--color-border);
+      margin: 12px 16px;
+    }
+
+    /* ============================================================
+       MAIN CONTENT
+    ============================================================ */
+    .docs-content {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      min-width: 0;
+    }
+    .docs-section {
+      padding: 64px 56px;
+      border-bottom: 1px solid var(--color-border);
+      max-width: 880px;
+    }
+    .docs-section:last-child { border-bottom: none; }
+
+    .section-label {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      font-weight: 700;
+      color: var(--color-text);
+      line-height: 1.25;
+      margin-bottom: 14px;
+      letter-spacing: -0.02em;
+    }
+    .section-sub {
+      font-size: 1rem;
+      color: var(--color-text-muted);
+      margin-bottom: 32px;
+      max-width: 640px;
+      line-height: 1.7;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-violet) 60%, var(--color-cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Inline code */
+    code {
+      font-family: var(--font-code);
+      font-size: 0.82em;
+      color: var(--color-accent);
+      background: rgba(0,212,170,0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* ============================================================
+       CODE BLOCKS
+    ============================================================ */
+    .code-block {
+      background: var(--color-code-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      margin: 20px 0;
+    }
+    .code-block__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--color-border);
+      background: rgba(255,255,255,0.02);
+    }
+    .code-block__label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .code-block__body {
+      padding: 20px;
+      font-family: var(--font-code);
+      font-size: 0.85rem;
+      line-height: 1.75;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      color: var(--color-text);
+    }
+    .sh-keyword  { color: #9D6FE8; }
+    .sh-string   { color: #00D4AA; }
+    .sh-number   { color: #FF9A3C; }
+    .sh-comment  { color: #4A6070; font-style: italic; }
+    .sh-prop     { color: #E8F4F8; }
+    .sh-fn       { color: #5BC8F5; }
+    .sh-punct    { color: #8BA8B5; }
+
+    /* ============================================================
+       API TABLES
+    ============================================================ */
+    .api-table-wrap {
+      margin: 28px 0;
+    }
+    .api-table-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: 12px;
+      padding-left: 2px;
+    }
+    .api-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+    }
+    .api-table th {
+      text-align: left;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.025);
+      border-bottom: 1px solid var(--color-border);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .api-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(0,212,170,0.06);
+      color: var(--color-text);
+      vertical-align: top;
+    }
+    .api-table tr:last-child td { border-bottom: none; }
+    .api-table tr:hover td { background: rgba(255,255,255,0.015); }
+    .api-table td code { font-size: 0.8rem; }
+    .api-table td.type   { color: var(--color-violet); font-family: var(--font-code); font-size: 0.78rem; white-space: nowrap; }
+    .api-table td.default { color: var(--color-text-muted); font-family: var(--font-code); font-size: 0.78rem; }
+
+    /* ============================================================
+       CALLOUT / NOTE BOXES
+    ============================================================ */
+    .callout {
+      display: flex;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      margin: 20px 0;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+    .callout--tip  { background: rgba(0,212,170,0.07); border: 1px solid rgba(0,212,170,0.2); color: var(--color-accent); }
+    .callout--note { background: rgba(157,111,232,0.07); border: 1px solid rgba(157,111,232,0.2); color: var(--color-violet); }
+    .callout__icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .callout__body { color: var(--color-text); }
+    .callout__body strong { color: inherit; }
+
+    /* ============================================================
+       FRAMEWORK TABS
+    ============================================================ */
+    .fw-tabs {
+      margin-top: 24px;
+    }
+    .fw-tabs__bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: -1px;
+      position: relative;
+      z-index: 1;
+    }
+    .fw-tab-btn {
+      padding: 9px 20px;
+      border: 1px solid var(--color-border);
+      border-bottom: none;
+      background: transparent;
+      color: var(--color-text-muted);
+      border-radius: 8px 8px 0 0;
+      font-family: var(--font-code);
+      font-size: 0.83rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .fw-tab-btn.active {
+      background: var(--color-bg-secondary);
+      border-color: var(--color-border-active);
+      border-bottom: 1px solid var(--color-bg-secondary);
+      color: var(--color-text);
+    }
+    .fw-tab-panel {
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border-active);
+      border-radius: 0 8px 8px 8px;
+      padding: 28px;
+      font-family: var(--font-code);
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: var(--color-text);
+      white-space: pre-wrap;
+      display: none;
+    }
+    .fw-tab-panel.active { display: block; }
+    .fw-note {
+      margin-top: 14px;
+      font-size: 0.82rem;
+      color: var(--color-text-muted);
+    }
+    .fw-note span { color: var(--color-accent); }
+
+    /* ============================================================
+       PRESET CARDS (docs page)
+    ============================================================ */
+    .presets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin: 24px 0;
+    }
+    .preset-doc-card {
+      padding: 18px;
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+    }
+    .preset-doc-card__icon { font-size: 1.5rem; margin-bottom: 8px; display: block; }
+    .preset-doc-card__name { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+    .preset-doc-card__mode {
+      display: inline-block;
+      font-size: 0.63rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+    .preset-doc-card__mode.circle { background: rgba(0,212,170,0.1); color: var(--color-accent); }
+    .preset-doc-card__mode.fluid  { background: rgba(157,111,232,0.1); color: var(--color-violet); }
+    .preset-doc-card__desc { font-size: 0.78rem; color: var(--color-text-muted); line-height: 1.5; }
+
+    /* ============================================================
+       BLEND MODE DEMO
+    ============================================================ */
+    .blend-demo {
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      display: flex;
+      min-height: 140px;
+      margin: 20px 0;
+    }
+    .blend-demo__half {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82rem;
+    }
+    .blend-demo__half--dark  { background: #080C14; color: #8BA8B5; }
+    .blend-demo__half--light { background: #E8F4F8; color: #080C14; }
+
+    /* ============================================================
+       ACCESSIBILITY BADGES
+    ============================================================ */
+    .a11y-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .a11y-card {
+      padding: 20px;
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+    }
+    .a11y-card__icon { font-size: 1.6rem; margin-bottom: 10px; display: block; }
+    .a11y-card__title { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
+    .a11y-card__desc { font-size: 0.83rem; color: var(--color-text-muted); line-height: 1.6; }
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    .docs-footer {
+      margin-left: var(--sidebar-w);
+      padding: 32px 56px;
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: var(--color-text-muted);
+    }
+    .docs-footer a:hover { color: var(--color-accent); }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 800px) {
+      .sidebar { display: none; }
+      .docs-content { margin-left: 0; }
+      .docs-section { padding: 40px 24px; }
+      .docs-footer { margin-left: 0; padding: 24px; flex-direction: column; gap: 12px; }
+      .a11y-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ============================================================
+       TOAST
+    ============================================================ */
+    .toast {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      padding: 10px 20px;
+      background: rgba(0,212,170,0.15);
+      border: 1px solid var(--color-accent);
+      border-radius: 10px;
+      color: var(--color-accent);
+      font-size: 0.85rem;
+      font-weight: 500;
+      z-index: 9999;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <div class="toast" id="toast">Copied!</div>
+
+  <!-- ============================================================
+       TOP BAR
+  ============================================================ -->
+  <header class="topbar">
+    <a href="index.html" class="topbar__logo">Proteus<span>.</span></a>
+    <div class="topbar__divider"></div>
+    <span class="topbar__title">Documentation</span>
+    <div class="topbar__right">
+      <button class="topbar__npm" id="topbar-npm" title="Copy install command">
+        npm install proteuscursor <span style="opacity:0.5">⎘</span>
+      </button>
+      <a href="https://github.com/Shuriken933/proteus-cursor" target="_blank" rel="noopener">
+        <button class="topbar__gh">GitHub →</button>
+      </a>
+      <a href="index.html">
+        <button class="topbar__back">← Back to site</button>
+      </a>
+    </div>
+  </header>
+
+  <div class="docs-layout">
+
+    <!-- ============================================================
+         SIDEBAR
+    ============================================================ -->
+    <aside class="sidebar" id="sidebar">
+
+      <div class="sidebar__section">
+        <div class="sidebar__heading">Getting Started</div>
+        <a href="#installation" class="sidebar__link active" data-section="installation">
+          <span class="dot"></span> Installation
+        </a>
+        <a href="#quickstart" class="sidebar__link" data-section="quickstart">
+          <span class="dot"></span> Quick Start
+        </a>
+      </div>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__section">
+        <div class="sidebar__heading">Core Concepts</div>
+        <a href="#modes" class="sidebar__link" data-section="modes">
+          <span class="dot"></span> The Two Modes
+        </a>
+        <a href="#states" class="sidebar__link" data-section="states">
+          <span class="dot"></span> State Machine
+        </a>
+        <a href="#data-attributes" class="sidebar__link" data-section="data-attributes">
+          <span class="dot"></span> Data Attributes
+        </a>
+      </div>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__section">
+        <div class="sidebar__heading">API Reference</div>
+        <a href="#constructor" class="sidebar__link" data-section="constructor">
+          <span class="dot"></span> Constructor Options
+        </a>
+        <a href="#setters" class="sidebar__link" data-section="setters">
+          <span class="dot"></span> Setters
+        </a>
+        <a href="#static" class="sidebar__link" data-section="static">
+          <span class="dot"></span> Static Methods
+        </a>
+      </div>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__section">
+        <div class="sidebar__heading">Features</div>
+        <a href="#presets" class="sidebar__link" data-section="presets">
+          <span class="dot"></span> Preset System
+        </a>
+        <a href="#blendmode" class="sidebar__link" data-section="blendmode">
+          <span class="dot"></span> Blend Mode
+        </a>
+        <a href="#clickanims" class="sidebar__link" data-section="clickanims">
+          <span class="dot"></span> Click Animations
+        </a>
+      </div>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__section">
+        <div class="sidebar__heading">Integrations</div>
+        <a href="#frameworks" class="sidebar__link" data-section="frameworks">
+          <span class="dot"></span> React / Vue / Svelte
+        </a>
+      </div>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__section">
+        <div class="sidebar__heading">Accessibility</div>
+        <a href="#accessibility" class="sidebar__link" data-section="accessibility">
+          <span class="dot"></span> Touch &amp; Reduced Motion
+        </a>
+      </div>
+
+    </aside>
+
+    <!-- ============================================================
+         MAIN CONTENT
+    ============================================================ -->
+    <main class="docs-content">
+
+      <!-- INSTALLATION -->
+      <section class="docs-section" id="installation">
+        <div class="section-label">Getting Started</div>
+        <h1 class="section-title">Installation</h1>
+        <p class="section-sub">Proteus Cursor works with any framework or plain HTML. No build tools required for the UMD version.</p>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">npm</span></div>
+          <div class="code-block__body"><span class="sh-punct">$</span> <span class="sh-fn">npm</span> <span class="sh-keyword">install</span> <span class="sh-string">proteuscursor</span></div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">CDN / HTML &lt;script&gt; tag</span></div>
+          <div class="code-block__body"><span class="sh-punct">&lt;</span><span class="sh-keyword">link</span> <span class="sh-prop">rel</span><span class="sh-punct">=</span><span class="sh-string">"stylesheet"</span> <span class="sh-prop">href</span><span class="sh-punct">=</span><span class="sh-string">"proteus-cursor.min.css"</span><span class="sh-punct">&gt;</span>
+<span class="sh-punct">&lt;</span><span class="sh-keyword">script</span> <span class="sh-prop">src</span><span class="sh-punct">=</span><span class="sh-string">"proteus-cursor.umd.js"</span><span class="sh-punct">&gt;&lt;/</span><span class="sh-keyword">script</span><span class="sh-punct">&gt;</span></div>
+        </div>
+
+        <div class="callout callout--tip">
+          <span class="callout__icon">💡</span>
+          <div class="callout__body">Always include the CSS file — it contains the base styles for both cursor modes. Without it the cursor shape won't be visible.</div>
+        </div>
+      </section>
+
+      <!-- QUICK START -->
+      <section class="docs-section" id="quickstart">
+        <div class="section-label">Getting Started</div>
+        <h2 class="section-title">Quick Start</h2>
+        <p class="section-sub">Three lines of code to get your first shapeshifting cursor.</p>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">ES Module</span></div>
+          <div class="code-block__body"><span class="sh-keyword">import</span> <span class="sh-prop">ProteusCursor</span> <span class="sh-keyword">from</span> <span class="sh-string">'proteuscursor'</span><span class="sh-punct">;</span>
+<span class="sh-keyword">import</span> <span class="sh-string">'proteuscursor/style'</span><span class="sh-punct">;</span>
+
+<span class="sh-keyword">const</span> <span class="sh-prop">cursor</span> <span class="sh-punct">=</span> <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span><span class="sh-punct">({</span>
+  <span class="sh-prop">shape</span><span class="sh-punct">:</span> <span class="sh-string">'circle'</span><span class="sh-punct">,</span>
+  <span class="sh-prop">shape_color</span><span class="sh-punct">:</span> <span class="sh-string">'#00D4AA'</span><span class="sh-punct">,</span>
+  <span class="sh-prop">click_animation</span><span class="sh-punct">:</span> <span class="sh-string">'ripple'</span><span class="sh-punct">,</span>
+<span class="sh-punct">});</span>
+
+<span class="sh-comment">// Or start from a preset</span>
+<span class="sh-keyword">const</span> <span class="sh-prop">cursor2</span> <span class="sh-punct">=</span> <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span><span class="sh-punct">({</span>
+  ...ProteusCursor.<span class="sh-fn">getPreset</span><span class="sh-punct">(</span><span class="sh-string">'neon'</span><span class="sh-punct">)</span>
+<span class="sh-punct">});</span></div>
+        </div>
+      </section>
+
+      <!-- MODES -->
+      <section class="docs-section" id="modes">
+        <div class="section-label">Core Concepts</div>
+        <h2 class="section-title">The Two Modes</h2>
+        <p class="section-sub">
+          All cursor behaviour in Proteus builds on one of two base modes, set via the <code>shape</code> option.
+          Everything else — color, size, shadow, text, presets — is layered on top.
+        </p>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">circle mode</span></div>
+          <div class="code-block__body"><span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span><span class="sh-punct">({</span>
+  <span class="sh-prop">shape</span><span class="sh-punct">:</span> <span class="sh-string">'circle'</span><span class="sh-punct">,</span>      <span class="sh-comment">// perfectly round dot + lagging shadow</span>
+  <span class="sh-prop">shape_size</span><span class="sh-punct">:</span>  <span class="sh-string">'12px'</span><span class="sh-punct">,</span>
+  <span class="sh-prop">shape_color</span><span class="sh-punct">:</span> <span class="sh-string">'#fff'</span><span class="sh-punct">,</span>
+  <span class="sh-prop">hasShadow</span><span class="sh-punct">:</span>   <span class="sh-keyword">true</span><span class="sh-punct">,</span>
+  <span class="sh-prop">shadow_size</span><span class="sh-punct">:</span> <span class="sh-string">'44px'</span><span class="sh-punct">,</span>
+<span class="sh-punct">});</span></div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">fluid mode</span></div>
+          <div class="code-block__body"><span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span><span class="sh-punct">({</span>
+  <span class="sh-prop">shape</span><span class="sh-punct">:</span>       <span class="sh-string">'fluid'</span><span class="sh-punct">,</span>  <span class="sh-comment">// physics blob, stretches with velocity</span>
+  <span class="sh-prop">shape_size</span><span class="sh-punct">:</span>  <span class="sh-string">'24px'</span><span class="sh-punct">,</span>
+  <span class="sh-prop">shape_color</span><span class="sh-punct">:</span> <span class="sh-string">'#e8e8e8'</span><span class="sh-punct">,</span>
+  <span class="sh-prop">speed</span><span class="sh-punct">:</span>       <span class="sh-number">0.9</span><span class="sh-punct">,</span>     <span class="sh-comment">// lerp factor 0–1</span>
+  <span class="sh-prop">maxVelocity</span><span class="sh-punct">:</span> <span class="sh-number">10</span><span class="sh-punct">,</span>
+<span class="sh-punct">});</span></div>
+        </div>
+
+        <p style="font-size:0.875rem;color:var(--color-text-muted);margin-top:12px;">
+          You can switch modes at runtime with <code>cursor.setShape('fluid')</code> or <code>cursor.setShape('circle')</code>.
+        </p>
+      </section>
+
+      <!-- STATE MACHINE -->
+      <section class="docs-section" id="states">
+        <div class="section-label">Core Concepts</div>
+        <h2 class="section-title">State Machine</h2>
+        <p class="section-sub">
+          Register named cursor states in JavaScript with <code>addState()</code>, then activate them anywhere in HTML with a single <code>data-cursor-state</code> attribute. States revert automatically on mouse leave.
+        </p>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">JavaScript — register states</span></div>
+          <div class="code-block__body"><span class="sh-keyword">const</span> <span class="sh-prop">cursor</span> <span class="sh-punct">=</span> <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span><span class="sh-punct">({</span> <span class="sh-prop">shape</span><span class="sh-punct">:</span> <span class="sh-string">'circle'</span> <span class="sh-punct">});</span>
+
+cursor
+  .<span class="sh-fn">addState</span><span class="sh-punct">(</span><span class="sh-string">'gallery'</span><span class="sh-punct">, {</span>
+    <span class="sh-prop">shape_size</span><span class="sh-punct">:</span>  <span class="sh-string">'80px'</span><span class="sh-punct">,</span>
+    <span class="sh-prop">text</span><span class="sh-punct">:</span>        <span class="sh-string">'Zoom'</span><span class="sh-punct">,</span>
+    <span class="sh-prop">text_size</span><span class="sh-punct">:</span>   <span class="sh-string">'13px'</span><span class="sh-punct">,</span>
+    <span class="sh-prop">text_color</span><span class="sh-punct">:</span>  <span class="sh-string">'#fff'</span><span class="sh-punct">,</span>
+  <span class="sh-punct">})</span>
+  .<span class="sh-fn">addState</span><span class="sh-punct">(</span><span class="sh-string">'video'</span><span class="sh-punct">, {</span>
+    <span class="sh-prop">shape_size</span><span class="sh-punct">:</span>  <span class="sh-string">'90px'</span><span class="sh-punct">,</span>
+    <span class="sh-prop">text</span><span class="sh-punct">:</span>        <span class="sh-string">'▶ Play'</span><span class="sh-punct">,</span>
+    <span class="sh-prop">hasShadow</span><span class="sh-punct">:</span>   <span class="sh-keyword">false</span><span class="sh-punct">,</span>
+  <span class="sh-punct">})</span>
+  .<span class="sh-fn">addState</span><span class="sh-punct">(</span><span class="sh-string">'cta'</span><span class="sh-punct">, {</span>
+    <span class="sh-prop">shape_size</span><span class="sh-punct">:</span>  <span class="sh-string">'70px'</span><span class="sh-punct">,</span>
+    <span class="sh-prop">shape_color</span><span class="sh-punct">:</span> <span class="sh-string">'rgba(255,107,53,0.2)'</span><span class="sh-punct">,</span>
+    <span class="sh-prop">text</span><span class="sh-punct">:</span>        <span class="sh-string">'Click'</span><span class="sh-punct">,</span>
+    <span class="sh-prop">text_color</span><span class="sh-punct">:</span>  <span class="sh-string">'#FF6B35'</span><span class="sh-punct">,</span>
+    <span class="sh-prop">text_weight</span><span class="sh-punct">:</span> <span class="sh-string">'600'</span><span class="sh-punct">,</span>
+  <span class="sh-punct">});</span></div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">HTML — activate with data attribute</span></div>
+          <div class="code-block__body"><span class="sh-comment">&lt;!-- Activates 'gallery' state on hover --&gt;</span>
+<span class="sh-punct">&lt;</span><span class="sh-keyword">div</span> <span class="sh-prop">class</span><span class="sh-punct">=</span><span class="sh-string">"gallery-item"</span> <span class="sh-prop">data-cursor-state</span><span class="sh-punct">=</span><span class="sh-string">"gallery"</span><span class="sh-punct">&gt;</span>
+  <span class="sh-punct">&lt;</span><span class="sh-keyword">img</span> <span class="sh-prop">src</span><span class="sh-punct">=</span><span class="sh-string">"photo.jpg"</span> <span class="sh-punct">/&gt;</span>
+<span class="sh-punct">&lt;/</span><span class="sh-keyword">div</span><span class="sh-punct">&gt;</span>
+
+<span class="sh-comment">&lt;!-- Activates 'video' state on hover --&gt;</span>
+<span class="sh-punct">&lt;</span><span class="sh-keyword">div</span> <span class="sh-prop">data-cursor-state</span><span class="sh-punct">=</span><span class="sh-string">"video"</span><span class="sh-punct">&gt;</span>
+  <span class="sh-punct">&lt;</span><span class="sh-keyword">video</span> <span class="sh-prop">src</span><span class="sh-punct">=</span><span class="sh-string">"clip.mp4"</span><span class="sh-punct">/&gt;</span>
+<span class="sh-punct">&lt;/</span><span class="sh-keyword">div</span><span class="sh-punct">&gt;</span></div>
+        </div>
+
+        <p style="font-size:0.875rem;color:var(--color-text-muted);">
+          <code>addState()</code> is chainable. Remove a state at runtime with <code>cursor.removeState('gallery')</code>.
+        </p>
+      </section>
+
+      <!-- DATA ATTRIBUTES -->
+      <section class="docs-section" id="data-attributes">
+        <div class="section-label">Core Concepts</div>
+        <h2 class="section-title">Data Attributes</h2>
+        <p class="section-sub">Per-element overrides without registering a named state — useful for one-off hover effects.</p>
+
+        <div class="api-table-wrap">
+          <table class="api-table">
+            <thead>
+              <tr><th>Attribute</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>data-cursor-state="name"</code></td><td>Activates a registered state on hover. Reverts on mouse leave.</td></tr>
+              <tr><td><code>data-proteus-shapeSize="40px"</code></td><td>Override shape size on hover for this element only.</td></tr>
+              <tr><td><code>data-proteus-shapeColor="#FF0"</code></td><td>Override shape color on hover for this element only.</td></tr>
+              <tr><td><code>data-proteus-text="Open"</code></td><td>Display text inside cursor when hovering this element.</td></tr>
+              <tr><td><code>data-proteus-textColor="#fff"</code></td><td>Text color for this element's hover state.</td></tr>
+              <tr><td><code>data-proteus-textSize="14px"</code></td><td>Text font size for this element's hover state.</td></tr>
+              <tr><td><code>data-proteus-textWeight="700"</code></td><td>Text font weight for this element's hover state.</td></tr>
+              <tr><td><code>data-proteus-shadowIsEnabled="false"</code></td><td>Disable shadow when hovering this element.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">Example — no state registration needed</span></div>
+          <div class="code-block__body"><span class="sh-punct">&lt;</span><span class="sh-keyword">button</span>
+  <span class="sh-prop">data-proteus-shapeSize</span><span class="sh-punct">=</span><span class="sh-string">"48px"</span>
+  <span class="sh-prop">data-proteus-shapeColor</span><span class="sh-punct">=</span><span class="sh-string">"rgba(255,107,53,0.2)"</span>
+  <span class="sh-prop">data-proteus-text</span><span class="sh-punct">=</span><span class="sh-string">"Go!"</span>
+  <span class="sh-prop">data-proteus-textColor</span><span class="sh-punct">=</span><span class="sh-string">"#FF6B35"</span>
+<span class="sh-punct">&gt;</span>
+  Submit
+<span class="sh-punct">&lt;/</span><span class="sh-keyword">button</span><span class="sh-punct">&gt;</span></div>
+        </div>
+      </section>
+
+      <!-- CONSTRUCTOR OPTIONS -->
+      <section class="docs-section" id="constructor">
+        <div class="section-label">API Reference</div>
+        <h2 class="section-title">Constructor Options</h2>
+        <p class="section-sub">All options passed to <code>new ProteusCursor(options)</code>.</p>
+
+        <div class="api-table-wrap">
+          <table class="api-table">
+            <thead>
+              <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>shape</code></td><td class="type">string</td><td class="default">'default'</td><td>Cursor mode: <code>circle</code>, <code>fluid</code>, or <code>default</code> (native cursor).</td></tr>
+              <tr><td><code>shape_size</code></td><td class="type">string</td><td class="default">'10px'</td><td>Width and height of the cursor element.</td></tr>
+              <tr><td><code>shape_color</code></td><td class="type">string</td><td class="default">'#fff'</td><td>CSS color of the cursor shape.</td></tr>
+              <tr><td><code>hasShadow</code></td><td class="type">boolean</td><td class="default">true</td><td>Whether to show the trailing shadow element (circle mode).</td></tr>
+              <tr><td><code>shadow_delay</code></td><td class="type">string</td><td class="default">'0.3s'</td><td>CSS transition delay for shadow lag effect.</td></tr>
+              <tr><td><code>shadow_size</code></td><td class="type">string</td><td class="default">'40px'</td><td>Width and height of the shadow element.</td></tr>
+              <tr><td><code>shadow_color</code></td><td class="type">string</td><td class="default">'#ffffff'</td><td>Hex color for the shadow glow.</td></tr>
+              <tr><td><code>text</code></td><td class="type">string</td><td class="default">''</td><td>Text rendered inside the cursor shape.</td></tr>
+              <tr><td><code>text_color</code></td><td class="type">string</td><td class="default">''</td><td>Color of the cursor text.</td></tr>
+              <tr><td><code>text_weight</code></td><td class="type">string</td><td class="default">''</td><td>Font weight of the cursor text.</td></tr>
+              <tr><td><code>text_size</code></td><td class="type">string</td><td class="default">''</td><td>Font size of the cursor text.</td></tr>
+              <tr><td><code>speed</code></td><td class="type">number</td><td class="default">0.9</td><td>Lerp factor for fluid mode movement (0–1). Higher = snappier.</td></tr>
+              <tr><td><code>maxVelocity</code></td><td class="type">number</td><td class="default">10</td><td>Maximum velocity cap for fluid deformation.</td></tr>
+              <tr><td><code>magnetic</code></td><td class="type">boolean</td><td class="default">false</td><td>Enables magnetic attraction to nearby elements.</td></tr>
+              <tr><td><code>blend_mode</code></td><td class="type">string</td><td class="default">'normal'</td><td>CSS <code>mix-blend-mode</code> on the cursor. Use <code>'difference'</code> for auto color inversion.</td></tr>
+              <tr><td><code>click_animation</code></td><td class="type">string</td><td class="default">'scale'</td><td>Click feedback: <code>scale</code>, <code>ripple</code>, or <code>none</code>.</td></tr>
+              <tr><td><code>click_duration</code></td><td class="type">number</td><td class="default">300</td><td>Duration in ms for click animation.</td></tr>
+              <tr><td><code>respectReducedMotion</code></td><td class="type">boolean</td><td class="default">true</td><td>When true, skips init if OS has <code>prefers-reduced-motion: reduce</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SETTERS -->
+      <section class="docs-section" id="setters">
+        <div class="section-label">API Reference</div>
+        <h2 class="section-title">Setters</h2>
+        <p class="section-sub">All setter methods can be called at runtime. Most accept an optional <code>isPermanent</code> flag — when <code>true</code>, the value persists after state resets.</p>
+
+        <div class="api-table-wrap">
+          <table class="api-table">
+            <thead>
+              <tr><th>Method</th><th>Parameters</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>setShape(shape)</code></td><td class="type">string</td><td>Switch cursor mode at runtime: <code>'circle'</code> or <code>'fluid'</code>.</td></tr>
+              <tr><td><code>setShapeSize(w, h, isPermanent?)</code></td><td class="type">string, string, bool?</td><td>Resize the cursor shape.</td></tr>
+              <tr><td><code>setShapeColor(color, isPermanent?)</code></td><td class="type">string, bool?</td><td>Change cursor fill color.</td></tr>
+              <tr><td><code>setShadowEnabled(bool, isPermanent?)</code></td><td class="type">boolean, bool?</td><td>Show or hide the shadow element.</td></tr>
+              <tr><td><code>setShadowSize(w, h)</code></td><td class="type">string, string</td><td>Resize the shadow blob.</td></tr>
+              <tr><td><code>setShadowColor(hex, alpha?)</code></td><td class="type">string, number?</td><td>Set shadow color and optional opacity (0–1).</td></tr>
+              <tr><td><code>setText(text, isPermanent?)</code></td><td class="type">string, bool?</td><td>Embed text inside the cursor.</td></tr>
+              <tr><td><code>setTextColor(color, isPermanent?)</code></td><td class="type">string, bool?</td><td>Set text color.</td></tr>
+              <tr><td><code>setTextWeight(weight, isPermanent?)</code></td><td class="type">string, bool?</td><td>Set font weight of cursor text.</td></tr>
+              <tr><td><code>setTextSize(size, isPermanent?)</code></td><td class="type">string, bool?</td><td>Set font size of cursor text.</td></tr>
+              <tr><td><code>setSpeed(speed)</code></td><td class="type">number</td><td>Adjust fluid interpolation speed (0–1).</td></tr>
+              <tr><td><code>setMaxVelocity(max)</code></td><td class="type">number</td><td>Cap maximum fluid deformation.</td></tr>
+              <tr><td><code>addState(name, config)</code></td><td class="type">string, object</td><td>Register a named state. Chainable.</td></tr>
+              <tr><td><code>removeState(name)</code></td><td class="type">string</td><td>Remove a registered state. Chainable.</td></tr>
+              <tr><td><code>setBlendMode(mode, isPermanent?)</code></td><td class="type">string, bool?</td><td>Apply CSS <code>mix-blend-mode</code> at runtime.</td></tr>
+              <tr><td><code>loadPreset(name, overrides?)</code></td><td class="type">string, object?</td><td>Apply a built-in preset. Chainable.</td></tr>
+              <tr><td><code>destroy()</code></td><td class="type">—</td><td>Remove cursor elements and all event listeners.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- STATIC METHODS -->
+      <section class="docs-section" id="static">
+        <div class="section-label">API Reference</div>
+        <h2 class="section-title">Static Methods &amp; Properties</h2>
+        <p class="section-sub">Class-level utilities. Call without creating an instance.</p>
+
+        <div class="api-table-wrap">
+          <table class="api-table">
+            <thead>
+              <tr><th>Method / Property</th><th>Returns</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>ProteusCursor.isTouchOnly()</code></td><td class="type">boolean</td><td>Returns <code>true</code> when the primary pointer is coarse (touch device). Called automatically in the constructor.</td></tr>
+              <tr><td><code>ProteusCursor.prefersReducedMotion()</code></td><td class="type">boolean</td><td>Returns <code>true</code> when the OS has <code>prefers-reduced-motion: reduce</code> active.</td></tr>
+              <tr><td><code>ProteusCursor.getPreset(name)</code></td><td class="type">object</td><td>Returns the raw config for a named preset. Spread into constructor options to use as a base.</td></tr>
+              <tr><td><code>ProteusCursor.PRESETS</code></td><td class="type">object</td><td>All five built-in preset configs keyed by name: <code>ghost</code>, <code>neon</code>, <code>minimal</code>, <code>chrome</code>, <code>ink</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- PRESETS -->
+      <section class="docs-section" id="presets">
+        <div class="section-label">Features</div>
+        <h2 class="section-title">Preset System</h2>
+        <p class="section-sub">Five built-in configurations. Apply in one line and override any property you want.</p>
+
+        <div class="presets-grid">
+          <div class="preset-doc-card">
+            <span class="preset-doc-card__icon">👻</span>
+            <div class="preset-doc-card__name">Ghost</div>
+            <span class="preset-doc-card__mode circle">circle</span>
+            <p class="preset-doc-card__desc">12px semi-transparent white dot with a subtle glow. Blends into any design.</p>
+          </div>
+          <div class="preset-doc-card">
+            <span class="preset-doc-card__icon">⚡</span>
+            <div class="preset-doc-card__name">Neon</div>
+            <span class="preset-doc-card__mode circle">circle</span>
+            <p class="preset-doc-card__desc">Solid teal (#00D4AA) dot with a wide electric halo. Built for dark UIs.</p>
+          </div>
+          <div class="preset-doc-card">
+            <span class="preset-doc-card__icon">◉</span>
+            <div class="preset-doc-card__name">Minimal</div>
+            <span class="preset-doc-card__mode circle">circle</span>
+            <p class="preset-doc-card__desc">6px white dot, no shadow. Almost invisible — the subtlest option.</p>
+          </div>
+          <div class="preset-doc-card">
+            <span class="preset-doc-card__icon">🔲</span>
+            <div class="preset-doc-card__name">Chrome</div>
+            <span class="preset-doc-card__mode circle">circle</span>
+            <p class="preset-doc-card__desc">48px white circle with <code>mix-blend-mode: difference</code>. Auto-inverts any background.</p>
+          </div>
+          <div class="preset-doc-card">
+            <span class="preset-doc-card__icon">💧</span>
+            <div class="preset-doc-card__name">Ink</div>
+            <span class="preset-doc-card__mode fluid">fluid</span>
+            <p class="preset-doc-card__desc">Physics blob that stretches and squeezes. Tactile and organic feel.</p>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">Usage</span></div>
+          <div class="code-block__body"><span class="sh-keyword">const</span> cursor = <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span>({ shape: <span class="sh-string">'circle'</span> });
+
+<span class="sh-comment">// Apply to a live instance (chainable)</span>
+cursor.<span class="sh-fn">loadPreset</span>(<span class="sh-string">'neon'</span>);
+cursor.<span class="sh-fn">loadPreset</span>(<span class="sh-string">'chrome'</span>, { shape_size: <span class="sh-string">'64px'</span> }); <span class="sh-comment">// with overrides</span>
+
+<span class="sh-comment">// Use as constructor base</span>
+<span class="sh-keyword">const</span> cursor2 = <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span>({
+  ...ProteusCursor.<span class="sh-fn">getPreset</span>(<span class="sh-string">'neon'</span>),
+  shape_color: <span class="sh-string">'#ff4444'</span>,   <span class="sh-comment">// override just the color</span>
+});
+
+<span class="sh-comment">// Inspect all preset configs</span>
+console.<span class="sh-fn">log</span>(ProteusCursor.PRESETS);</div>
+        </div>
+      </section>
+
+      <!-- BLEND MODE -->
+      <section class="docs-section" id="blendmode">
+        <div class="section-label">Features</div>
+        <h2 class="section-title">Blend Mode</h2>
+        <p class="section-sub">
+          Apply CSS <code>mix-blend-mode</code> to the cursor shape via the <code>blend_mode</code> option.
+          The <strong>difference</strong> value creates automatic color inversion — the cursor always stays readable against any background.
+        </p>
+
+        <div class="blend-demo">
+          <div class="blend-demo__half blend-demo__half--dark">dark background</div>
+          <div class="blend-demo__half blend-demo__half--light">light background</div>
+        </div>
+        <p style="font-size:0.8rem;color:var(--color-text-muted);margin-bottom:20px;">With <code>blend_mode: 'difference'</code> and a white cursor, the shape inverts automatically on both halves.</p>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">Constructor</span></div>
+          <div class="code-block__body"><span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span>({
+  shape:       <span class="sh-string">'circle'</span>,
+  shape_size:  <span class="sh-string">'40px'</span>,
+  shape_color: <span class="sh-string">'#ffffff'</span>,
+  hasShadow:   <span class="sh-keyword">false</span>,
+  blend_mode:  <span class="sh-string">'difference'</span>,
+});
+
+<span class="sh-comment">// Or at runtime</span>
+cursor.<span class="sh-fn">setBlendMode</span>(<span class="sh-string">'difference'</span>);
+cursor.<span class="sh-fn">setBlendMode</span>(<span class="sh-string">'normal'</span>);  <span class="sh-comment">// reset</span></div>
+        </div>
+
+        <div class="api-table-wrap">
+          <div class="api-table-title">Common values</div>
+          <table class="api-table">
+            <thead><tr><th>Value</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>'normal'</code></td><td>Default. No blending effect.</td></tr>
+              <tr><td><code>'difference'</code></td><td>Inverts colors beneath the cursor. Best with a white shape.</td></tr>
+              <tr><td><code>'exclusion'</code></td><td>Softer inversion, lower contrast than difference.</td></tr>
+              <tr><td><code>'multiply'</code></td><td>Darkens underneath the cursor.</td></tr>
+              <tr><td><code>'screen'</code></td><td>Lightens underneath the cursor.</td></tr>
+              <tr><td>any CSS value</td><td>All <code>mix-blend-mode</code> values are supported.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- CLICK ANIMATIONS -->
+      <section class="docs-section" id="clickanims">
+        <div class="section-label">Features</div>
+        <h2 class="section-title">Click Animations</h2>
+        <p class="section-sub">Three built-in click feedback styles. Set at construction time or change at runtime.</p>
+
+        <div class="api-table-wrap">
+          <table class="api-table">
+            <thead><tr><th>Value</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>'scale'</code></td><td>The cursor punches inward on click — a satisfying physical press feeling.</td></tr>
+              <tr><td><code>'ripple'</code></td><td>An expanding ring radiates outward from the cursor position on click.</td></tr>
+              <tr><td><code>'none'</code></td><td>No click feedback. For pure visual cursors with no interaction emphasis.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">Example</span></div>
+          <div class="code-block__body"><span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span>({
+  shape:          <span class="sh-string">'circle'</span>,
+  click_animation: <span class="sh-string">'ripple'</span>,
+  click_duration:  <span class="sh-number">350</span>,     <span class="sh-comment">// ms</span>
+});
+
+<span class="sh-comment">// Change at runtime</span>
+cursor.click_animation = <span class="sh-string">'scale'</span>;</div>
+        </div>
+      </section>
+
+      <!-- FRAMEWORKS -->
+      <section class="docs-section" id="frameworks">
+        <div class="section-label">Integrations</div>
+        <h2 class="section-title">Framework Adapters</h2>
+        <p class="section-sub">
+          First-class hooks for React, Vue 3, and Svelte via subpath exports.
+          Each adapter handles the mount/unmount lifecycle automatically and is SSR-safe (Next.js, Nuxt, SvelteKit).
+        </p>
+
+        <div class="fw-tabs">
+          <div class="fw-tabs__bar">
+            <button class="fw-tab-btn active" onclick="fwTab('react')">⚛️ React</button>
+            <button class="fw-tab-btn" onclick="fwTab('vue')">💚 Vue 3</button>
+            <button class="fw-tab-btn" onclick="fwTab('svelte')">🔥 Svelte</button>
+          </div>
+
+          <div class="fw-tab-panel active" id="fw-panel-react"><span class="sh-comment">// Install</span>
+<span class="sh-fn">npm</span> install proteuscursor
+
+<span class="sh-keyword">import</span> { useProteusCursor } <span class="sh-keyword">from</span> <span class="sh-string">'proteuscursor/react'</span>;
+<span class="sh-keyword">import</span> <span class="sh-string">'proteuscursor/style'</span>;
+
+<span class="sh-keyword">export default function</span> <span class="sh-fn">App</span>() {
+  <span class="sh-keyword">const</span> cursor = <span class="sh-fn">useProteusCursor</span>({
+    shape:           <span class="sh-string">'circle'</span>,
+    shape_color:     <span class="sh-string">'#ffffff'</span>,
+    click_animation: <span class="sh-string">'ripple'</span>,
+  });
+  <span class="sh-comment">// cursor.current → ProteusCursor instance (null until mounted)</span>
+  <span class="sh-keyword">return</span> &lt;<span class="sh-fn">main</span>&gt;...&lt;/<span class="sh-fn">main</span>&gt;;
+}</div>
+
+          <div class="fw-tab-panel" id="fw-panel-vue"><span class="sh-keyword">import</span> { useProteusCursor } <span class="sh-keyword">from</span> <span class="sh-string">'proteuscursor/vue'</span>;
+<span class="sh-keyword">import</span> <span class="sh-string">'proteuscursor/style'</span>;
+
+<span class="sh-comment">// inside &lt;script setup&gt;</span>
+<span class="sh-keyword">const</span> cursor = <span class="sh-fn">useProteusCursor</span>({
+  shape:           <span class="sh-string">'circle'</span>,
+  shape_color:     <span class="sh-string">'#ffffff'</span>,
+  click_animation: <span class="sh-string">'ripple'</span>,
+});
+<span class="sh-comment">// cursor.value → ProteusCursor instance (null until mounted)</span></div>
+
+          <div class="fw-tab-panel" id="fw-panel-svelte"><span class="sh-keyword">import</span> { useProteusCursor } <span class="sh-keyword">from</span> <span class="sh-string">'proteuscursor/svelte'</span>;
+<span class="sh-keyword">import</span> <span class="sh-string">'proteuscursor/style'</span>;
+
+<span class="sh-comment">// inside &lt;script&gt; block (Svelte 4 &amp; 5)</span>
+<span class="sh-keyword">const</span> cursor = <span class="sh-fn">useProteusCursor</span>({
+  shape:           <span class="sh-string">'circle'</span>,
+  shape_color:     <span class="sh-string">'#ffffff'</span>,
+  click_animation: <span class="sh-string">'ripple'</span>,
+});
+<span class="sh-comment">// cursor.current → ProteusCursor instance (undefined until mounted)</span></div>
+        </div>
+
+        <p class="fw-note">
+          <span>✅ SSR-safe</span> &nbsp;·&nbsp; <span>✅ TypeScript types included</span> &nbsp;·&nbsp;
+          <span>✅ Full API accessible via returned ref</span>
+        </p>
+
+        <div class="callout callout--note" style="margin-top:20px;">
+          <span class="callout__icon">📦</span>
+          <div class="callout__body">
+            <strong>Peer dependencies</strong> — React, Vue and Svelte are peer dependencies.
+            Install only the one you need. The adapters are tree-shaken from your bundle automatically.
+          </div>
+        </div>
+      </section>
+
+      <!-- ACCESSIBILITY -->
+      <section class="docs-section" id="accessibility">
+        <div class="section-label">Accessibility</div>
+        <h2 class="section-title">Touch &amp; Reduced Motion</h2>
+        <p class="section-sub">
+          Proteus Cursor is designed to be inclusive by default.
+          Both behaviours are opt-out via constructor options if you need manual control.
+        </p>
+
+        <div class="a11y-grid">
+          <div class="a11y-card">
+            <span class="a11y-card__icon">📱</span>
+            <div class="a11y-card__title">Touch Device Support</div>
+            <p class="a11y-card__desc">
+              On touch-only devices (phones, tablets without a paired mouse), the constructor
+              returns immediately without injecting any DOM elements or attaching event listeners.
+              The native cursor — if any — remains unaffected.
+            </p>
+          </div>
+          <div class="a11y-card">
+            <span class="a11y-card__icon">♿</span>
+            <div class="a11y-card__title">Reduced Motion</div>
+            <p class="a11y-card__desc">
+              When the OS has <code>prefers-reduced-motion: reduce</code> set, the constructor
+              also skips init entirely. No animation frames, no overlay elements.
+              Disable with <code>respectReducedMotion: false</code> if your site itself handles this flag.
+            </p>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">Manual detection</span></div>
+          <div class="code-block__body"><span class="sh-comment">// Check before initialising in custom logic</span>
+<span class="sh-keyword">if</span> (!ProteusCursor.<span class="sh-fn">isTouchOnly</span>() &amp;&amp; !ProteusCursor.<span class="sh-fn">prefersReducedMotion</span>()) {
+  <span class="sh-keyword">const</span> cursor = <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span>({ shape: <span class="sh-string">'circle'</span> });
+}
+
+<span class="sh-comment">// Or opt out of the automatic check</span>
+<span class="sh-keyword">const</span> cursor = <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span>({
+  shape:                <span class="sh-string">'circle'</span>,
+  respectReducedMotion: <span class="sh-keyword">false</span>,   <span class="sh-comment">// handle it yourself</span>
+});</div>
+        </div>
+
+        <div class="callout callout--tip">
+          <span class="callout__icon">💡</span>
+          <div class="callout__body">
+            Both static methods are safe to call server-side — they check for <code>typeof window</code>
+            and return <code>false</code> in SSR environments.
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+  <footer class="docs-footer">
+    <span>Proteus Cursor v2.0.0 &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; Built by <a href="https://github.com/Shuriken933" target="_blank" rel="noopener" style="color:var(--color-accent)">Eros Agostini</a></span>
+    <span style="display:flex;gap:20px;">
+      <a href="index.html" style="color:var(--color-text-muted)">← Landing page</a>
+      <a href="https://github.com/Shuriken933/proteus-cursor" target="_blank" rel="noopener" style="color:var(--color-text-muted)">GitHub</a>
+      <a href="https://www.npmjs.com/package/proteuscursor" target="_blank" rel="noopener" style="color:var(--color-text-muted)">npm</a>
+    </span>
+  </footer>
+
+  <!-- ============================================================
+       SCRIPT
+  ============================================================ -->
+  <script>
+    /* Framework tabs */
+    function fwTab(id) {
+      document.querySelectorAll('.fw-tab-btn').forEach((b, i) => {
+        const ids = ['react', 'vue', 'svelte'];
+        b.classList.toggle('active', ids[i] === id);
+      });
+      ['react','vue','svelte'].forEach(fw => {
+        const panel = document.getElementById('fw-panel-' + fw);
+        if (panel) panel.classList.toggle('active', fw === id);
+      });
+    }
+
+    /* Active sidebar link on scroll */
+    const sections = document.querySelectorAll('.docs-section[id]');
+    const sidebarLinks = document.querySelectorAll('.sidebar__link[data-section]');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          sidebarLinks.forEach(link => {
+            link.classList.toggle('active', link.dataset.section === id);
+          });
+        }
+      });
+    }, { rootMargin: '-60px 0px -60% 0px', threshold: 0 });
+
+    sections.forEach(s => observer.observe(s));
+
+    /* Sidebar link smooth scroll */
+    sidebarLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.getElementById(link.dataset.section);
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+
+    /* Toast */
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    /* Copy npm command */
+    document.getElementById('topbar-npm').addEventListener('click', () => {
+      navigator.clipboard.writeText('npm install proteuscursor')
+        .then(() => showToast('Copied!'))
+        .catch(() => {});
+    });
+  </script>
+</body>
+</html>
