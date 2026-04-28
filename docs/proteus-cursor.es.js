@@ -10,7 +10,7 @@ var e = class e {
 	prevMouseX = 0;
 	prevMouseY = 0;
 	constructor(t = {}) {
-		this.testMode = !1, this.shape = t.shape || "default", this.shape_size = t.shape_size || "10px", this.shape_color = t.shape_color || "#fff", this.hasShadow = t.hasShadow ?? !0, this.shadow_delay = this.hasShadow ? t.shadow_delay || "0.3s" : "0s", this.shadow_size = t.shadow_size || "40px", this.shadow_color = t.shadow_color || "#ffffff", this.text = "", this.text_color = "", this.text_weight = "", this.text_size = "", this.speed = .9, this.maxVelocity = 10, this.isMagnetic = t.magnetic ?? !1, this.click_animation = t.click_animation || "scale", this.click_duration = t.click_duration ?? 300, this.states = {}, this.eventListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.isTouch = e.isTouchOnly(), !this.isTouch && (this.respectReducedMotion = t.respectReducedMotion ?? !0, this.isReducedMotion = this.respectReducedMotion && e.prefersReducedMotion(), !this.isReducedMotion && (this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.hasShadow || (this.$shadow.style.display = "none"), this.dataAttributeEvents(), this._initClickAnimation()));
+		this.testMode = !1, this.shape = t.shape || "default", this.shape_size = t.shape_size || "10px", this.shape_color = t.shape_color || "#fff", this.hasShadow = t.hasShadow ?? !0, this.shadow_delay = this.hasShadow ? t.shadow_delay || "0.3s" : "0s", this.shadow_size = t.shadow_size || "40px", this.shadow_color = t.shadow_color || "#ffffff", this.text = "", this.text_color = "", this.text_weight = "", this.text_size = "", this.speed = .9, this.maxVelocity = 10, this.isMagnetic = t.magnetic ?? !1, this.blend_mode = t.blend_mode || "normal", this.click_animation = t.click_animation || "scale", this.click_duration = t.click_duration ?? 300, this.states = {}, this.eventListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.isTouch = e.isTouchOnly(), !this.isTouch && (this.respectReducedMotion = t.respectReducedMotion ?? !0, this.isReducedMotion = this.respectReducedMotion && e.prefersReducedMotion(), !this.isReducedMotion && (this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.hasShadow || (this.$shadow.style.display = "none"), this.dataAttributeEvents(), this._initClickAnimation()));
 	}
 	static isTouchOnly() {
 		return typeof window > "u" ? !1 : window.matchMedia("(pointer: coarse)").matches;
@@ -22,7 +22,7 @@ var e = class e {
 		return !this.isDestroyed && !this.isTouch && !this.isReducedMotion;
 	}
 	init() {
-		this.init_HTMLcursorAndShadow(), this.$shape = document.getElementById("proteus-cursor-shape"), this.$shadow = document.getElementById("proteus-cursor-shadow"), this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shadow.style.width = this.shadow_size || "40px", this.$shadow.style.height = this.shadow_size || "40px", this.setShape(this.shape);
+		this.init_HTMLcursorAndShadow(), this.$shape = document.getElementById("proteus-cursor-shape"), this.$shadow = document.getElementById("proteus-cursor-shadow"), this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shadow.style.width = this.shadow_size || "40px", this.$shadow.style.height = this.shadow_size || "40px", this.setShape(this.shape), this.blend_mode && this.blend_mode !== "normal" && (this.$shape.style.mixBlendMode = this.blend_mode);
 	}
 	init_HTMLcursorAndShadow() {
 		if (document.getElementById("proteus-cursor-shape")) return;
@@ -171,6 +171,9 @@ var e = class e {
 	setMaxVelocity(e) {
 		this.maxVelocity = e;
 	}
+	setBlendMode(e, t = !1) {
+		this._isActive() && (t && (this.blend_mode = e), this.$shape.style.mixBlendMode = e);
+	}
 	_initClickAnimation() {
 		this.click_animation !== "none" && this.addEventListenerTracked(document, "mousedown", (e) => {
 			this.isDestroyed || (this.click_animation === "scale" && this._clickScale(), this.click_animation === "ripple" && this._clickRipple(e));
@@ -216,10 +219,10 @@ var e = class e {
 	}
 	_applyState(e) {
 		let t = this.states[e];
-		t && (t.shape_size !== void 0 && this.setShapeSize(t.shape_size, t.shape_size), t.shape_color !== void 0 && this.setShapeColor(t.shape_color), t.hasShadow !== void 0 && this.setShadowEnabled(t.hasShadow), t.shadow_size !== void 0 && this.setShadowSize(t.shadow_size, t.shadow_size), t.text !== void 0 && this.setText(t.text), t.text_color !== void 0 && this.setTextColor(t.text_color), t.text_size !== void 0 && this.setTextSize(t.text_size), t.text_weight !== void 0 && this.setTextWeight(t.text_weight));
+		t && (t.shape_size !== void 0 && this.setShapeSize(t.shape_size, t.shape_size), t.shape_color !== void 0 && this.setShapeColor(t.shape_color), t.hasShadow !== void 0 && this.setShadowEnabled(t.hasShadow), t.shadow_size !== void 0 && this.setShadowSize(t.shadow_size, t.shadow_size), t.text !== void 0 && this.setText(t.text), t.text_color !== void 0 && this.setTextColor(t.text_color), t.text_size !== void 0 && this.setTextSize(t.text_size), t.text_weight !== void 0 && this.setTextWeight(t.text_weight), t.blend_mode !== void 0 && this.setBlendMode(t.blend_mode));
 	}
 	_resetState() {
-		this.setShapeSize(this.shape_size, this.shape_size), this.setShapeColor(this.shape_color), this.setShadowEnabled(this.hasShadow), this.setText(this.text), this.setTextColor(this.text_color), this.setTextSize(this.text_size), this.setTextWeight(this.text_weight);
+		this.setShapeSize(this.shape_size, this.shape_size), this.setShapeColor(this.shape_color), this.setShadowEnabled(this.hasShadow), this.setText(this.text), this.setTextColor(this.text_color), this.setTextSize(this.text_size), this.setTextWeight(this.text_weight), this.setBlendMode(this.blend_mode);
 	}
 	_bindStateElements(e) {
 		this.isDestroyed || document.querySelectorAll(`[data-cursor-state="${e}"]`).forEach((t) => {

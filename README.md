@@ -250,7 +250,47 @@ cursor.removeState('video');
 
 ---
 
-## 7) ♿ Accessibility — Reduced Motion
+## 7) 🎨 Blend Mode
+
+Apply a CSS `mix-blend-mode` to the cursor shape so it blends with the page content beneath it. The most popular effect is `'difference'`, which automatically inverts the colors underneath the cursor — creating perfect contrast on any background.
+
+```js
+new ProteusCursor({
+  shape: 'circle',
+  shape_size: '40px',
+  shape_color: '#ffffff',   // white + difference = automatic inversion
+  hasShadow: false,
+  blend_mode: 'difference', // 'normal' | 'difference' | 'exclusion' | any CSS value
+});
+```
+
+| Value | Effect |
+|---|---|
+| `'normal'` | Default — no blending |
+| `'difference'` | Inverts the colors beneath the cursor. Best with `shape_color: '#ffffff'` |
+| `'exclusion'` | Softer inversion, lower contrast than `difference` |
+| any CSS value | Full `mix-blend-mode` spec is supported |
+
+> **Tip:** `difference` with a white cursor gives automatic light/dark contrast on any background — white on dark, black on light.
+
+Switch blend mode at runtime or per state:
+
+```js
+// Runtime switch
+cursor.setBlendMode('exclusion');
+cursor.setBlendMode('normal', true); // isPermanent — persists after state resets
+
+// Per state
+cursor.addState('hero', {
+  shape_size: '60px',
+  shape_color: '#ffffff',
+  blend_mode: 'difference',
+});
+```
+
+---
+
+## 8) ♿ Accessibility — Reduced Motion
 
 Some users enable **"Reduce Motion"** in their OS accessibility settings (macOS → Accessibility → Display, Windows → Accessibility → Visual Effects). This signals that animations may cause discomfort (vestibular disorders, epilepsy, motion sensitivity).
 

@@ -62,6 +62,9 @@ export default class ProteusCursor{
 
       this.isMagnetic = options.magnetic ?? false;
 
+      // blend mode
+      this.blend_mode = options.blend_mode || 'normal';
+
       // click animation
       this.click_animation = options.click_animation || 'scale';
       this.click_duration = options.click_duration ?? 300;
@@ -144,6 +147,9 @@ export default class ProteusCursor{
       this.$shadow.style.width = this.shadow_size || '40px';
       this.$shadow.style.height = this.shadow_size || '40px';
       this.setShape(this.shape);
+      if (this.blend_mode && this.blend_mode !== 'normal') {
+         this.$shape.style.mixBlendMode = this.blend_mode;
+      }
    }
 
    init_HTMLcursorAndShadow(){
@@ -620,6 +626,17 @@ export default class ProteusCursor{
       this.maxVelocity = maxVelocity;
    }
 
+   /**
+    * Apply a CSS mix-blend-mode to the cursor shape element.
+    * @param {'normal'|'difference'|'exclusion'|string} mode  Any valid CSS mix-blend-mode value.
+    * @param {boolean} [isPermanent=false]  When true, persists across state resets.
+    */
+   setBlendMode(mode, isPermanent = false) {
+      if (!this._isActive()) return;
+      if (isPermanent) this.blend_mode = mode;
+      this.$shape.style.mixBlendMode = mode;
+   }
+
    //endregion
 
 
@@ -713,6 +730,7 @@ export default class ProteusCursor{
       if (state.text_color  !== undefined) this.setTextColor(state.text_color);
       if (state.text_size   !== undefined) this.setTextSize(state.text_size);
       if (state.text_weight !== undefined) this.setTextWeight(state.text_weight);
+      if (state.blend_mode  !== undefined) this.setBlendMode(state.blend_mode);
    }
 
    _resetState() {
@@ -723,6 +741,7 @@ export default class ProteusCursor{
       this.setTextColor(this.text_color);
       this.setTextSize(this.text_size);
       this.setTextWeight(this.text_weight);
+      this.setBlendMode(this.blend_mode);
    }
 
    _bindStateElements(name) {

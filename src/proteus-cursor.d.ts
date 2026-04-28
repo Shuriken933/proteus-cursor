@@ -8,6 +8,12 @@ export interface CursorStateOptions {
   text_color?: string;
   text_weight?: string;
   text_size?: string;
+  /**
+   * CSS `mix-blend-mode` applied to the cursor shape element.
+   * Use `'difference'` for an automatic color-inversion effect (works best with
+   * a white `shape_color`). Use `'normal'` to remove blending.
+   */
+  blend_mode?: 'normal' | 'difference' | 'exclusion' | 'multiply' | 'screen' | 'overlay' | string;
 }
 
 export interface ProteusCursorOptions {
@@ -56,6 +62,14 @@ export interface ProteusCursorOptions {
    * Default: `true`
    */
   respectReducedMotion?: boolean;
+
+  /**
+   * CSS `mix-blend-mode` applied to the cursor shape element.
+   * `'difference'` gives the classic automatic color-inversion effect —
+   * works best with `shape_color: '#ffffff'`.
+   * Default: `'normal'`
+   */
+  blend_mode?: 'normal' | 'difference' | 'exclusion' | 'multiply' | 'screen' | 'overlay' | string;
 }
 
 export default class ProteusCursor {
@@ -79,6 +93,7 @@ export default class ProteusCursor {
   speed: number;
   maxVelocity: number;
   isMagnetic: boolean;
+  blend_mode: string;
   click_animation: 'scale' | 'ripple' | 'none';
   click_duration: number;
   isDestroyed: boolean;
@@ -137,6 +152,14 @@ export default class ProteusCursor {
   setTextColor(color: string, isPermanent?: boolean): void;
   setTextWeight(weight: string, isPermanent?: boolean): void;
   setTextSize(size: string, isPermanent?: boolean): void;
+
+  // ── Blend mode ───────────────────────────────────────────────────────────
+  /**
+   * Apply a CSS `mix-blend-mode` to the cursor shape element at runtime.
+   * @param mode      Any valid CSS mix-blend-mode value (e.g. `'difference'`)
+   * @param isPermanent When true, persists across state machine resets
+   */
+  setBlendMode(mode: string, isPermanent?: boolean): void;
 
   // ── Fluid ────────────────────────────────────────────────────────────────
   /** Set easing speed for fluid mode (0–1) */
