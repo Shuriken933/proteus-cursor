@@ -51,7 +51,88 @@ There are two different import style
     ```
 
 ---
-## 3) Proteus options
+
+## 3) ⚛️ Framework Adapters
+
+Proteus Cursor ships first-class adapters for React, Vue 3 and Svelte. Each adapter handles lifecycle (mount / unmount) automatically and is SSR-safe.
+
+### React
+
+```bash
+npm install proteuscursor
+```
+
+```jsx
+import { useProteusCursor } from 'proteuscursor/react';
+import 'proteuscursor/style';
+
+export default function App() {
+  const cursor = useProteusCursor({
+    shape: 'circle',
+    shape_color: '#ffffff',
+    click_animation: 'ripple',
+  });
+
+  // cursor.current → ProteusCursor instance (null until mounted)
+  // e.g. cursor.current?.addState('hero', { shape_size: '80px' })
+
+  return <main>...</main>;
+}
+```
+
+### Vue 3
+
+```bash
+npm install proteuscursor
+```
+
+```vue
+<script setup>
+import { useProteusCursor } from 'proteuscursor/vue';
+import 'proteuscursor/style';
+
+const cursor = useProteusCursor({
+  shape: 'circle',
+  shape_color: '#ffffff',
+  click_animation: 'ripple',
+});
+
+// cursor.value → ProteusCursor instance (null until mounted)
+</script>
+
+<template>
+  <main>...</main>
+</template>
+```
+
+### Svelte
+
+```bash
+npm install proteuscursor
+```
+
+```svelte
+<script>
+  import { useProteusCursor } from 'proteuscursor/svelte';
+  import 'proteuscursor/style';
+
+  const cursor = useProteusCursor({
+    shape: 'circle',
+    shape_color: '#ffffff',
+    click_animation: 'ripple',
+  });
+
+  // cursor.current → ProteusCursor instance (undefined until mounted)
+</script>
+
+<main>...</main>
+```
+
+> All three adapters expose the full ProteusCursor API via the returned reference. SSR environments (Next.js, Nuxt, SvelteKit) are handled automatically — the constructor runs only on the client.
+
+---
+
+## 4) Proteus options
 There are a lot of options ✨ for Proteus.
 First of all you can set a cursor type:
 - circle

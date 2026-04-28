@@ -12,15 +12,37 @@
          "import": "./dist/proteus-cursor.es.js",
          "require": "./dist/proteus-cursor.umd.js"
       },
-      "./style": "./dist/proteus-cursor.min.css"
+      "./style": "./dist/proteus-cursor.min.css",
+      "./react": {
+         "types": "./dist/react.d.ts",
+         "import": "./dist/react.js"
+      },
+      "./vue": {
+         "types": "./dist/vue.d.ts",
+         "import": "./dist/vue.js"
+      },
+      "./svelte": {
+         "types": "./dist/svelte.d.ts",
+         "import": "./dist/svelte.js"
+      }
    },
    "files": [
       "dist",
       "README.md"
    ],
    "scripts": {
-      "build": "vite build && npm run build:css",
+      "build": "vite build && vite build --config vite.adapters.config.js && npm run build:css",
       "build:css": "postcss src/proteus-cursor.css -o dist/proteus-cursor.min.css"
+   },
+   "peerDependencies": {
+      "react": ">=16.8.0",
+      "vue": ">=3.0.0",
+      "svelte": ">=3.0.0"
+   },
+   "peerDependenciesMeta": {
+      "react":  { "optional": true },
+      "vue":    { "optional": true },
+      "svelte": { "optional": true }
    },
    "repository": {
       "type": "git",
