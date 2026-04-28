@@ -1092,6 +1092,9 @@
           <li><a href="#playground" data-cursor-state="nav-link">Playground</a></li>
           <li><a href="#states"    data-cursor-state="nav-link">States</a></li>
           <li><a href="#api"       data-cursor-state="nav-link">API</a></li>
+          <li><a class="nav__link" href="#presets"    data-cursor-state="nav-link">Presets</a></li>
+          <li><a class="nav__link" href="#blendmode"  data-cursor-state="nav-link">Blend</a></li>
+          <li><a class="nav__link" href="#frameworks" data-cursor-state="nav-link">Frameworks</a></li>
         </ul>
         <div class="nav__right">
           <button class="nav__npm" id="nav-npm-copy" title="Copy install command">
@@ -1131,6 +1134,12 @@
             <span style="color:var(--color-text-muted)">$</span>
             <span>npm install proteuscursor</span>
             <span style="opacity:0.4; font-size:0.8rem;">⎘</span>
+          </div>
+          <div class="hero__badges" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;justify-content:center;">
+            <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.25);border-radius:20px;padding:5px 12px;font-size:0.75rem;color:var(--color-accent);">📱 Touch-safe</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(157,111,232,0.1);border:1px solid rgba(157,111,232,0.25);border-radius:20px;padding:5px 12px;font-size:0.75rem;color:var(--color-violet);">♿ Reduced-motion</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(91,200,245,0.1);border:1px solid rgba(91,200,245,0.25);border-radius:20px;padding:5px 12px;font-size:0.75rem;color:var(--color-cyan);">⚛️ React · Vue · Svelte</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.25);border-radius:20px;padding:5px 12px;font-size:0.75rem;color:var(--color-cta);">📦 TypeScript</span>
           </div>
           <div class="hero__ctas">
             <a href="#quickstart">
@@ -1301,6 +1310,124 @@
   </section>
 
   <!-- ============================================================
+       PRESETS SECTION
+  ============================================================ -->
+  <section class="section" id="presets">
+    <div class="container">
+      <div class="section-label">Built-in</div>
+      <h2 class="section-title">Preset System</h2>
+      <p class="section-sub">Five ready-to-use cursor presets. Apply in one line — or use as a base and override what you need.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:40px 0;">
+
+        <div class="feature-card" style="cursor:default;" data-cursor-state="sm-gallery">
+          <div style="font-size:2rem;margin-bottom:12px;">👻</div>
+          <div style="font-weight:600;margin-bottom:6px;color:var(--color-text);">Ghost</div>
+          <div style="font-size:0.82rem;color:var(--color-text-muted);">Translucent circle. Blends into any design without demanding attention.</div>
+          <code style="display:block;margin-top:10px;font-size:0.75rem;color:var(--color-accent);">cursor.loadPreset('ghost')</code>
+        </div>
+
+        <div class="feature-card" style="cursor:default;" data-cursor-state="sm-video">
+          <div style="font-size:2rem;margin-bottom:12px;">⚡</div>
+          <div style="font-weight:600;margin-bottom:6px;color:var(--color-text);">Neon</div>
+          <div style="font-size:0.82rem;color:var(--color-text-muted);">Teal dot with glowing halo. Ideal for dark, creative sites.</div>
+          <code style="display:block;margin-top:10px;font-size:0.75rem;color:var(--color-accent);">cursor.loadPreset('neon')</code>
+        </div>
+
+        <div class="feature-card" style="cursor:default;" data-cursor-state="sm-cta">
+          <div style="font-size:2rem;margin-bottom:12px;">🔵</div>
+          <div style="font-weight:600;margin-bottom:6px;color:var(--color-text);">Minimal</div>
+          <div style="font-size:0.82rem;color:var(--color-text-muted);">Tiny dot, no shadow, no animation. Zero visual noise.</div>
+          <code style="display:block;margin-top:10px;font-size:0.75rem;color:var(--color-accent);">cursor.loadPreset('minimal')</code>
+        </div>
+
+        <div class="feature-card" style="cursor:default;">
+          <div style="font-size:2rem;margin-bottom:12px;">🔲</div>
+          <div style="font-weight:600;margin-bottom:6px;color:var(--color-text);">Chrome</div>
+          <div style="font-size:0.82rem;color:var(--color-text-muted);">Large circle with mix-blend-mode: difference — automatic color inversion on any bg.</div>
+          <code style="display:block;margin-top:10px;font-size:0.75rem;color:var(--color-accent);">cursor.loadPreset('chrome')</code>
+        </div>
+
+        <div class="feature-card" style="cursor:default;">
+          <div style="font-size:2rem;margin-bottom:12px;">💧</div>
+          <div style="font-weight:600;margin-bottom:6px;color:var(--color-text);">Ink</div>
+          <div style="font-size:0.82rem;color:var(--color-text-muted);">Fluid blob that stretches and squeezes with movement.</div>
+          <code style="display:block;margin-top:10px;font-size:0.75rem;color:var(--color-accent);">cursor.loadPreset('ink')</code>
+        </div>
+
+      </div>
+
+      <div style="background:var(--color-code-bg);border:1px solid var(--color-border);border-radius:var(--radius-card);padding:24px;font-family:var(--font-code);font-size:0.88rem;line-height:1.8;margin-top:8px;">
+        <div style="color:var(--color-text-muted);font-size:0.75rem;margin-bottom:12px;letter-spacing:.05em;">USAGE</div>
+<pre style="margin:0;color:var(--color-text);white-space:pre-wrap;"><span style="color:#9D6FE8;">const</span> cursor = <span style="color:#9D6FE8;">new</span> <span style="color:#00D4AA;">ProteusCursor</span>({ shape: <span style="color:#FF9A3C;">'circle'</span> });
+
+<span style="color:#8BA8B5;">// apply preset to live instance (chainable)</span>
+cursor.<span style="color:#00D4AA;">loadPreset</span>(<span style="color:#FF9A3C;">'neon'</span>);
+cursor.<span style="color:#00D4AA;">loadPreset</span>(<span style="color:#FF9A3C;">'chrome'</span>, { shape_size: <span style="color:#FF9A3C;">'64px'</span> }); <span style="color:#8BA8B5;">// with overrides</span>
+
+<span style="color:#8BA8B5;">// use preset as constructor base</span>
+<span style="color:#9D6FE8;">const</span> cursor2 = <span style="color:#9D6FE8;">new</span> <span style="color:#00D4AA;">ProteusCursor</span>({
+  ...ProteusCursor.<span style="color:#00D4AA;">getPreset</span>(<span style="color:#FF9A3C;">'neon'</span>),
+  shape_color: <span style="color:#FF9A3C;">'#ff4444'</span>,
+});</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       BLEND MODE SECTION
+  ============================================================ -->
+  <section class="section" id="blendmode">
+    <div class="container">
+      <div class="section-label">Visual Effect</div>
+      <h2 class="section-title">Blend Mode</h2>
+      <p class="section-sub">Apply CSS <code style="color:var(--color-accent);">mix-blend-mode</code> to the cursor shape. The <strong>difference</strong> value creates automatic color inversion — the cursor is always readable against any background.</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:40px 0;">
+
+        <!-- Demo panel: difference on dark/light halves -->
+        <div style="border-radius:var(--radius-card);overflow:hidden;display:flex;min-height:200px;">
+          <div style="flex:1;background:#080C14;display:flex;align-items:center;justify-content:center;font-size:0.85rem;color:#8BA8B5;">dark bg</div>
+          <div style="flex:1;background:#E8F4F8;display:flex;align-items:center;justify-content:center;font-size:0.85rem;color:#080C14;">light bg</div>
+        </div>
+
+        <!-- Code snippet -->
+        <div style="background:var(--color-code-bg);border:1px solid var(--color-border);border-radius:var(--radius-card);padding:24px;font-family:var(--font-code);font-size:0.85rem;line-height:1.9;display:flex;flex-direction:column;justify-content:center;">
+<pre style="margin:0;color:var(--color-text);white-space:pre-wrap;"><span style="color:#9D6FE8;">new</span> <span style="color:#00D4AA;">ProteusCursor</span>({
+  shape: <span style="color:#FF9A3C;">'circle'</span>,
+  shape_size: <span style="color:#FF9A3C;">'40px'</span>,
+  shape_color: <span style="color:#FF9A3C;">'#ffffff'</span>,
+  hasShadow: <span style="color:#9D6FE8;">false</span>,
+  blend_mode: <span style="color:#FF9A3C;">'difference'</span>,
+});
+
+<span style="color:#8BA8B5;">// or at runtime</span>
+cursor.<span style="color:#00D4AA;">setBlendMode</span>(<span style="color:#FF9A3C;">'difference'</span>);</pre>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:8px;">
+        <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:10px;padding:16px;">
+          <code style="color:var(--color-accent);font-size:0.8rem;">'normal'</code>
+          <p style="font-size:0.82rem;color:var(--color-text-muted);margin-top:6px;">Default. No blending.</p>
+        </div>
+        <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:10px;padding:16px;">
+          <code style="color:var(--color-accent);font-size:0.8rem;">'difference'</code>
+          <p style="font-size:0.82rem;color:var(--color-text-muted);margin-top:6px;">Inverts colors beneath the cursor. Best with white shape.</p>
+        </div>
+        <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:10px;padding:16px;">
+          <code style="color:var(--color-accent);font-size:0.8rem;">'exclusion'</code>
+          <p style="font-size:0.82rem;color:var(--color-text-muted);margin-top:6px;">Softer inversion, lower contrast than difference.</p>
+        </div>
+        <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:10px;padding:16px;">
+          <code style="color:var(--color-accent);font-size:0.8rem;">any CSS value</code>
+          <p style="font-size:0.82rem;color:var(--color-text-muted);margin-top:6px;">Full mix-blend-mode spec is supported.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
        CLICK ANIMATIONS
   ============================================================ -->
   <section class="section" id="clickanim">
@@ -1426,10 +1553,10 @@
 
       <!-- Presets bar -->
       <div class="playground__presets" style="margin-top:32px;">
-        <button class="preset-btn" data-preset="ghost">Ghost</button>
+        <button class="preset-btn active" data-preset="ghost">Ghost</button>
         <button class="preset-btn" data-preset="neon">Neon</button>
-        <button class="preset-btn" data-preset="inkdrop">Ink Drop</button>
         <button class="preset-btn" data-preset="chrome">Chrome</button>
+        <button class="preset-btn" data-preset="ink">Ink</button>
         <button class="preset-btn" data-preset="minimal">Minimal</button>
       </div>
 
@@ -1529,6 +1656,21 @@
             </div>
           </div>
 
+          <div class="pg-group">
+            <div class="pg-group__label">Blend Mode</div>
+            <div class="pg-row">
+              <label class="pg-label">Blend Mode</label>
+              <select id="pg-blend" onchange="pgSetBlendMode(this.value)" style="background:var(--color-bg-primary);color:var(--color-text);border:1px solid var(--color-border);border-radius:6px;padding:6px 10px;font-family:var(--font-code);font-size:0.8rem;">
+                <option value="normal">normal</option>
+                <option value="difference">difference</option>
+                <option value="exclusion">exclusion</option>
+                <option value="multiply">multiply</option>
+                <option value="screen">screen</option>
+                <option value="overlay">overlay</option>
+              </select>
+            </div>
+          </div>
+
         </div>
 
         <!-- Canvas -->
@@ -1598,6 +1740,8 @@
               <tr><td><code>click_animation</code></td><td class="type">string</td><td class="default">'scale'</td><td>Click feedback: <code>scale</code>, <code>ripple</code>, or <code>none</code>.</td></tr>
               <tr><td><code>click_duration</code></td><td class="type">number</td><td class="default">300</td><td>Duration in milliseconds for click animation.</td></tr>
               <tr><td><code>magnetic</code></td><td class="type">boolean</td><td class="default">false</td><td>Enables magnetic attraction to nearby elements.</td></tr>
+              <tr><td><code>blend_mode</code></td><td class="type">string</td><td class="default">'normal'</td><td>CSS <code>mix-blend-mode</code> on the cursor shape. Use <code>'difference'</code> for automatic color inversion. Any valid CSS value.</td></tr>
+              <tr><td><code>respectReducedMotion</code></td><td class="type">boolean</td><td class="default">true</td><td>When true, skips initialization entirely if the OS has <code>prefers-reduced-motion: reduce</code> set.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1623,7 +1767,26 @@
               <tr><td><code>setSpeed(speed)</code></td><td class="type">number</td><td>Adjust fluid interpolation speed (0–1).</td></tr>
               <tr><td><code>setMaxVelocity(max)</code></td><td class="type">number</td><td>Cap maximum fluid deformation.</td></tr>
               <tr><td><code>addState(name, config)</code></td><td class="type">string, object</td><td>Register a named state. Chainable. Activated via <code>data-cursor-state</code>.</td></tr>
+              <tr><td><code>removeState(name)</code></td><td class="type">string</td><td>Remove a previously registered state. Chainable.</td></tr>
+              <tr><td><code>setBlendMode(mode, isPermanent?)</code></td><td class="type">string, bool?</td><td>Apply CSS mix-blend-mode at runtime. isPermanent persists across state resets.</td></tr>
+              <tr><td><code>loadPreset(name, overrides?)</code></td><td class="type">string, object?</td><td>Apply a built-in preset. Optional overrides object for per-property customisation. Chainable.</td></tr>
               <tr><td><code>destroy()</code></td><td class="type">—</td><td>Remove cursor elements and all event listeners.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Static Methods -->
+        <div class="api-table-wrap">
+          <div class="api-table-title">Static Methods &amp; Properties</div>
+          <table class="api-table">
+            <thead>
+              <tr><th>Method / Property</th><th>Returns</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>ProteusCursor.isTouchOnly()</code></td><td class="type">boolean</td><td>Returns true when the primary pointer is coarse (touch). Library calls this automatically.</td></tr>
+              <tr><td><code>ProteusCursor.prefersReducedMotion()</code></td><td class="type">boolean</td><td>Returns true when the OS has prefers-reduced-motion: reduce set.</td></tr>
+              <tr><td><code>ProteusCursor.getPreset(name)</code></td><td class="type">object</td><td>Returns the raw config for a named preset. Spread into constructor options to use as a base.</td></tr>
+              <tr><td><code>ProteusCursor.PRESETS</code></td><td class="type">object</td><td>All five built-in preset configs: ghost, neon, minimal, chrome, ink.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1653,6 +1816,79 @@
   </section>
 
   <!-- ============================================================
+       FRAMEWORKS SECTION
+  ============================================================ -->
+  <section class="section" id="frameworks">
+    <div class="container">
+      <div class="section-label">Integration</div>
+      <h2 class="section-title">Framework Adapters</h2>
+      <p class="section-sub">First-class adapters for React, Vue 3 and Svelte. Each one handles mount/unmount lifecycle automatically and is SSR-safe (Next.js, Nuxt, SvelteKit).</p>
+
+      <!-- Tabs -->
+      <div style="margin-top:40px;">
+        <div style="display:flex;gap:4px;margin-bottom:-1px;position:relative;z-index:1;">
+          <button onclick="fwTab('react')" id="fw-tab-react" style="padding:10px 20px;border:1px solid var(--color-border-active);border-bottom:1px solid var(--color-bg-secondary);background:var(--color-bg-secondary);color:var(--color-text);border-radius:8px 8px 0 0;font-family:var(--font-code);font-size:0.85rem;cursor:pointer;">⚛️ React</button>
+          <button onclick="fwTab('vue')" id="fw-tab-vue" style="padding:10px 20px;border:1px solid var(--color-border);border-bottom:1px solid transparent;background:transparent;color:var(--color-text-muted);border-radius:8px 8px 0 0;font-family:var(--font-code);font-size:0.85rem;cursor:pointer;">💚 Vue 3</button>
+          <button onclick="fwTab('svelte')" id="fw-tab-svelte" style="padding:10px 20px;border:1px solid var(--color-border);border-bottom:1px solid transparent;background:transparent;color:var(--color-text-muted);border-radius:8px 8px 0 0;font-family:var(--font-code);font-size:0.85rem;cursor:pointer;">🔥 Svelte</button>
+        </div>
+
+        <!-- React panel -->
+        <div id="fw-panel-react" style="background:var(--color-bg-secondary);border:1px solid var(--color-border-active);border-radius:0 8px 8px 8px;padding:28px;">
+          <p style="font-size:0.85rem;color:var(--color-text-muted);margin-bottom:16px;">Install and import from the <code style="color:var(--color-accent);">proteuscursor/react</code> subpath:</p>
+<pre style="font-family:var(--font-code);font-size:0.85rem;line-height:1.8;color:var(--color-text);white-space:pre-wrap;"><span style="color:#8BA8B5;">// Install</span>
+npm install proteuscursor
+
+<span style="color:#9D6FE8;">import</span> { useProteusCursor } <span style="color:#9D6FE8;">from</span> <span style="color:#FF9A3C;">'proteuscursor/react'</span>;
+<span style="color:#9D6FE8;">import</span> <span style="color:#FF9A3C;">'proteuscursor/style'</span>;
+
+<span style="color:#9D6FE8;">export default function</span> <span style="color:#00D4AA;">App</span>() {
+  <span style="color:#9D6FE8;">const</span> cursor = <span style="color:#00D4AA;">useProteusCursor</span>({
+    shape: <span style="color:#FF9A3C;">'circle'</span>,
+    shape_color: <span style="color:#FF9A3C;">'#ffffff'</span>,
+    click_animation: <span style="color:#FF9A3C;">'ripple'</span>,
+  });
+  <span style="color:#8BA8B5;">// cursor.current → ProteusCursor instance (null until mounted)</span>
+  <span style="color:#9D6FE8;">return</span> &lt;<span style="color:#00D4AA;">main</span>&gt;...&lt;/<span style="color:#00D4AA;">main</span>&gt;;
+}</pre>
+        </div>
+
+        <!-- Vue panel -->
+        <div id="fw-panel-vue" style="display:none;background:var(--color-bg-secondary);border:1px solid var(--color-border-active);border-radius:0 8px 8px 8px;padding:28px;">
+          <p style="font-size:0.85rem;color:var(--color-text-muted);margin-bottom:16px;">Use the composable inside <code style="color:var(--color-accent);">&lt;script setup&gt;</code>:</p>
+<pre style="font-family:var(--font-code);font-size:0.85rem;line-height:1.8;color:var(--color-text);white-space:pre-wrap;"><span style="color:#9D6FE8;">import</span> { useProteusCursor } <span style="color:#9D6FE8;">from</span> <span style="color:#FF9A3C;">'proteuscursor/vue'</span>;
+<span style="color:#9D6FE8;">import</span> <span style="color:#FF9A3C;">'proteuscursor/style'</span>;
+
+<span style="color:#8BA8B5;">// inside &lt;script setup&gt;</span>
+<span style="color:#9D6FE8;">const</span> cursor = <span style="color:#00D4AA;">useProteusCursor</span>({
+  shape: <span style="color:#FF9A3C;">'circle'</span>,
+  shape_color: <span style="color:#FF9A3C;">'#ffffff'</span>,
+  click_animation: <span style="color:#FF9A3C;">'ripple'</span>,
+});
+<span style="color:#8BA8B5;">// cursor.value → ProteusCursor instance (null until mounted)</span></pre>
+        </div>
+
+        <!-- Svelte panel -->
+        <div id="fw-panel-svelte" style="display:none;background:var(--color-bg-secondary);border:1px solid var(--color-border-active);border-radius:0 8px 8px 8px;padding:28px;">
+          <p style="font-size:0.85rem;color:var(--color-text-muted);margin-bottom:16px;">Use inside a <code style="color:var(--color-accent);">&lt;script&gt;</code> block (Svelte 4 &amp; 5):</p>
+<pre style="font-family:var(--font-code);font-size:0.85rem;line-height:1.8;color:var(--color-text);white-space:pre-wrap;"><span style="color:#9D6FE8;">import</span> { useProteusCursor } <span style="color:#9D6FE8;">from</span> <span style="color:#FF9A3C;">'proteuscursor/svelte'</span>;
+<span style="color:#9D6FE8;">import</span> <span style="color:#FF9A3C;">'proteuscursor/style'</span>;
+
+<span style="color:#9D6FE8;">const</span> cursor = <span style="color:#00D4AA;">useProteusCursor</span>({
+  shape: <span style="color:#FF9A3C;">'circle'</span>,
+  shape_color: <span style="color:#FF9A3C;">'#ffffff'</span>,
+  click_animation: <span style="color:#FF9A3C;">'ripple'</span>,
+});
+<span style="color:#8BA8B5;">// cursor.current → ProteusCursor instance (undefined until mounted)</span></pre>
+        </div>
+
+        <p style="margin-top:16px;font-size:0.82rem;color:var(--color-text-muted);">
+          ✅ SSR-safe &nbsp;·&nbsp; ✅ TypeScript types included &nbsp;·&nbsp; ✅ Full API accessible via returned ref
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
        FOOTER
   ============================================================ -->
   <footer class="footer">
@@ -1676,8 +1912,8 @@
     /* ------------------------------------------------------------------
        TOUCH & REDUCED MOTION DETECTION
     ------------------------------------------------------------------ */
-    const isTouchDevice = () => window.matchMedia('(hover: none)').matches || ('ontouchstart' in window);
-    const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isTouchDevice = () => ProteusCursor.isTouchOnly();
+    const prefersReducedMotion = () => ProteusCursor.prefersReducedMotion();
 
     if (isTouchDevice()) {
       document.getElementById('banner-mobile').classList.add('visible');
@@ -1847,13 +2083,15 @@
     /* ------------------------------------------------------------------
        PLAYGROUND
     ------------------------------------------------------------------ */
-    const PRESETS = {
-      ghost:   { shape: 'fluid',  shape_size: '30px', shape_color: 'rgba(200,220,255,0.25)', hasShadow: false, click_animation: 'ripple', shadow_color: '#ffffff', shadow_size: '40px', shadow_alpha: 60, text: '', text_size: '12', text_weight: '400' },
-      neon:    { shape: 'circle', shape_size: '14px', shape_color: '#FF006E', hasShadow: true, shadow_color: '#FF006E', shadow_size: '50px', click_animation: 'ripple', shadow_alpha: 70, text: '', text_size: '12', text_weight: '400' },
-      inkdrop: { shape: 'fluid',  shape_size: '22px', shape_color: '#1a1a2e', hasShadow: false, click_animation: 'ripple', shadow_color: '#ffffff', shadow_size: '40px', shadow_alpha: 60, text: '', text_size: '12', text_weight: '400' },
-      chrome:  { shape: 'circle', shape_size: '16px', shape_color: '#E8F4F8', hasShadow: true, shadow_color: '#5BC8F5', shadow_size: '40px', click_animation: 'scale', shadow_alpha: 60, text: '', text_size: '12', text_weight: '400' },
-      minimal: { shape: 'circle', shape_size: '6px',  shape_color: '#fff', hasShadow: false, click_animation: 'none', shadow_color: '#ffffff', shadow_size: '40px', shadow_alpha: 60, text: '', text_size: '12', text_weight: '400' },
-    };
+    const PRESETS = Object.fromEntries(
+      Object.entries(ProteusCursor.PRESETS).map(([name, cfg]) => [name, {
+        ...cfg,
+        shadow_alpha: 60,
+        text: '',
+        text_size: '12',
+        text_weight: '400',
+      }])
+    );
 
     // Current playground state
     const pgState = {
@@ -1865,6 +2103,7 @@
       shadow_color: '#00D4AA',
       shadow_alpha: 60,
       click_animation: 'scale',
+      blend_mode: 'normal',
       text: '',
       text_size: '12',
       text_weight: '400',
@@ -1877,8 +2116,11 @@
       const textSizeLine = pgState.text ? `\n  <span class="sh-prop">text_size</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.text_size}px'</span><span class="sh-punct">,</span>` : '';
       const textWeightLine = pgState.text_weight !== '400' ? `\n  <span class="sh-prop">text_weight</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.text_weight}'</span><span class="sh-punct">,</span>` : '';
       const shadowLines = pgState.hasShadow ? `\n  <span class="sh-prop">hasShadow</span><span class="sh-punct">:</span> <span class="sh-keyword">true</span><span class="sh-punct">,</span>\n  <span class="sh-prop">shadow_size</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.shadow_size}px'</span><span class="sh-punct">,</span>\n  <span class="sh-prop">shadow_color</span><span class="sh-punct">:</span> <span class="sh-string">'${shadowColorHex}'</span><span class="sh-punct">,</span>` : `\n  <span class="sh-prop">hasShadow</span><span class="sh-punct">:</span> <span class="sh-keyword">false</span><span class="sh-punct">,</span>`;
+      const blendLine = pgState.blend_mode && pgState.blend_mode !== 'normal'
+        ? `\n  <span class="sh-prop">blend_mode</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.blend_mode}'</span><span class="sh-punct">,</span>`
+        : '';
 
-      const html = `<span class="sh-keyword">const</span> <span class="sh-prop">cursor</span> <span class="sh-punct">=</span> <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span><span class="sh-punct">({</span>\n  <span class="sh-prop">shape</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.shape}'</span><span class="sh-punct">,</span>\n  <span class="sh-prop">shape_size</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.shape_size}px'</span><span class="sh-punct">,</span>\n  <span class="sh-prop">shape_color</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.shape_color}'</span><span class="sh-punct">,</span>${shadowLines}\n  <span class="sh-prop">click_animation</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.click_animation}'</span><span class="sh-punct">,</span>${textLine}${textSizeLine}${textWeightLine}\n<span class="sh-punct">});</span>`;
+      const html = `<span class="sh-keyword">const</span> <span class="sh-prop">cursor</span> <span class="sh-punct">=</span> <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span><span class="sh-punct">({</span>\n  <span class="sh-prop">shape</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.shape}'</span><span class="sh-punct">,</span>\n  <span class="sh-prop">shape_size</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.shape_size}px'</span><span class="sh-punct">,</span>\n  <span class="sh-prop">shape_color</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.shape_color}'</span><span class="sh-punct">,</span>${shadowLines}\n  <span class="sh-prop">click_animation</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.click_animation}'</span><span class="sh-punct">,</span>${blendLine}${textLine}${textSizeLine}${textWeightLine}\n<span class="sh-punct">});</span>`;
 
       document.getElementById('pg-code-output').innerHTML = html;
     }
@@ -1895,6 +2137,7 @@
         cursor.setShadowColor(pgState.shadow_color, pgState.shadow_alpha / 100);
       }
       cursor.click_animation = pgState.click_animation;
+      cursor.setBlendMode(pgState.blend_mode, true);
       cursor.setText(pgState.text, true);
       cursor.setTextSize(pgState.text ? pgState.text_size + 'px' : '', true);
       cursor.setTextWeight(pgState.text_weight, true);
@@ -1985,22 +2228,32 @@
       pgSync();
     };
 
+    // Blend mode
+    window.pgSetBlendMode = function(val) {
+      pgState.blend_mode = val;
+      pgSync();
+    };
+
     // Apply preset
     function applyPreset(name) {
       const p = PRESETS[name];
       if (!p) return;
 
-      pgState.shape          = p.shape;
-      pgState.shape_size     = parseInt(p.shape_size, 10).toString();
-      pgState.shape_color    = p.shape_color;
-      pgState.hasShadow      = p.hasShadow;
-      pgState.shadow_color   = p.shadow_color || '#ffffff';
+      // Apply to cursor using the library's preset API
+      if (cursor) cursor.loadPreset(name);
+
+      pgState.shape          = p.shape || 'circle';
+      pgState.shape_size     = parseInt(p.shape_size || '10', 10).toString();
+      pgState.shape_color    = /^#[0-9a-f]{6}$/i.test(p.shape_color || '') ? p.shape_color : '#00D4AA';
+      pgState.hasShadow      = p.hasShadow !== false;
+      pgState.shadow_color   = /^#[0-9a-f]{6}$/i.test(p.shadow_color || '') ? p.shadow_color : '#ffffff';
       pgState.shadow_size    = parseInt(p.shadow_size || '40', 10).toString();
-      pgState.shadow_alpha   = p.shadow_alpha || 60;
-      pgState.click_animation = p.click_animation;
-      pgState.text           = p.text || '';
-      pgState.text_size      = p.text_size || '12';
-      pgState.text_weight    = p.text_weight || '400';
+      pgState.shadow_alpha   = 60;
+      pgState.blend_mode     = p.blend_mode || 'normal';
+      pgState.click_animation = p.click_animation || 'scale';
+      pgState.text           = '';
+      pgState.text_size      = '12';
+      pgState.text_weight    = '400';
 
       // Update UI controls
       document.getElementById('pg-shape-circle').classList.toggle('active', pgState.shape === 'circle');
@@ -2009,34 +2262,33 @@
       const clickRadios = document.querySelectorAll('input[name="pg-click"]');
       clickRadios.forEach(r => { r.checked = r.value === pgState.click_animation; });
 
-      document.getElementById('pg-size').value        = pgState.shape_size;
+      document.getElementById('pg-size').value           = pgState.shape_size;
       document.getElementById('pg-size-val').textContent = pgState.shape_size + 'px';
-
-      document.getElementById('pg-color').value       = /^#[0-9a-f]{6}$/i.test(pgState.shape_color) ? pgState.shape_color : '#00D4AA';
+      document.getElementById('pg-color').value          = pgState.shape_color;
       document.getElementById('pg-color-val').textContent = pgState.shape_color;
-
-      document.getElementById('pg-shadow-on').checked = pgState.hasShadow;
-      document.getElementById('pg-shadow-size').value = pgState.shadow_size;
+      document.getElementById('pg-shadow-on').checked    = pgState.hasShadow;
+      document.getElementById('pg-shadow-size').value    = pgState.shadow_size;
       document.getElementById('pg-shadow-size-val').textContent = pgState.shadow_size + 'px';
-      document.getElementById('pg-shadow-color').value = /^#[0-9a-f]{6}$/i.test(pgState.shadow_color) ? pgState.shadow_color : '#ffffff';
+      document.getElementById('pg-shadow-color').value   = pgState.shadow_color;
       document.getElementById('pg-shadow-color-val').textContent = pgState.shadow_color;
-      document.getElementById('pg-shadow-alpha').value = pgState.shadow_alpha;
+      document.getElementById('pg-shadow-alpha').value   = pgState.shadow_alpha;
       document.getElementById('pg-shadow-alpha-val').textContent = (pgState.shadow_alpha / 100).toFixed(2);
-
-      document.getElementById('pg-text').value        = pgState.text;
-      document.getElementById('pg-text-size').value   = pgState.text_size;
+      document.getElementById('pg-text').value           = pgState.text;
+      document.getElementById('pg-text-size').value      = pgState.text_size;
       document.getElementById('pg-text-size-val').textContent = pgState.text_size + 'px';
       ['400','600','800'].forEach(w => {
         document.getElementById('pg-tw-' + w).classList.toggle('active', w === pgState.text_weight);
       });
 
-      if (cursor) cursor.setShape(pgState.shape);
-      currentShape = pgState.shape;
+      // Blend mode select
+      const blendSel = document.getElementById('pg-blend');
+      if (blendSel) blendSel.value = pgState.blend_mode;
+
+      if (cursor) currentShape = pgState.shape;
       isPlaygroundMode = true;
+      pgUpdateCode();
 
-      pgSync();
-
-      // Highlight active preset
+      // Highlight active preset btn
       document.querySelectorAll('.preset-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-preset') === name);
       });
@@ -2066,6 +2318,25 @@
 
     // Initialize playground code display
     pgUpdateCode();
+
+    /* Framework tabs */
+    window.fwTab = function(name) {
+      ['react','vue','svelte'].forEach(fw => {
+        document.getElementById('fw-panel-' + fw).style.display = fw === name ? 'block' : 'none';
+        const tab = document.getElementById('fw-tab-' + fw);
+        if (fw === name) {
+          tab.style.background = 'var(--color-bg-secondary)';
+          tab.style.borderBottomColor = 'var(--color-bg-secondary)';
+          tab.style.borderColor = 'var(--color-border-active)';
+          tab.style.color = 'var(--color-text)';
+        } else {
+          tab.style.background = 'transparent';
+          tab.style.borderBottomColor = 'transparent';
+          tab.style.borderColor = 'var(--color-border)';
+          tab.style.color = 'var(--color-text-muted)';
+        }
+      });
+    };
 
     /* ------------------------------------------------------------------
        EASTER EGG — DevTools Console
