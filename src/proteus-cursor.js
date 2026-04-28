@@ -1,5 +1,5 @@
 /*!
- * Proteus Cursor v1.1.5
+ * Proteus Cursor v2.0.0
  * https://github.com/Shuriken933/proteus-cursor
  *
  * A dynamic JavaScript library that transforms the default mouse cursor
@@ -51,7 +51,6 @@ export default class ProteusCursor{
       this.shadow_size = options.shadow_size || '40px';
       this.shadow_color = options.shadow_color || '#ffffff';
 
-
       // text
       this.text = ''
       this.text_color = ''
@@ -62,6 +61,9 @@ export default class ProteusCursor{
       this.maxVelocity = 10;
 
       this.isMagnetic = options.magnetic ?? false;
+
+      // blend mode
+      this.blend_mode = options.blend_mode || 'normal';
 
       // click animation
       this.click_animation = options.click_animation || 'scale';
@@ -76,6 +78,20 @@ export default class ProteusCursor{
       this.intervals = [];
       this.timeouts = [];
       this.isDestroyed = false;
+
+      // Touch-only devices: skip DOM creation and event binding entirely.
+      // The native cursor works fine on touch; injecting overlay elements
+      // wastes resources and serves no purpose.
+      this.isTouch = ProteusCursor.isTouchOnly();
+      if (this.isTouch) return;
+
+      // Reduced-motion: respect the user's OS-level accessibility preference.
+      // When prefers-reduced-motion: reduce is active we skip initialization
+      // entirely so no animations, RAF loops or overlay elements are created.
+      // Can be opted-out by passing respectReducedMotion: false.
+      this.respectReducedMotion = options.respectReducedMotion ?? true;
+      this.isReducedMotion = this.respectReducedMotion && ProteusCursor.prefersReducedMotion();
+      if (this.isReducedMotion) return;
 
       // Bind dei metodi per poterli rimuovere correttamente
       this.boundMouseMove = this.handleMouseMove.bind(this);
@@ -92,6 +108,33 @@ export default class ProteusCursor{
       this._initClickAnimation();
 
    }
+
+   /**
+    * Returns true when the primary pointing device is coarse (touch / finger).
+    * Uses the CSS pointer media feature which is the most reliable heuristic:
+    * - phones, tablets without a paired mouse  → true  (skip cursor)
+    * - laptops with touchscreen                → false (primary pointer is mouse)
+    * - iPad/Surface with paired mouse/stylus   → false (fine pointer available)
+    */
+   static isTouchOnly() {
+      if (typeof window === 'undefined') return false;
+      return window.matchMedia('(pointer: coarse)').matches;
+   }
+
+   /**
+    * Returns true when the user has requested reduced motion at the OS level
+    * (`prefers-reduced-motion: reduce`). ProteusCursor calls this automatically;
+    * you can use it for your own conditional logic.
+    */
+   static prefersReducedMotion() {
+      if (typeof window === 'undefined') return false;
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+   }
+
+   /** @private — returns true when the cursor is active (not destroyed, not touch, not reduced-motion). */
+   _isActive() {
+      return !this.isDestroyed && !this.isTouch && !this.isReducedMotion;
+   }
    //endregion
 
    init(){
@@ -104,6 +147,9 @@ export default class ProteusCursor{
       this.$shadow.style.width = this.shadow_size || '40px';
       this.$shadow.style.height = this.shadow_size || '40px';
       this.setShape(this.shape);
+      if (this.blend_mode && this.blend_mode !== 'normal') {
+         this.$shape.style.mixBlendMode = this.blend_mode;
+      }
    }
 
    init_HTMLcursorAndShadow(){
@@ -150,6 +196,7 @@ export default class ProteusCursor{
    }
 
    setShape(shape){
+      if (!this._isActive()) return;
       document.querySelector('body').classList.remove('proteus-is-a-fluid');
       document.querySelector('body').classList.remove('proteus-is-a-circle');
       this.shape = shape
@@ -173,11 +220,17 @@ export default class ProteusCursor{
 
    //region 🧩 Type shape CIRCLE
    setShape__circle(shape){
+      // Stop any running animation frames (e.g. fluid loop) before starting circle.
+      this.animationIds.forEach(id => cancelAnimationFrame(id));
+      this.animationIds = [];
+
       this.delay = 8;
       this._x = 0
       this._y = 0;
-      this.endX = (window.innerWidth / 2);
-      this.endY = (window.innerHeight / 2);
+      // Seed circle shadow at current mouse position (clientX = viewport coords).
+      // Falls back to centre only when the mouse has never moved.
+      this.endX = this.mouseX > 0 ? this.mouseX : (window.innerWidth / 2);
+      this.endY = this.mouseY > 0 ? this.mouseY : (window.innerHeight / 2);
       this.cursorVisible = true;
       this.cursorEnlarged = false;
       // this.$shape = document.querySelector('.proteus-cursor-shape');
@@ -347,8 +400,12 @@ export default class ProteusCursor{
       this.setShape__fluid__animateCursor();
    }
    setShape__fluid() {
+      // Stop any running animation frames (e.g. circle shadow loop) before starting fluid.
+      this.animationIds.forEach(id => cancelAnimationFrame(id));
+      this.animationIds = [];
+
       document.querySelector('body').classList.add('proteus-is-a-fluid');
-      // hyde cursor system
+      // hide cursor system
       document.body.style.cursor = 'none';
       // Assicurati che l'elemento cursor esista
       if (!this.$shape) {
@@ -364,16 +421,23 @@ export default class ProteusCursor{
       this.$shape.style.borderRadius = '50%';
       this.$shape.style.pointerEvents = 'none';
       this.$shape.style.zIndex = '9999';
-      this.$shape.style.transition = 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)';
+      // Use 'none' — a CSS transition on left/top conflicts with the RAF loop
+      // and causes visible jitter when switching from circle to fluid mode.
+      this.$shape.style.transition = 'none';
 
       if (this.hasShadow) {
          this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`;
       }
 
-      // initialize the variables
+      // Seed fluid cursor at the current mouse position so there's no jump to
+      // the centre of the viewport when switching from circle to fluid mode.
+      // endX/endY are set in page-coordinates by the circle mousemove handler;
+      // fluid uses fixed (viewport) coordinates, so subtract current scroll.
+      const scrollX = window.scrollX || 0;
+      const scrollY = window.scrollY || 0;
       this.velocityInitialized = false;
-      this.cursorX = window.innerWidth / 2;
-      this.cursorY = window.innerHeight / 2;
+      this.cursorX = this.endX > 0 ? (this.endX - scrollX) : (this.mouseX || window.innerWidth / 2);
+      this.cursorY = this.endY > 0 ? (this.endY - scrollY) : (this.mouseY || window.innerHeight / 2);
 
       // start animation
       this.setShape__fluid__animateCursor();
@@ -383,6 +447,9 @@ export default class ProteusCursor{
 
    //region ❌ destroy Proteus
    destroy() {
+
+      // No-op on touch or reduced-motion: nothing was created, nothing to tear down.
+      if (this.isTouch || this.isReducedMotion) return;
 
       // Marca come distrutto per fermare tutte le operazioni
       this.isDestroyed = true;
@@ -475,6 +542,7 @@ export default class ProteusCursor{
    //region 🏷️ Setters
    /* -------------------------------------------------------------------------------- */
    setShapeSize(width, height, isPermanent = false){
+      if (!this._isActive()) return;
       if(isPermanent){
          this.shape_size = width || '20px';
          this.shadow_size = height || '20px';
@@ -486,6 +554,7 @@ export default class ProteusCursor{
       }
    }
    setShapeColor(color, isPermanent = false){
+      if (!this._isActive()) return;
       if(isPermanent){
          this.shape_color = color;
          this.$shape.style.backgroundColor = color;
@@ -495,6 +564,7 @@ export default class ProteusCursor{
    }
 
    setShadowEnabled(isEnabled, isPermanent = false){
+      if (!this._isActive()) return;
       if(this.shape === 'circle'){
          if(isPermanent){
             this.hasShadow = isEnabled;
@@ -518,15 +588,18 @@ export default class ProteusCursor{
 
    }
    setShadowSize(width, height){
+      if (!this._isActive()) return;
       this.$shadow.style.width = width || '20px';
       this.$shadow.style.height = height || '20px';
    }
    setShadowColor(hexColor, alpha = 0.5){
+      if (!this._isActive()) return;
       const rgba = hexToRgba(hexColor, alpha);
       this.$shadow.style.backgroundColor = rgba;
    }
 
    setText(text, isPermanent = false){
+      if (!this._isActive()) return;
       if(isPermanent){
          this.text = text;
          document.querySelector('.proteus-cursor-shape').textContent = this.text;
@@ -535,6 +608,7 @@ export default class ProteusCursor{
       }
    }
    setTextColor(color, permanent = false){
+      if (!this._isActive()) return;
       if(permanent){
          this.text_color = color;
          document.querySelector('.proteus-cursor-shape').style.color = color;
@@ -544,6 +618,7 @@ export default class ProteusCursor{
 
    }
    setTextWeight(weight, isPermanent = false){
+      if (!this._isActive()) return;
       if(isPermanent){
          this.text_weight = weight;
          document.querySelector('.proteus-cursor-shape').style.fontWeight = weight;
@@ -552,6 +627,7 @@ export default class ProteusCursor{
       }
    }
    setTextSize(size, isPermanent = false){
+      if (!this._isActive()) return;
       if(isPermanent){
          this.text_size = size;
          document.querySelector('.proteus-cursor-shape').style.fontSize = size;
@@ -565,6 +641,87 @@ export default class ProteusCursor{
    }
    setMaxVelocity(maxVelocity){
       this.maxVelocity = maxVelocity;
+   }
+
+   /**
+    * Apply a CSS mix-blend-mode to the cursor shape element.
+    * @param {'normal'|'difference'|'exclusion'|string} mode  Any valid CSS mix-blend-mode value.
+    * @param {boolean} [isPermanent=false]  When true, persists across state resets.
+    */
+   setBlendMode(mode, isPermanent = false) {
+      if (!this._isActive()) return;
+      if (isPermanent) this.blend_mode = mode;
+      this.$shape.style.mixBlendMode = mode;
+   }
+
+   /**
+    * Apply a shadow color given as a direct CSS color string (rgb, rgba, hex, keyword…).
+    * Works for both circle (backgroundColor on $shadow) and fluid (boxShadow on $shape).
+    * @private
+    */
+   _applyShadowColor(cssColor) {
+      if (!this._isActive()) return;
+      this.shadow_color = cssColor;
+      if (this.shape === 'circle') {
+         this.$shadow.style.backgroundColor = cssColor;
+      } else if (this.shape === 'fluid') {
+         if (this.hasShadow) {
+            this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${cssColor}`;
+         }
+      }
+   }
+
+   // ── Preset system ──────────────────────────────────────────────────────────
+
+   /**
+    * Apply a named built-in preset to the live cursor instance.
+    * Optionally pass an `overrides` object to customise individual properties.
+    *
+    * @param {keyof typeof ProteusCursor.PRESETS | string} name
+    * @param {import('./proteus-cursor.d.ts').ProteusCursorOptions} [overrides]
+    * @returns {this}
+    *
+    * @example
+    * cursor.loadPreset('neon');
+    * cursor.loadPreset('chrome', { shape_size: '64px' });
+    */
+   loadPreset(name, overrides = {}) {
+      if (!this._isActive()) return this;
+      const base = ProteusCursor.PRESETS[name];
+      if (!base) {
+         console.warn(`[ProteusCursor] Unknown preset: "${name}". Available: ${Object.keys(ProteusCursor.PRESETS).join(', ')}`);
+         return this;
+      }
+      const preset = { ...base, ...overrides };
+
+      if (preset.shape       !== undefined && preset.shape !== this.shape) this.setShape(preset.shape);
+      if (preset.shape_size  !== undefined) this.setShapeSize(preset.shape_size, preset.shape_size, true);
+      if (preset.shape_color !== undefined) this.setShapeColor(preset.shape_color, true);
+      if (preset.hasShadow   !== undefined) this.setShadowEnabled(preset.hasShadow, true);
+      if (preset.shadow_size !== undefined) this.setShadowSize(preset.shadow_size, preset.shadow_size);
+      if (preset.shadow_color !== undefined) this._applyShadowColor(preset.shadow_color);
+      if (preset.blend_mode  !== undefined) this.setBlendMode(preset.blend_mode, true);
+      if (preset.click_animation !== undefined) this.click_animation = preset.click_animation;
+
+      return this;
+   }
+
+   /**
+    * Return the raw configuration object for a named preset.
+    * Useful for constructing a cursor with a preset as a base and then overriding
+    * individual properties:
+    *
+    * @example
+    * const cursor = new ProteusCursor({
+    *   ...ProteusCursor.getPreset('neon'),
+    *   shape_color: '#ff4444',
+    * });
+    *
+    * @param {string} name
+    * @returns {import('./proteus-cursor.d.ts').ProteusCursorOptions | undefined}
+    */
+   static getPreset(name) {
+      return ProteusCursor.PRESETS[name];
    }
 
    //endregion
@@ -637,12 +794,14 @@ export default class ProteusCursor{
     * will activate it on mouseenter and restore defaults on mouseleave.
     */
    addState(name, options = {}) {
+      if (this.isTouch || this.isReducedMotion) return this;
       this.states[name] = options;
       this._bindStateElements(name);
       return this;
    }
 
    removeState(name) {
+      if (this.isTouch || this.isReducedMotion) return this;
       delete this.states[name];
       return this;
    }
@@ -658,6 +817,7 @@ export default class ProteusCursor{
       if (state.text_color  !== undefined) this.setTextColor(state.text_color);
       if (state.text_size   !== undefined) this.setTextSize(state.text_size);
       if (state.text_weight !== undefined) this.setTextWeight(state.text_weight);
+      if (state.blend_mode  !== undefined) this.setBlendMode(state.blend_mode);
    }
 
    _resetState() {
@@ -668,6 +828,7 @@ export default class ProteusCursor{
       this.setTextColor(this.text_color);
       this.setTextSize(this.text_size);
       this.setTextWeight(this.text_weight);
+      this.setBlendMode(this.blend_mode);
    }
 
    _bindStateElements(name) {
@@ -797,6 +958,90 @@ export default class ProteusCursor{
 
 
 /* -------------------------------------------------------------------------------- */
+//region 🎨 Built-in Presets
+/* -------------------------------------------------------------------------------- */
+
+/**
+ * Five ready-to-use cursor presets.
+ * Access them via:
+ *   - `cursor.loadPreset('neon')`           — apply to a live instance
+ *   - `ProteusCursor.getPreset('neon')`     — get the raw config object
+ *   - `import { PRESETS } from 'proteuscursor'` — named export
+ */
+ProteusCursor.PRESETS = {
+   /**
+    * Subtle translucent circle — blends into any design without demanding attention.
+    */
+   ghost: {
+      shape:           'circle',
+      shape_size:      '12px',
+      shape_color:     'rgba(255,255,255,0.55)',
+      hasShadow:       true,
+      shadow_size:     '44px',
+      shadow_color:    'rgba(255,255,255,0.10)',
+      blend_mode:      'normal',
+      click_animation: 'scale',
+   },
+
+   /**
+    * Vibrant teal dot with a glowing halo — great for dark, creative sites.
+    */
+   neon: {
+      shape:           'circle',
+      shape_size:      '10px',
+      shape_color:     '#00D4AA',
+      hasShadow:       true,
+      shadow_size:     '52px',
+      shadow_color:    'rgba(0,212,170,0.30)',
+      blend_mode:      'normal',
+      click_animation: 'ripple',
+   },
+
+   /**
+    * Bare-minimum dot, no shadow, no animation — zero visual noise.
+    */
+   minimal: {
+      shape:           'circle',
+      shape_size:      '6px',
+      shape_color:     '#ffffff',
+      hasShadow:       false,
+      blend_mode:      'normal',
+      click_animation: 'none',
+   },
+
+   /**
+    * Large white circle with mix-blend-mode: difference — automatically inverts
+    * the colors underneath, creating perfect contrast on any background.
+    */
+   chrome: {
+      shape:           'circle',
+      shape_size:      '48px',
+      shape_color:     '#ffffff',
+      hasShadow:       false,
+      blend_mode:      'difference',
+      click_animation: 'scale',
+   },
+
+   /**
+    * Fluid morphing blob — dynamic shape that stretches and squeezes with movement.
+    * Best used when the cursor is initialised with shape: 'fluid'.
+    */
+   ink: {
+      shape:           'fluid',
+      shape_size:      '24px',
+      shape_color:     '#e8e8e8',
+      hasShadow:       true,
+      shadow_size:     '60px',
+      shadow_color:    'rgba(232,232,232,0.18)',
+      blend_mode:      'normal',
+      click_animation: 'ripple',
+   },
+};
+
+//endregion
+
+
+/* -------------------------------------------------------------------------------- */
 //region 🔹 Helper
 /* -------------------------------------------------------------------------------- */
 function hexToRgba(hex, alpha = 1) {
@@ -806,3 +1051,4 @@ function hexToRgba(hex, alpha = 1) {
    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 //endregion
+

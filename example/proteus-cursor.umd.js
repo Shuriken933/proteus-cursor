@@ -1,5 +1,5 @@
 (function(l,u){typeof exports=="object"&&typeof module<"u"?module.exports=u():typeof define=="function"&&define.amd?define(u):(l=typeof globalThis<"u"?globalThis:l||self,l.ProteusCursor=u())})(this,function(){"use strict";/*!
- * Proteus Cursor v1.1.5
+ * Proteus Cursor v2.0.0
  * https://github.com/Shuriken933/proteus-cursor
  *
  * A dynamic JavaScript library that transforms the default mouse cursor
