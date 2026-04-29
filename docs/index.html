@@ -1676,10 +1676,11 @@ cursor.<span class="sh-fn">loadPreset</span>(<span class="sh-string">'chrome'</s
         .addState('preset-chrome',  { ...P.chrome })
         .addState('preset-ink',     { ...P.ink })
         .addState('preset-minimal', { ...P.minimal })
-        // Click animation boxes
-        .addState('box-scale',  { shape_size: '16px', shape_color: '#5BC8F5' })
-        .addState('box-ripple', { shape_size: '16px', shape_color: '#00D4AA' })
-        .addState('box-none',   { shape_size: '16px', shape_color: '#8BA8B5' })
+        // Click animation boxes — state machine handles click_animation as
+        // a temporary override, restored automatically on mouseleave.
+        .addState('box-scale',  { shape_size: '16px', shape_color: '#5BC8F5', click_animation: 'scale' })
+        .addState('box-ripple', { shape_size: '16px', shape_color: '#00D4AA', click_animation: 'ripple' })
+        .addState('box-none',   { shape_size: '16px', shape_color: '#8BA8B5', click_animation: 'none' })
         // Nav links
         .addState('nav-link', { shape_size: '8px', shape_color: '#00D4AA', hasShadow: false });
 
@@ -1700,18 +1701,12 @@ cursor.<span class="sh-fn">loadPreset</span>(<span class="sh-string">'chrome'</s
       });
 
       /* ------------------------------------------------------------------
-         CLICK ANIMATION BOXES — switch animation on enter
+         CLICK ANIMATION BOXES — state-machine driven
+         box-scale / box-ripple / box-none all carry `click_animation` in
+         their state config (see addState calls above), so the cursor's own
+         state machine activates and restores the animation automatically.
+         No manual mouseenter/mouseleave handlers needed.
       ------------------------------------------------------------------ */
-      const boxScale  = document.getElementById('box-scale');
-      const boxRipple = document.getElementById('box-ripple');
-      const boxNone   = document.getElementById('box-none');
-
-      if (boxScale)  boxScale.addEventListener('mouseenter',  () => { if (cursor) cursor.click_animation = 'scale'; });
-      if (boxRipple) boxRipple.addEventListener('mouseenter', () => { if (cursor) cursor.click_animation = 'ripple'; });
-      if (boxNone)   boxNone.addEventListener('mouseenter',   () => { if (cursor) cursor.click_animation = 'none'; });
-      if (boxScale)  boxScale.addEventListener('mouseleave',  () => { if (cursor && !isPlaygroundMode) cursor.click_animation = 'ripple'; });
-      if (boxRipple) boxRipple.addEventListener('mouseleave', () => { if (cursor && !isPlaygroundMode) cursor.click_animation = 'ripple'; });
-      if (boxNone)   boxNone.addEventListener('mouseleave',   () => { if (cursor && !isPlaygroundMode) cursor.click_animation = 'ripple'; });
 
       /* ------------------------------------------------------------------
          MODES TOGGLE BUTTON
@@ -1812,22 +1807,32 @@ cursor.<span class="sh-fn">loadPreset</span>(<span class="sh-string">'chrome'</s
         `<span class="sh-keyword">const</span> <span class="sh-prop">cursor</span> <span class="sh-punct">=</span> <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span><span class="sh-punct">({</span>\n  <span class="sh-prop">shape</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.shape}'</span><span class="sh-punct">,</span>\n  <span class="sh-prop">shape_size</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.shape_size}px'</span><span class="sh-punct">,</span>\n  <span class="sh-prop">shape_color</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.shape_color}'</span><span class="sh-punct">,</span>${shadowLines}\n  <span class="sh-prop">click_animation</span><span class="sh-punct">:</span> <span class="sh-string">'${pgState.click_animation}'</span><span class="sh-punct">,</span>${blendLine}${textLine}${textSizeLine}${textWeightLine}\n<span class="sh-punct">});</span>`;
     }
 
+    /**
+     * Push the playground state into the cursor's DEFAULT preset.
+     * Hover-triggered states overlay temporary changes; this function is the
+     * only thing that should mutate the underlying default. Uses
+     * setDefaultPreset() for size/colors/text/blend/click + setShadowColor()
+     * to convert hex+alpha to rgba. After this call, _resetState() (mouseleave)
+     * will restore the cursor to exactly these values.
+     */
     function pgApplyToCursor() {
       if (!cursor) return;
-      const sizeStr = pgState.shape_size + 'px';
-      cursor.setShapeColor(pgState.shape_color, true);
-      cursor.setShapeSize(sizeStr, sizeStr, true);
-      cursor.setShadowEnabled(pgState.hasShadow, true);
+      cursor.setDefaultPreset({
+        shape:           pgState.shape,
+        shape_size:      pgState.shape_size + 'px',
+        shape_color:     pgState.shape_color,
+        hasShadow:       pgState.hasShadow,
+        blend_mode:      pgState.blend_mode,
+        click_animation: pgState.click_animation,
+        text:            pgState.text || '',
+        text_size:       pgState.text ? pgState.text_size + 'px' : '',
+        text_weight:     pgState.text_weight,
+      });
       if (pgState.hasShadow) {
         const sz = pgState.shadow_size + 'px';
         cursor.setShadowSize(sz, sz, true);
         cursor.setShadowColor(pgState.shadow_color, pgState.shadow_alpha / 100, true);
       }
-      cursor.click_animation = pgState.click_animation;
-      cursor.setBlendMode(pgState.blend_mode, true);
-      cursor.setText(pgState.text, true);
-      cursor.setTextSize(pgState.text ? pgState.text_size + 'px' : '', true);
-      cursor.setTextWeight(pgState.text_weight, true);
     }
 
     function pgSync() { pgApplyToCursor(); pgUpdateCode(); }

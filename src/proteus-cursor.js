@@ -116,6 +116,11 @@ export default class ProteusCursor{
       this.dataAttributeEvents();
       this._initClickAnimation();
 
+      // Snapshot the constructor-built configuration as the cursor's default
+      // preset. _resetState() will rebuild the cursor from this snapshot on
+      // every state-mouseleave so hover effects never bleed into the base.
+      this._captureDefaults();
+
    }
 
    /**
@@ -208,7 +213,9 @@ export default class ProteusCursor{
 
    setShape(shape){
       if (!this._isActive()) return;
+      // Public API: setShape always promotes the change to the default preset.
       this._baseShape = shape;
+      if (this._defaultPreset) this._defaultPreset.shape = shape;
       this._activateShape(shape);
    }
 
@@ -639,12 +646,27 @@ export default class ProteusCursor{
    /**
     * Set the number of trail dots following the cursor. Pass 0 to disable.
     * @param {number} n
+    * @param {boolean} [isPermanent=false]  When true, persists across state resets.
     * @returns {this}
     */
-   setTrailLength(n) {
+   setTrailLength(n, isPermanent = false) {
       if (!this._isActive()) return this;
       this.trail_length = Math.max(0, n);
+      if (isPermanent && this._defaultPreset) this._defaultPreset.trail_length = this.trail_length;
       this._initTrail();
+      return this;
+   }
+
+   /**
+    * Set the trail base opacity (0..1). Higher = more visible trail.
+    * @param {number} opacity
+    * @param {boolean} [isPermanent=false]
+    * @returns {this}
+    */
+   setTrailOpacity(opacity, isPermanent = false) {
+      if (!this._isActive()) return this;
+      this.trail_opacity = opacity;
+      if (isPermanent && this._defaultPreset) this._defaultPreset.trail_opacity = opacity;
       return this;
    }
 
@@ -654,101 +676,86 @@ export default class ProteusCursor{
    /* -------------------------------------------------------------------------------- */
    //region 🏷️ Setters
    /* -------------------------------------------------------------------------------- */
+   // Setter convention:
+   //   - Always update the LIVE field (this.X) and the DOM.
+   //   - When isPermanent=true, ALSO update this._defaultPreset.X so the
+   //     change survives the next _resetState() (mouseleave on a state).
+   // The state machine uses non-permanent setters: live + DOM are touched,
+   // _defaultPreset is preserved, and _resetState() can rebuild from it.
    setShapeSize(width, height, isPermanent = false){
       if (!this._isActive()) return;
-      if(isPermanent){
-         this.shape_size = width || '20px';
-         this.shadow_size = height || '20px';
-         this.$shape.style.width = width || '20px';
-         this.$shape.style.height = height || '20px';
-      } else {
-         this.$shape.style.width = width || '20px';
-         this.$shape.style.height = height || '20px';
-      }
+      this.shape_size = width || '20px';
+      if (isPermanent && this._defaultPreset) this._defaultPreset.shape_size = this.shape_size;
+      this.$shape.style.width = width || '20px';
+      this.$shape.style.height = height || '20px';
    }
    setShapeColor(color, isPermanent = false){
       if (!this._isActive()) return;
-      if(isPermanent){
-         this.shape_color = color;
-         this.$shape.style.backgroundColor = color;
-      } else {
-         this.$shape.style.backgroundColor = color;
-      }
+      this.shape_color = color;
+      if (isPermanent && this._defaultPreset) this._defaultPreset.shape_color = color;
+      this.$shape.style.backgroundColor = color;
    }
 
    setShadowEnabled(isEnabled, isPermanent = false){
       if (!this._isActive()) return;
-      if(this.shape === 'circle'){
-         if(isPermanent){
-            this.hasShadow = isEnabled;
-            if (this.hasShadow){
-               this.$shadow.style.display = 'block';
-            } else {
-               this.$shadow.style.display = 'none';
-            }
-         } else{
-            if (isEnabled){
-               this.$shadow.style.display = 'block';
-            } else {
-               this.$shadow.style.display = 'none';
-            }
-         }
-      } else if(this.shape === 'fluid'){
-         const shadow = isEnabled ? `0 0 ${this.shadow_size} ${this.shadow_color}` : 'none';
-         if(isPermanent) this.hasShadow = isEnabled;
-         this.$shape.style.boxShadow = shadow;
+      this.hasShadow = isEnabled;
+      if (isPermanent && this._defaultPreset) this._defaultPreset.hasShadow = isEnabled;
+      if (this.shape === 'circle') {
+         this.$shadow.style.display = isEnabled ? 'block' : 'none';
+      } else if (this.shape === 'fluid') {
+         this.$shape.style.boxShadow = isEnabled ? `0 0 ${this.shadow_size} ${this.shadow_color}` : 'none';
       }
-
    }
    setShadowSize(width, height, isPermanent = false){
       if (!this._isActive()) return;
-      if (isPermanent) this.shadow_size = width || '20px';
+      this.shadow_size = width || '20px';
+      if (isPermanent && this._defaultPreset) this._defaultPreset.shadow_size = this.shadow_size;
       this.$shadow.style.width = width || '20px';
       this.$shadow.style.height = height || '20px';
+      // Fluid mode renders the shadow as boxShadow on $shape, not on $shadow.
+      if (this.shape === 'fluid' && this.hasShadow) {
+         this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`;
+      }
    }
    setShadowColor(hexColor, alpha = 0.5, isPermanent = false){
       if (!this._isActive()) return;
       const rgba = hexToRgba(hexColor, alpha);
-      if (isPermanent) this.shadow_color = rgba;
+      this.shadow_color = rgba;
+      if (isPermanent && this._defaultPreset) this._defaultPreset.shadow_color = rgba;
       this.$shadow.style.backgroundColor = rgba;
+      if (this.shape === 'fluid' && this.hasShadow) {
+         this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${rgba}`;
+      }
    }
 
    setText(text, isPermanent = false){
       if (!this._isActive()) return;
-      if(isPermanent){
-         this.text = text;
-         document.querySelector('.proteus-cursor-shape').textContent = this.text;
-      } else{
-         document.querySelector('.proteus-cursor-shape').textContent = text;
-      }
+      this.text = text;
+      if (isPermanent && this._defaultPreset) this._defaultPreset.text = text;
+      if (this.$shape) this.$shape.textContent = text;
    }
-   setTextColor(color, permanent = false){
+   setTextColor(color, isPermanent = false){
       if (!this._isActive()) return;
-      if(permanent){
-         this.text_color = color;
-         document.querySelector('.proteus-cursor-shape').style.color = color;
-      } else{
-         document.querySelector('.proteus-cursor-shape').style.color = color;
-      }
-
+      this.text_color = color;
+      if (isPermanent && this._defaultPreset) this._defaultPreset.text_color = color;
+      if (this.$shape) this.$shape.style.color = color;
    }
    setTextWeight(weight, isPermanent = false){
       if (!this._isActive()) return;
-      if(isPermanent){
-         this.text_weight = weight;
-         document.querySelector('.proteus-cursor-shape').style.fontWeight = weight;
-      } else{
-         document.querySelector('.proteus-cursor-shape').style.fontWeight = weight;
-      }
+      this.text_weight = weight;
+      if (isPermanent && this._defaultPreset) this._defaultPreset.text_weight = weight;
+      if (this.$shape) this.$shape.style.fontWeight = weight;
    }
    setTextSize(size, isPermanent = false){
       if (!this._isActive()) return;
-      if(isPermanent){
-         this.text_size = size;
-         document.querySelector('.proteus-cursor-shape').style.fontSize = size;
-      } else{
-         document.querySelector('.proteus-cursor-shape').style.fontSize = size;
-      }
+      this.text_size = size;
+      if (isPermanent && this._defaultPreset) this._defaultPreset.text_size = size;
+      if (this.$shape) this.$shape.style.fontSize = size;
+   }
+   setClickAnimation(animation, isPermanent = false){
+      if (!this._isActive()) return;
+      this.click_animation = animation;
+      if (isPermanent && this._defaultPreset) this._defaultPreset.click_animation = animation;
    }
 
    setSpeed(speed){
@@ -765,7 +772,8 @@ export default class ProteusCursor{
     */
    setBlendMode(mode, isPermanent = false) {
       if (!this._isActive()) return;
-      if (isPermanent) this.blend_mode = mode;
+      this.blend_mode = mode;
+      if (isPermanent && this._defaultPreset) this._defaultPreset.blend_mode = mode;
       this.$shape.style.mixBlendMode = mode;
    }
 
@@ -776,7 +784,8 @@ export default class ProteusCursor{
     */
    _applyShadowColor(cssColor, isPermanent = false) {
       if (!this._isActive()) return;
-      if (isPermanent) this.shadow_color = cssColor;
+      this.shadow_color = cssColor;
+      if (isPermanent && this._defaultPreset) this._defaultPreset.shadow_color = cssColor;
       if (this.shape === 'circle') {
          this.$shadow.style.backgroundColor = cssColor;
       } else if (this.shape === 'fluid') {
@@ -807,20 +816,72 @@ export default class ProteusCursor{
          console.warn(`[ProteusCursor] Unknown preset: "${name}". Available: ${Object.keys(ProteusCursor.PRESETS).join(', ')}`);
          return this;
       }
-      const preset = { ...base, ...overrides };
+      return this.setDefaultPreset({ ...base, ...overrides });
+   }
 
-      if (preset.shape       !== undefined && preset.shape !== this.shape) this.setShape(preset.shape);
-      if (preset.shape_size  !== undefined) this.setShapeSize(preset.shape_size, preset.shape_size, true);
-      if (preset.shape_color !== undefined) this.setShapeColor(preset.shape_color, true);
-      if (preset.hasShadow   !== undefined) this.setShadowEnabled(preset.hasShadow, true);
-      if (preset.shadow_size !== undefined) this.setShadowSize(preset.shadow_size, preset.shadow_size, true);
-      if (preset.shadow_color !== undefined) this._applyShadowColor(preset.shadow_color, true);
-      if (preset.blend_mode  !== undefined) this.setBlendMode(preset.blend_mode, true);
-      if (preset.click_animation !== undefined) this.click_animation = preset.click_animation;
-      if (preset.trail_length !== undefined) { this.trail_length = preset.trail_length; this._initTrail(); }
-      if (preset.trail_opacity !== undefined) this.trail_opacity = preset.trail_opacity;
-
+   /**
+    * Replace the cursor's "default preset" — the configuration the cursor
+    * returns to whenever a hover-state ends. Only properties present in
+    * `config` are updated; everything else is preserved.
+    *
+    * Use this from sandbox/playground UIs that should permanently change the
+    * default look. State machine hovers must NOT call this — they go through
+    * non-permanent setters that leave the default preset intact.
+    *
+    * @param {object} config
+    * @returns {this}
+    */
+   setDefaultPreset(config = {}) {
+      if (!this._isActive()) return this;
+      // Pass isPermanent=true everywhere so each setter writes both the live
+      // field AND this._defaultPreset, then runs the DOM update. The order
+      // matters: shape switch first (sets up DOM for the new mode), then the
+      // visual properties on top.
+      if (config.shape !== undefined && config.shape !== this.shape) {
+         this.setShape(config.shape);
+      } else if (config.shape !== undefined) {
+         this._baseShape = config.shape;
+         if (this._defaultPreset) this._defaultPreset.shape = config.shape;
+      }
+      if (config.shape_size  !== undefined) this.setShapeSize(config.shape_size, config.shape_size, true);
+      if (config.shape_color !== undefined) this.setShapeColor(config.shape_color, true);
+      if (config.hasShadow   !== undefined) this.setShadowEnabled(config.hasShadow, true);
+      if (config.shadow_size !== undefined) this.setShadowSize(config.shadow_size, config.shadow_size, true);
+      if (config.shadow_color !== undefined) this._applyShadowColor(config.shadow_color, true);
+      if (config.text        !== undefined) this.setText(config.text, true);
+      if (config.text_color  !== undefined) this.setTextColor(config.text_color, true);
+      if (config.text_size   !== undefined) this.setTextSize(config.text_size, true);
+      if (config.text_weight !== undefined) this.setTextWeight(config.text_weight, true);
+      if (config.blend_mode  !== undefined) this.setBlendMode(config.blend_mode, true);
+      if (config.click_animation !== undefined) this.setClickAnimation(config.click_animation, true);
+      if (config.trail_length !== undefined) this.setTrailLength(config.trail_length, true);
+      if (config.trail_opacity !== undefined) this.setTrailOpacity(config.trail_opacity, true);
       return this;
+   }
+
+   /**
+    * Snapshot the current live values as the cursor's default preset.
+    * Called once at the end of the constructor; users typically don't need
+    * to call this directly — use setDefaultPreset() / loadPreset() instead.
+    * @private
+    */
+   _captureDefaults() {
+      this._defaultPreset = {
+         shape:           this._baseShape,
+         shape_size:      this.shape_size,
+         shape_color:     this.shape_color,
+         hasShadow:       this.hasShadow,
+         shadow_size:     this.shadow_size,
+         shadow_color:    this.shadow_color,
+         text:            this.text || '',
+         text_color:      this.text_color || '',
+         text_size:       this.text_size || '',
+         text_weight:     this.text_weight || '',
+         blend_mode:      this.blend_mode,
+         click_animation: this.click_animation,
+         trail_length:    this.trail_length,
+         trail_opacity:   this.trail_opacity,
+      };
    }
 
    /**
@@ -933,9 +994,17 @@ export default class ProteusCursor{
       return this;
    }
 
+   /**
+    * Apply a registered state to the cursor TEMPORARILY. Every change uses
+    * non-permanent setters so the default preset is preserved and
+    * _resetState() can rebuild the cursor exactly as it was before.
+    * @private
+    */
    _applyState(name) {
       const state = this.states[name];
       if (!state) return;
+      // Shape switch first — sets up DOM for the new mode using current live
+      // values. Subsequent setters then patch the visual properties on top.
       if (state.shape       !== undefined && state.shape !== this.shape) this._activateShape(state.shape);
       if (state.shape_size  !== undefined) this.setShapeSize(state.shape_size, state.shape_size);
       if (state.shape_color !== undefined) this.setShapeColor(state.shape_color);
@@ -947,20 +1016,36 @@ export default class ProteusCursor{
       if (state.text_size   !== undefined) this.setTextSize(state.text_size);
       if (state.text_weight !== undefined) this.setTextWeight(state.text_weight);
       if (state.blend_mode  !== undefined) this.setBlendMode(state.blend_mode);
+      if (state.click_animation !== undefined) this.setClickAnimation(state.click_animation);
+      if (state.trail_length !== undefined) this.setTrailLength(state.trail_length);
+      if (state.trail_opacity !== undefined) this.setTrailOpacity(state.trail_opacity);
    }
 
+   /**
+    * Restore the cursor to its default preset (constructor + any
+    * setDefaultPreset/loadPreset/setShape calls since then). Called on every
+    * mouseleave of a state element. The default preset is the source of
+    * truth — we rebuild every property from it, so partial state overlays
+    * can never bleed into the base.
+    * @private
+    */
    _resetState() {
-      if (this.shape !== this._baseShape) this._activateShape(this._baseShape);
-      this.setShapeSize(this.shape_size, this.shape_size);
-      this.setShapeColor(this.shape_color);
-      this.setShadowEnabled(this.hasShadow);
-      this.setShadowSize(this.shadow_size, this.shadow_size);
-      this._applyShadowColor(this.shadow_color);
-      this.setText(this.text);
-      this.setTextColor(this.text_color);
-      this.setTextSize(this.text_size);
-      this.setTextWeight(this.text_weight);
-      this.setBlendMode(this.blend_mode);
+      if (!this._defaultPreset || !this._isActive()) return;
+      const p = this._defaultPreset;
+      if (this.shape !== p.shape) this._activateShape(p.shape);
+      this.setShapeSize(p.shape_size, p.shape_size);
+      this.setShapeColor(p.shape_color);
+      this.setShadowEnabled(p.hasShadow);
+      this.setShadowSize(p.shadow_size, p.shadow_size);
+      this._applyShadowColor(p.shadow_color);
+      this.setText(p.text);
+      this.setTextColor(p.text_color);
+      this.setTextSize(p.text_size);
+      this.setTextWeight(p.text_weight);
+      this.setBlendMode(p.blend_mode);
+      this.setClickAnimation(p.click_animation);
+      if (this.trail_length !== p.trail_length) this.setTrailLength(p.trail_length);
+      this.setTrailOpacity(p.trail_opacity);
    }
 
    _bindStateElements(name) {

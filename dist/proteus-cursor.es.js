@@ -12,7 +12,7 @@ var e = class e {
 	cursorY = 0;
 	_baseShape = "default";
 	constructor(t = {}) {
-		this.testMode = !1, this.shape = t.shape || "default", this._baseShape = this.shape, this.shape_size = t.shape_size || "10px", this.shape_color = t.shape_color || "#fff", this.hasShadow = t.hasShadow ?? !0, this.shadow_delay = this.hasShadow ? t.shadow_delay || "0.3s" : "0s", this.shadow_size = t.shadow_size || "40px", this.shadow_color = t.shadow_color || "#ffffff", this.text = "", this.text_color = "", this.text_weight = "", this.text_size = "", this.speed = .9, this.maxVelocity = 10, this.isMagnetic = t.magnetic ?? !1, this.blend_mode = t.blend_mode || "normal", this.trail_length = t.trail_length || 0, this.trail_opacity = t.trail_opacity ?? .3, this._trailElements = [], this._trailPositions = [], this.click_animation = t.click_animation || "scale", this.click_duration = t.click_duration ?? 300, this.states = {}, this.eventListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.isTouch = e.isTouchOnly(), !this.isTouch && (this.respectReducedMotion = t.respectReducedMotion ?? !0, this.isReducedMotion = this.respectReducedMotion && e.prefersReducedMotion(), !this.isReducedMotion && (this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.hasShadow || (this.$shadow.style.display = "none"), this.trail_length > 0 && this._initTrail(), this.dataAttributeEvents(), this._initClickAnimation()));
+		this.testMode = !1, this.shape = t.shape || "default", this._baseShape = this.shape, this.shape_size = t.shape_size || "10px", this.shape_color = t.shape_color || "#fff", this.hasShadow = t.hasShadow ?? !0, this.shadow_delay = this.hasShadow ? t.shadow_delay || "0.3s" : "0s", this.shadow_size = t.shadow_size || "40px", this.shadow_color = t.shadow_color || "#ffffff", this.text = "", this.text_color = "", this.text_weight = "", this.text_size = "", this.speed = .9, this.maxVelocity = 10, this.isMagnetic = t.magnetic ?? !1, this.blend_mode = t.blend_mode || "normal", this.trail_length = t.trail_length || 0, this.trail_opacity = t.trail_opacity ?? .3, this._trailElements = [], this._trailPositions = [], this.click_animation = t.click_animation || "scale", this.click_duration = t.click_duration ?? 300, this.states = {}, this.eventListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.isTouch = e.isTouchOnly(), !this.isTouch && (this.respectReducedMotion = t.respectReducedMotion ?? !0, this.isReducedMotion = this.respectReducedMotion && e.prefersReducedMotion(), !this.isReducedMotion && (this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.hasShadow || (this.$shadow.style.display = "none"), this.trail_length > 0 && this._initTrail(), this.dataAttributeEvents(), this._initClickAnimation(), this._captureDefaults()));
 	}
 	static isTouchOnly() {
 		return typeof window > "u" ? !1 : window.matchMedia("(pointer: coarse)").matches;
@@ -49,7 +49,7 @@ var e = class e {
 		return this.animationIds.push(t), t;
 	}
 	setShape(e) {
-		this._isActive() && (this._baseShape = e, this._activateShape(e));
+		this._isActive() && (this._baseShape = e, this._defaultPreset && (this._defaultPreset.shape = e), this._activateShape(e));
 	}
 	_activateShape(e) {
 		if (this._isActive()) switch (document.querySelector("body").classList.remove("proteus-is-a-fluid"), document.querySelector("body").classList.remove("proteus-is-a-circle"), this.shape = e, this.shape) {
@@ -177,43 +177,43 @@ var e = class e {
 	_destroyTrail() {
 		this._trailElements.forEach((e) => e.parentNode && e.parentNode.removeChild(e)), this._trailElements = [], this._trailPositions = [];
 	}
-	setTrailLength(e) {
-		return this._isActive() ? (this.trail_length = Math.max(0, e), this._initTrail(), this) : this;
+	setTrailLength(e, t = !1) {
+		return this._isActive() ? (this.trail_length = Math.max(0, e), t && this._defaultPreset && (this._defaultPreset.trail_length = this.trail_length), this._initTrail(), this) : this;
+	}
+	setTrailOpacity(e, t = !1) {
+		return this._isActive() ? (this.trail_opacity = e, t && this._defaultPreset && (this._defaultPreset.trail_opacity = e), this) : this;
 	}
 	setShapeSize(e, t, n = !1) {
-		this._isActive() && (n ? (this.shape_size = e || "20px", this.shadow_size = t || "20px", this.$shape.style.width = e || "20px", this.$shape.style.height = t || "20px") : (this.$shape.style.width = e || "20px", this.$shape.style.height = t || "20px"));
+		this._isActive() && (this.shape_size = e || "20px", n && this._defaultPreset && (this._defaultPreset.shape_size = this.shape_size), this.$shape.style.width = e || "20px", this.$shape.style.height = t || "20px");
 	}
 	setShapeColor(e, t = !1) {
-		this._isActive() && (t && (this.shape_color = e), this.$shape.style.backgroundColor = e);
+		this._isActive() && (this.shape_color = e, t && this._defaultPreset && (this._defaultPreset.shape_color = e), this.$shape.style.backgroundColor = e);
 	}
 	setShadowEnabled(e, t = !1) {
-		if (this._isActive()) {
-			if (this.shape === "circle") t ? (this.hasShadow = e, this.hasShadow ? this.$shadow.style.display = "block" : this.$shadow.style.display = "none") : e ? this.$shadow.style.display = "block" : this.$shadow.style.display = "none";
-			else if (this.shape === "fluid") {
-				let n = e ? `0 0 ${this.shadow_size} ${this.shadow_color}` : "none";
-				t && (this.hasShadow = e), this.$shape.style.boxShadow = n;
-			}
-		}
+		this._isActive() && (this.hasShadow = e, t && this._defaultPreset && (this._defaultPreset.hasShadow = e), this.shape === "circle" ? this.$shadow.style.display = e ? "block" : "none" : this.shape === "fluid" && (this.$shape.style.boxShadow = e ? `0 0 ${this.shadow_size} ${this.shadow_color}` : "none"));
 	}
 	setShadowSize(e, t, n = !1) {
-		this._isActive() && (n && (this.shadow_size = e || "20px"), this.$shadow.style.width = e || "20px", this.$shadow.style.height = t || "20px");
+		this._isActive() && (this.shadow_size = e || "20px", n && this._defaultPreset && (this._defaultPreset.shadow_size = this.shadow_size), this.$shadow.style.width = e || "20px", this.$shadow.style.height = t || "20px", this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`));
 	}
 	setShadowColor(e, n = .5, r = !1) {
 		if (!this._isActive()) return;
 		let i = t(e, n);
-		r && (this.shadow_color = i), this.$shadow.style.backgroundColor = i;
+		this.shadow_color = i, r && this._defaultPreset && (this._defaultPreset.shadow_color = i), this.$shadow.style.backgroundColor = i, this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${i}`);
 	}
 	setText(e, t = !1) {
-		this._isActive() && (t ? (this.text = e, document.querySelector(".proteus-cursor-shape").textContent = this.text) : document.querySelector(".proteus-cursor-shape").textContent = e);
+		this._isActive() && (this.text = e, t && this._defaultPreset && (this._defaultPreset.text = e), this.$shape && (this.$shape.textContent = e));
 	}
 	setTextColor(e, t = !1) {
-		this._isActive() && (t && (this.text_color = e), document.querySelector(".proteus-cursor-shape").style.color = e);
+		this._isActive() && (this.text_color = e, t && this._defaultPreset && (this._defaultPreset.text_color = e), this.$shape && (this.$shape.style.color = e));
 	}
 	setTextWeight(e, t = !1) {
-		this._isActive() && (t && (this.text_weight = e), document.querySelector(".proteus-cursor-shape").style.fontWeight = e);
+		this._isActive() && (this.text_weight = e, t && this._defaultPreset && (this._defaultPreset.text_weight = e), this.$shape && (this.$shape.style.fontWeight = e));
 	}
 	setTextSize(e, t = !1) {
-		this._isActive() && (t && (this.text_size = e), document.querySelector(".proteus-cursor-shape").style.fontSize = e);
+		this._isActive() && (this.text_size = e, t && this._defaultPreset && (this._defaultPreset.text_size = e), this.$shape && (this.$shape.style.fontSize = e));
+	}
+	setClickAnimation(e, t = !1) {
+		this._isActive() && (this.click_animation = e, t && this._defaultPreset && (this._defaultPreset.click_animation = e));
 	}
 	setSpeed(e) {
 		this.speed = e;
@@ -222,20 +222,39 @@ var e = class e {
 		this.maxVelocity = e;
 	}
 	setBlendMode(e, t = !1) {
-		this._isActive() && (t && (this.blend_mode = e), this.$shape.style.mixBlendMode = e);
+		this._isActive() && (this.blend_mode = e, t && this._defaultPreset && (this._defaultPreset.blend_mode = e), this.$shape.style.mixBlendMode = e);
 	}
 	_applyShadowColor(e, t = !1) {
-		this._isActive() && (t && (this.shadow_color = e), this.shape === "circle" ? this.$shadow.style.backgroundColor = e : this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${e}`));
+		this._isActive() && (this.shadow_color = e, t && this._defaultPreset && (this._defaultPreset.shadow_color = e), this.shape === "circle" ? this.$shadow.style.backgroundColor = e : this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${e}`));
 	}
 	loadPreset(t, n = {}) {
 		if (!this._isActive()) return this;
 		let r = e.PRESETS[t];
-		if (!r) return console.warn(`[ProteusCursor] Unknown preset: "${t}". Available: ${Object.keys(e.PRESETS).join(", ")}`), this;
-		let i = {
+		return r ? this.setDefaultPreset({
 			...r,
 			...n
+		}) : (console.warn(`[ProteusCursor] Unknown preset: "${t}". Available: ${Object.keys(e.PRESETS).join(", ")}`), this);
+	}
+	setDefaultPreset(e = {}) {
+		return this._isActive() ? (e.shape !== void 0 && e.shape !== this.shape ? this.setShape(e.shape) : e.shape !== void 0 && (this._baseShape = e.shape, this._defaultPreset && (this._defaultPreset.shape = e.shape)), e.shape_size !== void 0 && this.setShapeSize(e.shape_size, e.shape_size, !0), e.shape_color !== void 0 && this.setShapeColor(e.shape_color, !0), e.hasShadow !== void 0 && this.setShadowEnabled(e.hasShadow, !0), e.shadow_size !== void 0 && this.setShadowSize(e.shadow_size, e.shadow_size, !0), e.shadow_color !== void 0 && this._applyShadowColor(e.shadow_color, !0), e.text !== void 0 && this.setText(e.text, !0), e.text_color !== void 0 && this.setTextColor(e.text_color, !0), e.text_size !== void 0 && this.setTextSize(e.text_size, !0), e.text_weight !== void 0 && this.setTextWeight(e.text_weight, !0), e.blend_mode !== void 0 && this.setBlendMode(e.blend_mode, !0), e.click_animation !== void 0 && this.setClickAnimation(e.click_animation, !0), e.trail_length !== void 0 && this.setTrailLength(e.trail_length, !0), e.trail_opacity !== void 0 && this.setTrailOpacity(e.trail_opacity, !0), this) : this;
+	}
+	_captureDefaults() {
+		this._defaultPreset = {
+			shape: this._baseShape,
+			shape_size: this.shape_size,
+			shape_color: this.shape_color,
+			hasShadow: this.hasShadow,
+			shadow_size: this.shadow_size,
+			shadow_color: this.shadow_color,
+			text: this.text || "",
+			text_color: this.text_color || "",
+			text_size: this.text_size || "",
+			text_weight: this.text_weight || "",
+			blend_mode: this.blend_mode,
+			click_animation: this.click_animation,
+			trail_length: this.trail_length,
+			trail_opacity: this.trail_opacity
 		};
-		return i.shape !== void 0 && i.shape !== this.shape && this.setShape(i.shape), i.shape_size !== void 0 && this.setShapeSize(i.shape_size, i.shape_size, !0), i.shape_color !== void 0 && this.setShapeColor(i.shape_color, !0), i.hasShadow !== void 0 && this.setShadowEnabled(i.hasShadow, !0), i.shadow_size !== void 0 && this.setShadowSize(i.shadow_size, i.shadow_size, !0), i.shadow_color !== void 0 && this._applyShadowColor(i.shadow_color, !0), i.blend_mode !== void 0 && this.setBlendMode(i.blend_mode, !0), i.click_animation !== void 0 && (this.click_animation = i.click_animation), i.trail_length !== void 0 && (this.trail_length = i.trail_length, this._initTrail()), i.trail_opacity !== void 0 && (this.trail_opacity = i.trail_opacity), this;
 	}
 	static getPreset(t) {
 		return e.PRESETS[t];
@@ -293,10 +312,12 @@ var e = class e {
 	}
 	_applyState(e) {
 		let t = this.states[e];
-		t && (t.shape !== void 0 && t.shape !== this.shape && this._activateShape(t.shape), t.shape_size !== void 0 && this.setShapeSize(t.shape_size, t.shape_size), t.shape_color !== void 0 && this.setShapeColor(t.shape_color), t.hasShadow !== void 0 && this.setShadowEnabled(t.hasShadow), t.shadow_size !== void 0 && this.setShadowSize(t.shadow_size, t.shadow_size), t.shadow_color !== void 0 && this._applyShadowColor(t.shadow_color), t.text !== void 0 && this.setText(t.text), t.text_color !== void 0 && this.setTextColor(t.text_color), t.text_size !== void 0 && this.setTextSize(t.text_size), t.text_weight !== void 0 && this.setTextWeight(t.text_weight), t.blend_mode !== void 0 && this.setBlendMode(t.blend_mode));
+		t && (t.shape !== void 0 && t.shape !== this.shape && this._activateShape(t.shape), t.shape_size !== void 0 && this.setShapeSize(t.shape_size, t.shape_size), t.shape_color !== void 0 && this.setShapeColor(t.shape_color), t.hasShadow !== void 0 && this.setShadowEnabled(t.hasShadow), t.shadow_size !== void 0 && this.setShadowSize(t.shadow_size, t.shadow_size), t.shadow_color !== void 0 && this._applyShadowColor(t.shadow_color), t.text !== void 0 && this.setText(t.text), t.text_color !== void 0 && this.setTextColor(t.text_color), t.text_size !== void 0 && this.setTextSize(t.text_size), t.text_weight !== void 0 && this.setTextWeight(t.text_weight), t.blend_mode !== void 0 && this.setBlendMode(t.blend_mode), t.click_animation !== void 0 && this.setClickAnimation(t.click_animation), t.trail_length !== void 0 && this.setTrailLength(t.trail_length), t.trail_opacity !== void 0 && this.setTrailOpacity(t.trail_opacity));
 	}
 	_resetState() {
-		this.shape !== this._baseShape && this._activateShape(this._baseShape), this.setShapeSize(this.shape_size, this.shape_size), this.setShapeColor(this.shape_color), this.setShadowEnabled(this.hasShadow), this.setShadowSize(this.shadow_size, this.shadow_size), this._applyShadowColor(this.shadow_color), this.setText(this.text), this.setTextColor(this.text_color), this.setTextSize(this.text_size), this.setTextWeight(this.text_weight), this.setBlendMode(this.blend_mode);
+		if (!this._defaultPreset || !this._isActive()) return;
+		let e = this._defaultPreset;
+		this.shape !== e.shape && this._activateShape(e.shape), this.setShapeSize(e.shape_size, e.shape_size), this.setShapeColor(e.shape_color), this.setShadowEnabled(e.hasShadow), this.setShadowSize(e.shadow_size, e.shadow_size), this._applyShadowColor(e.shadow_color), this.setText(e.text), this.setTextColor(e.text_color), this.setTextSize(e.text_size), this.setTextWeight(e.text_weight), this.setBlendMode(e.blend_mode), this.setClickAnimation(e.click_animation), this.trail_length !== e.trail_length && this.setTrailLength(e.trail_length), this.setTrailOpacity(e.trail_opacity);
 	}
 	_bindStateElements(e) {
 		this.isDestroyed || document.querySelectorAll(`[data-cursor-state="${e}"]`).forEach((t) => {
