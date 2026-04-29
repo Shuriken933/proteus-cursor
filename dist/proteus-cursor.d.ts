@@ -1,3 +1,6 @@
+/** Names of the five built-in presets */
+export type PresetName = 'ghost' | 'neon' | 'minimal' | 'chrome' | 'ink';
+
 /** Visual properties that can be applied as a named cursor state */
 export interface CursorStateOptions {
   shape_size?: string;
@@ -8,6 +11,12 @@ export interface CursorStateOptions {
   text_color?: string;
   text_weight?: string;
   text_size?: string;
+  /**
+   * CSS `mix-blend-mode` applied to the cursor shape element.
+   * Use `'difference'` for an automatic color-inversion effect (works best with
+   * a white `shape_color`). Use `'normal'` to remove blending.
+   */
+  blend_mode?: 'normal' | 'difference' | 'exclusion' | 'multiply' | 'screen' | 'overlay' | string;
 }
 
 export interface ProteusCursorOptions {
@@ -48,6 +57,22 @@ export interface ProteusCursorOptions {
   click_animation?: 'scale' | 'ripple' | 'none';
   /** Duration of the click animation in ms. Default: `300` */
   click_duration?: number;
+
+  /**
+   * When `true` (default), the library skips initialization if the user has
+   * enabled "reduce motion" at the OS level (`prefers-reduced-motion: reduce`).
+   * Set to `false` to opt-out of this behaviour.
+   * Default: `true`
+   */
+  respectReducedMotion?: boolean;
+
+  /**
+   * CSS `mix-blend-mode` applied to the cursor shape element.
+   * `'difference'` gives the classic automatic color-inversion effect —
+   * works best with `shape_color: '#ffffff'`.
+   * Default: `'normal'`
+   */
+  blend_mode?: 'normal' | 'difference' | 'exclusion' | 'multiply' | 'screen' | 'overlay' | string;
 }
 
 export default class ProteusCursor {
@@ -71,9 +96,23 @@ export default class ProteusCursor {
   speed: number;
   maxVelocity: number;
   isMagnetic: boolean;
+  blend_mode: string;
   click_animation: 'scale' | 'ripple' | 'none';
   click_duration: number;
   isDestroyed: boolean;
+  /**
+   * `true` when the library detected a touch-only device and skipped
+   * initialization. All API methods are safe to call — they are no-ops.
+   */
+  readonly isTouch: boolean;
+  /**
+   * `true` when `respectReducedMotion` is enabled and the user's OS has
+   * `prefers-reduced-motion: reduce` set. Initialization was skipped;
+   * all API methods are safe to call as no-ops.
+   */
+  readonly isReducedMotion: boolean;
+  /** Whether the library will respect the reduced-motion OS preference. Default: `true` */
+  respectReducedMotion: boolean;
 
   // ── Shape ────────────────────────────────────────────────────────────────
   /** Switch cursor shape at runtime */
@@ -117,6 +156,14 @@ export default class ProteusCursor {
   setTextWeight(weight: string, isPermanent?: boolean): void;
   setTextSize(size: string, isPermanent?: boolean): void;
 
+  // ── Blend mode ───────────────────────────────────────────────────────────
+  /**
+   * Apply a CSS `mix-blend-mode` to the cursor shape element at runtime.
+   * @param mode      Any valid CSS mix-blend-mode value (e.g. `'difference'`)
+   * @param isPermanent When true, persists across state machine resets
+   */
+  setBlendMode(mode: string, isPermanent?: boolean): void;
+
   // ── Fluid ────────────────────────────────────────────────────────────────
   /** Set easing speed for fluid mode (0–1) */
   setSpeed(speed: number): void;
@@ -137,6 +184,60 @@ export default class ProteusCursor {
    * @returns `this` for chaining
    */
   removeState(name: string): this;
+
+  // ── Preset system ────────────────────────────────────────────────────────
+  /**
+   * Apply a named built-in preset to the live cursor instance.
+   * Optionally pass `overrides` to customise individual properties.
+   * @returns `this` for chaining
+   *
+   * @example
+   * cursor.loadPreset('neon');
+   * cursor.loadPreset('chrome', { shape_size: '64px' });
+   */
+  loadPreset(name: PresetName | string, overrides?: ProteusCursorOptions): this;
+
+  /**
+   * Return the raw configuration object for a named preset.
+   * Useful for using a preset as a base in the constructor:
+   *
+   * @example
+   * const cursor = new ProteusCursor({
+   *   ...ProteusCursor.getPreset('neon'),
+   *   shape_color: '#ff4444',
+   * });
+   */
+  static getPreset(name: PresetName | string): ProteusCursorOptions | undefined;
+
+  /**
+   * All built-in preset configurations, keyed by name.
+   */
+  static readonly PRESETS: Record<PresetName, ProteusCursorOptions>;
+
+  // ── Device & accessibility detection ────────────────────────────────────
+  /**
+   * Returns `true` when the primary pointing device is coarse (touch/finger).
+   * ProteusCursor calls this automatically; you can use it for your own
+   * conditional logic.
+   *
+   * @example
+   * if (!ProteusCursor.isTouchOnly()) {
+   *   const cursor = new ProteusCursor({ shape: 'circle' });
+   * }
+   */
+  static isTouchOnly(): boolean;
+
+  /**
+   * Returns `true` when the user has enabled "reduce motion" at the OS level
+   * (`prefers-reduced-motion: reduce`). ProteusCursor calls this automatically;
+   * you can use it for your own conditional logic.
+   *
+   * @example
+   * if (!ProteusCursor.prefersReducedMotion()) {
+   *   cursor.addState('hero', { shape_size: '80px' });
+   * }
+   */
+  static prefersReducedMotion(): boolean;
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
   /** Remove all event listeners, cancel animations and restore the native cursor */

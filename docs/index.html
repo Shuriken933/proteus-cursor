@@ -1660,20 +1660,22 @@ cursor.<span class="sh-fn">loadPreset</span>(<span class="sh-string">'chrome'</s
         click_duration: 350,
       });
 
+      // Centralized state configs — preset-* states mirror ProteusCursor.PRESETS exactly
+      const P = ProteusCursor.PRESETS;
       cursor
         // Hero bait zone
-        .addState('hero-fluid', { shape_size: '24px', shape_color: '#9D6FE8', hasShadow: false })
+        .addState('hero-fluid', { shape: 'fluid', shape_size: '24px', shape_color: '#9D6FE8', hasShadow: false })
         .addState('hero-text',  { shape_size: '60px', shape_color: 'rgba(0,212,170,0.1)', text: 'Hello', text_size: '12px', text_color: '#00D4AA' })
         .addState('hero-cta',   { shape_size: '56px', shape_color: 'rgba(255,107,53,0.15)', text: 'Click', text_size: '12px', text_color: '#FF6B35' })
         // Mode demos
         .addState('demo-circle', { shape_size: '20px', shape_color: '#fff', hasShadow: true })
-        .addState('demo-fluid',  { shape_size: '28px', shape_color: '#9D6FE8', hasShadow: false })
-        // Preset previews (approximated — shows each preset's look)
-        .addState('preset-ghost',   { shape_size: '20px', shape_color: 'rgba(255,255,255,0.35)', hasShadow: true, shadow_size: '44px', shadow_color: 'rgba(255,255,255,0.1)' })
-        .addState('preset-neon',    { shape_size: '18px', shape_color: '#00D4AA', hasShadow: true, shadow_size: '48px', shadow_color: 'rgba(0,212,170,0.25)' })
-        .addState('preset-chrome',  { shape_size: '48px', shape_color: '#ffffff', hasShadow: false })
-        .addState('preset-ink',     { shape: 'fluid', shape_size: '28px', shape_color: '#e8e8e8', hasShadow: true, shadow_size: '60px', shadow_color: 'rgba(232,232,232,0.15)' })
-        .addState('preset-minimal', { shape_size: '6px',  shape_color: '#ffffff', hasShadow: false })
+        .addState('demo-fluid',  { shape: 'fluid', shape_size: '28px', shape_color: '#9D6FE8', hasShadow: false })
+        // Preset previews — exact same config as PRESETS so hover matches the sandbox
+        .addState('preset-ghost',   { ...P.ghost })
+        .addState('preset-neon',    { ...P.neon })
+        .addState('preset-chrome',  { ...P.chrome })
+        .addState('preset-ink',     { ...P.ink })
+        .addState('preset-minimal', { ...P.minimal })
         // Click animation boxes
         .addState('box-scale',  { shape_size: '16px', shape_color: '#5BC8F5' })
         .addState('box-ripple', { shape_size: '16px', shape_color: '#00D4AA' })

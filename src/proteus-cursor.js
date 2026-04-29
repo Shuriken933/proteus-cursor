@@ -67,6 +67,12 @@ export default class ProteusCursor{
       // blend mode
       this.blend_mode = options.blend_mode || 'normal';
 
+      // trail
+      this.trail_length = options.trail_length || 0;
+      this.trail_opacity = options.trail_opacity ?? 0.3;
+      this._trailElements = [];
+      this._trailPositions = [];
+
       // click animation
       this.click_animation = options.click_animation || 'scale';
       this.click_duration = options.click_duration ?? 300;
@@ -106,6 +112,7 @@ export default class ProteusCursor{
       if (!this.hasShadow) {
          this.$shadow.style.display = 'none';
       }
+      if (this.trail_length > 0) this._initTrail();
       this.dataAttributeEvents();
       this._initClickAnimation();
 
@@ -317,6 +324,8 @@ export default class ProteusCursor{
          this.$shadow.style.top = this._y + 'px';
          this.$shadow.style.left = this._x + 'px';
       }
+
+      this._updateTrail(this.endX, this.endY);
 
       this.requestAnimationFrameTracked(this.boundAnimateCircle);
    }
@@ -547,7 +556,10 @@ export default class ProteusCursor{
          this.$shadow.style.backgroundColor = '';
       }
 
-      // 7. NULLIFICA TUTTI I RIFERIMENTI
+      // 7. RIMUOVI TRAIL ELEMENTS
+      this._destroyTrail();
+
+      // 8. NULLIFICA TUTTI I RIFERIMENTI
       this.$shape = null;
       this.$shadow = null;
       this.boundMouseMove = null;
@@ -556,7 +568,7 @@ export default class ProteusCursor{
       this.boundAnimateCircle = null;
       this.boundAnimateFluid = null;
 
-      // 8. RESET DELLE PROPRIETÀ
+      // 9. RESET DELLE PROPRIETÀ
       this.velocity = 0;
       this.smoothDirX = 0;
       this.smoothDirY = 0;
@@ -570,6 +582,72 @@ export default class ProteusCursor{
 
    }
    //endregion
+
+
+   /* -------------------------------------------------------------------------------- */
+   //region ✨ Trail
+   /* -------------------------------------------------------------------------------- */
+
+   _initTrail() {
+      this._destroyTrail();
+      if (this.trail_length <= 0) return;
+      const size = parseInt(this.shape_size) || 10;
+      for (let i = 0; i < this.trail_length; i++) {
+         const el = document.createElement('div');
+         el.style.cssText = [
+            'position:fixed',
+            'pointer-events:none',
+            'border-radius:50%',
+            `width:${size}px`,
+            `height:${size}px`,
+            `background:${this.shape_color}`,
+            'transform:translate(-50%,-50%)',
+            'opacity:0',
+            'will-change:left,top',
+            `z-index:${9997 - i}`,
+         ].join(';');
+         document.body.appendChild(el);
+         this._trailElements.push(el);
+      }
+      this._trailPositions = new Array(this.trail_length).fill(null);
+   }
+
+   _updateTrail(x, y) {
+      if (!this._trailElements.length) return;
+      this._trailPositions.unshift({ x, y });
+      if (this._trailPositions.length > this.trail_length) {
+         this._trailPositions.length = this.trail_length;
+      }
+      const n = this.trail_length;
+      this._trailElements.forEach((el, i) => {
+         const pos = this._trailPositions[i];
+         if (!pos) { el.style.opacity = '0'; return; }
+         el.style.left = pos.x + 'px';
+         el.style.top = pos.y + 'px';
+         el.style.opacity = String(this.trail_opacity * (1 - i / n));
+      });
+   }
+
+   _destroyTrail() {
+      this._trailElements.forEach(el => el.parentNode && el.parentNode.removeChild(el));
+      this._trailElements = [];
+      this._trailPositions = [];
+   }
+
+   /**
+    * Set the number of trail dots following the cursor. Pass 0 to disable.
+    * @param {number} n
+    * @returns {this}
+    */
+   setTrailLength(n) {
+      if (!this._isActive()) return this;
+      this.trail_length = Math.max(0, n);
+      this._initTrail();
+      return this;
+   }
+
+   //endregion
+
 
    /* -------------------------------------------------------------------------------- */
    //region 🏷️ Setters
@@ -735,6 +813,8 @@ export default class ProteusCursor{
       if (preset.shadow_color !== undefined) this._applyShadowColor(preset.shadow_color);
       if (preset.blend_mode  !== undefined) this.setBlendMode(preset.blend_mode, true);
       if (preset.click_animation !== undefined) this.click_animation = preset.click_animation;
+      if (preset.trail_length !== undefined) { this.trail_length = preset.trail_length; this._initTrail(); }
+      if (preset.trail_opacity !== undefined) this.trail_opacity = preset.trail_opacity;
 
       return this;
    }
@@ -852,11 +932,12 @@ export default class ProteusCursor{
    _applyState(name) {
       const state = this.states[name];
       if (!state) return;
-      if (state.shape !== undefined && state.shape !== this.shape) this._activateShape(state.shape);
+      if (state.shape       !== undefined && state.shape !== this.shape) this._activateShape(state.shape);
       if (state.shape_size  !== undefined) this.setShapeSize(state.shape_size, state.shape_size);
       if (state.shape_color !== undefined) this.setShapeColor(state.shape_color);
       if (state.hasShadow   !== undefined) this.setShadowEnabled(state.hasShadow);
       if (state.shadow_size !== undefined) this.setShadowSize(state.shadow_size, state.shadow_size);
+      if (state.shadow_color !== undefined) this._applyShadowColor(state.shadow_color);
       if (state.text        !== undefined) this.setText(state.text);
       if (state.text_color  !== undefined) this.setTextColor(state.text_color);
       if (state.text_size   !== undefined) this.setTextSize(state.text_size);
@@ -869,6 +950,8 @@ export default class ProteusCursor{
       this.setShapeSize(this.shape_size, this.shape_size);
       this.setShapeColor(this.shape_color);
       this.setShadowEnabled(this.hasShadow);
+      this.setShadowSize(this.shadow_size, this.shadow_size);
+      this._applyShadowColor(this.shadow_color);
       this.setText(this.text);
       this.setTextColor(this.text_color);
       this.setTextSize(this.text_size);
@@ -1040,6 +1123,8 @@ ProteusCursor.PRESETS = {
       shadow_color:    'rgba(0,212,170,0.30)',
       blend_mode:      'normal',
       click_animation: 'ripple',
+      trail_length:    8,
+      trail_opacity:   0.3,
    },
 
    /**
