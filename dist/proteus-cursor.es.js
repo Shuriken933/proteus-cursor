@@ -195,13 +195,13 @@ var e = class e {
 			}
 		}
 	}
-	setShadowSize(e, t) {
-		this._isActive() && (this.$shadow.style.width = e || "20px", this.$shadow.style.height = t || "20px");
+	setShadowSize(e, t, n = !1) {
+		this._isActive() && (n && (this.shadow_size = e || "20px"), this.$shadow.style.width = e || "20px", this.$shadow.style.height = t || "20px");
 	}
-	setShadowColor(e, n = .5) {
+	setShadowColor(e, n = .5, r = !1) {
 		if (!this._isActive()) return;
-		let r = t(e, n);
-		this.$shadow.style.backgroundColor = r;
+		let i = t(e, n);
+		r && (this.shadow_color = i), this.$shadow.style.backgroundColor = i;
 	}
 	setText(e, t = !1) {
 		this._isActive() && (t ? (this.text = e, document.querySelector(".proteus-cursor-shape").textContent = this.text) : document.querySelector(".proteus-cursor-shape").textContent = e);
@@ -224,8 +224,8 @@ var e = class e {
 	setBlendMode(e, t = !1) {
 		this._isActive() && (t && (this.blend_mode = e), this.$shape.style.mixBlendMode = e);
 	}
-	_applyShadowColor(e) {
-		this._isActive() && (this.shadow_color = e, this.shape === "circle" ? this.$shadow.style.backgroundColor = e : this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${e}`));
+	_applyShadowColor(e, t = !1) {
+		this._isActive() && (t && (this.shadow_color = e), this.shape === "circle" ? this.$shadow.style.backgroundColor = e : this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${e}`));
 	}
 	loadPreset(t, n = {}) {
 		if (!this._isActive()) return this;
@@ -235,7 +235,7 @@ var e = class e {
 			...r,
 			...n
 		};
-		return i.shape !== void 0 && i.shape !== this.shape && this.setShape(i.shape), i.shape_size !== void 0 && this.setShapeSize(i.shape_size, i.shape_size, !0), i.shape_color !== void 0 && this.setShapeColor(i.shape_color, !0), i.hasShadow !== void 0 && this.setShadowEnabled(i.hasShadow, !0), i.shadow_size !== void 0 && this.setShadowSize(i.shadow_size, i.shadow_size), i.shadow_color !== void 0 && this._applyShadowColor(i.shadow_color), i.blend_mode !== void 0 && this.setBlendMode(i.blend_mode, !0), i.click_animation !== void 0 && (this.click_animation = i.click_animation), i.trail_length !== void 0 && (this.trail_length = i.trail_length, this._initTrail()), i.trail_opacity !== void 0 && (this.trail_opacity = i.trail_opacity), this;
+		return i.shape !== void 0 && i.shape !== this.shape && this.setShape(i.shape), i.shape_size !== void 0 && this.setShapeSize(i.shape_size, i.shape_size, !0), i.shape_color !== void 0 && this.setShapeColor(i.shape_color, !0), i.hasShadow !== void 0 && this.setShadowEnabled(i.hasShadow, !0), i.shadow_size !== void 0 && this.setShadowSize(i.shadow_size, i.shadow_size, !0), i.shadow_color !== void 0 && this._applyShadowColor(i.shadow_color, !0), i.blend_mode !== void 0 && this.setBlendMode(i.blend_mode, !0), i.click_animation !== void 0 && (this.click_animation = i.click_animation), i.trail_length !== void 0 && (this.trail_length = i.trail_length, this._initTrail()), i.trail_opacity !== void 0 && (this.trail_opacity = i.trail_opacity), this;
 	}
 	static getPreset(t) {
 		return e.PRESETS[t];

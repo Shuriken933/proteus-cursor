@@ -1820,8 +1820,8 @@ cursor.<span class="sh-fn">loadPreset</span>(<span class="sh-string">'chrome'</s
       cursor.setShadowEnabled(pgState.hasShadow, true);
       if (pgState.hasShadow) {
         const sz = pgState.shadow_size + 'px';
-        cursor.setShadowSize(sz, sz);
-        cursor.setShadowColor(pgState.shadow_color, pgState.shadow_alpha / 100);
+        cursor.setShadowSize(sz, sz, true);
+        cursor.setShadowColor(pgState.shadow_color, pgState.shadow_alpha / 100, true);
       }
       cursor.click_animation = pgState.click_animation;
       cursor.setBlendMode(pgState.blend_mode, true);

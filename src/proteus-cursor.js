@@ -698,14 +698,16 @@ export default class ProteusCursor{
       }
 
    }
-   setShadowSize(width, height){
+   setShadowSize(width, height, isPermanent = false){
       if (!this._isActive()) return;
+      if (isPermanent) this.shadow_size = width || '20px';
       this.$shadow.style.width = width || '20px';
       this.$shadow.style.height = height || '20px';
    }
-   setShadowColor(hexColor, alpha = 0.5){
+   setShadowColor(hexColor, alpha = 0.5, isPermanent = false){
       if (!this._isActive()) return;
       const rgba = hexToRgba(hexColor, alpha);
+      if (isPermanent) this.shadow_color = rgba;
       this.$shadow.style.backgroundColor = rgba;
    }
 
@@ -770,9 +772,9 @@ export default class ProteusCursor{
     * Works for both circle (backgroundColor on $shadow) and fluid (boxShadow on $shape).
     * @private
     */
-   _applyShadowColor(cssColor) {
+   _applyShadowColor(cssColor, isPermanent = false) {
       if (!this._isActive()) return;
-      this.shadow_color = cssColor;
+      if (isPermanent) this.shadow_color = cssColor;
       if (this.shape === 'circle') {
          this.$shadow.style.backgroundColor = cssColor;
       } else if (this.shape === 'fluid') {
@@ -809,8 +811,8 @@ export default class ProteusCursor{
       if (preset.shape_size  !== undefined) this.setShapeSize(preset.shape_size, preset.shape_size, true);
       if (preset.shape_color !== undefined) this.setShapeColor(preset.shape_color, true);
       if (preset.hasShadow   !== undefined) this.setShadowEnabled(preset.hasShadow, true);
-      if (preset.shadow_size !== undefined) this.setShadowSize(preset.shadow_size, preset.shadow_size);
-      if (preset.shadow_color !== undefined) this._applyShadowColor(preset.shadow_color);
+      if (preset.shadow_size !== undefined) this.setShadowSize(preset.shadow_size, preset.shadow_size, true);
+      if (preset.shadow_color !== undefined) this._applyShadowColor(preset.shadow_color, true);
       if (preset.blend_mode  !== undefined) this.setBlendMode(preset.blend_mode, true);
       if (preset.click_animation !== undefined) this.click_animation = preset.click_animation;
       if (preset.trail_length !== undefined) { this.trail_length = preset.trail_length; this._initTrail(); }
