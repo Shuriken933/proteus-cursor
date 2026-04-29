@@ -26,14 +26,15 @@ export default class ProteusCursor{
    //region 🔹 initialization
    // internal state
    velocity = 0;
+   smoothDirX = 0;
+   smoothDirY = 0;
    _x = 0;
    _y = 0;
    mouseX = 0;
    mouseY = 0;
    cursorX = 0;
    cursorY = 0;
-   prevMouseX = 0;
-   prevMouseY = 0;
+   _baseShape = 'default';
 
    //region 🏗️ constructor
    constructor(options = {}){
@@ -42,6 +43,7 @@ export default class ProteusCursor{
 
       // shape
       this.shape = options.shape || 'default';
+      this._baseShape = this.shape;
       this.shape_size = options.shape_size || '10px';
       this.shape_color = options.shape_color || '#fff';
 
@@ -197,20 +199,26 @@ export default class ProteusCursor{
 
    setShape(shape){
       if (!this._isActive()) return;
+      this._baseShape = shape;
+      this._activateShape(shape);
+   }
+
+   /** @private — switch mode without updating _baseShape (used by state machine). */
+   _activateShape(shape) {
+      if (!this._isActive()) return;
       document.querySelector('body').classList.remove('proteus-is-a-fluid');
       document.querySelector('body').classList.remove('proteus-is-a-circle');
-      this.shape = shape
+      this.shape = shape;
       switch (this.shape) {
          case 'default':
             break;
          case 'circle':
-            this.setShape__circle(this.shape)
+            this.setShape__circle(this.shape);
             break;
          case 'fluid':
             this.setShape__fluid();
             break;
       }
-
    }
    //endregion
 
@@ -225,20 +233,31 @@ export default class ProteusCursor{
       this.animationIds = [];
 
       this.delay = 8;
-      this._x = 0
+      this._x = 0;
       this._y = 0;
       // Seed circle shadow at current mouse position (clientX = viewport coords).
       // Falls back to centre only when the mouse has never moved.
       this.endX = this.mouseX > 0 ? this.mouseX : (window.innerWidth / 2);
       this.endY = this.mouseY > 0 ? this.mouseY : (window.innerHeight / 2);
+      // Seed the shadow tracking position so it doesn't jump from 0,0.
+      this._x = this.endX;
+      this._y = this.endY;
       this.cursorVisible = true;
       this.cursorEnlarged = false;
-      // this.$shape = document.querySelector('.proteus-cursor-shape');
-      // this.$shadow = document.querySelector('.proteus-cursor-shadow');
       document.querySelector('body').classList.add('proteus-is-a-circle');
-      // this.init()
 
       document.body.style.cursor = 'none';
+
+      // Ensure shadow is visible in circle mode (may have been hidden by fluid mode).
+      if (this.$shadow) {
+         this.$shadow.style.display = this.hasShadow ? '' : 'none';
+         this.$shadow.style.transform = 'translate(-50%, -50%) scale(1)';
+      }
+      // Reset fluid transform so shape returns to a circle.
+      if (this.$shape) {
+         this.$shape.style.transform = 'translate(-50%, -50%) scale(1)';
+         this.$shape.style.transition = '';
+      }
 
       // this.$shape.style.width = this.shape_size || '20px';
       // this.$shape.style.height = this.shape_size || '20px';
@@ -331,13 +350,19 @@ export default class ProteusCursor{
    setShape__fluid__animateCursor__calcVelocity() {
       const fluidMouseHandler = (e) => {
          if (this.isDestroyed) return;
-         const deltaX = e.clientX - this.prevMouseX;
-         const deltaY = e.clientY - this.prevMouseY;
-         this.velocity = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-         this.prevMouseX = this.mouseX;
-         this.prevMouseY = this.mouseY;
+         const deltaX = e.clientX - this.mouseX;
+         const deltaY = e.clientY - this.mouseY;
+         // EMA smoothing (alpha=0.25): accumulates many events into a stable direction,
+         // preventing the axis-bias from physical mouse encoding (often fires (dx,0)/(0,dy)
+         // alternately rather than (dx,dy) together when moving diagonally).
+         const alpha = 0.25;
+         this.smoothDirX = this.smoothDirX * (1 - alpha) + deltaX * alpha;
+         this.smoothDirY = this.smoothDirY * (1 - alpha) + deltaY * alpha;
          this.mouseX = e.clientX;
          this.mouseY = e.clientY;
+         // Keep endX/endY in page-coords so mode switching back to circle is smooth.
+         this.endX = e.clientX + (window.scrollX || 0);
+         this.endY = e.clientY + (window.scrollY || 0);
       };
       this.addEventListenerTracked(document, 'mousemove', fluidMouseHandler);
    }
@@ -353,34 +378,32 @@ export default class ProteusCursor{
          this.cursorX += (this.mouseX - this.cursorX) * this.speed;
          this.cursorY += (this.mouseY - this.cursorY) * this.speed;
 
-         const normalizedVelocity = Math.min(this.velocity / this.maxVelocity, 1);
+         // Decay the smoothed direction every RAF frame so it fades when mouse stops.
+         const decay = 0.88;
+         this.smoothDirX *= decay;
+         this.smoothDirY *= decay;
 
-         if (normalizedVelocity > 0.01) {
-            const deltaX = this.mouseX - this.cursorX;
-            const deltaY = this.mouseY - this.cursorY;
-            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+         const mag = Math.sqrt(this.smoothDirX * this.smoothDirX + this.smoothDirY * this.smoothDirY);
+         const normalizedVelocity = Math.min(mag / this.maxVelocity, 1);
 
-            if (distance > 0) {
-               const dirX = deltaX / distance;
-               const dirY = deltaY / distance;
-               const stretchFactor = 1 + normalizedVelocity * 1.5;
-               const squeezeFactor = 1 - normalizedVelocity * 0.3;
-               const a = dirX * dirX * (stretchFactor - 1) + 1;
-               const b = dirX * dirY * (stretchFactor - 1);
-               const c = dirX * dirY * (stretchFactor - 1);
-               const d = dirY * dirY * (stretchFactor - 1) + 1;
-               const perpDirX = -dirY;
-               const perpDirY = dirX;
-               const finalA = a + perpDirX * perpDirX * (squeezeFactor - 1);
-               const finalB = b + perpDirX * perpDirY * (squeezeFactor - 1);
-               const finalC = c + perpDirX * perpDirY * (squeezeFactor - 1);
-               const finalD = d + perpDirY * perpDirY * (squeezeFactor - 1);
+         if (normalizedVelocity > 0.015 && mag > 0.05) {
+            const dirX = this.smoothDirX / mag;
+            const dirY = this.smoothDirY / mag;
+            const stretchFactor = 1 + normalizedVelocity * 1.5;
+            const squeezeFactor = 1 - normalizedVelocity * 0.3;
+            const a = dirX * dirX * (stretchFactor - 1) + 1;
+            const b = dirX * dirY * (stretchFactor - 1);
+            const c = dirX * dirY * (stretchFactor - 1);
+            const d = dirY * dirY * (stretchFactor - 1) + 1;
+            const perpDirX = -dirY;
+            const perpDirY = dirX;
+            const finalA = a + perpDirX * perpDirX * (squeezeFactor - 1);
+            const finalB = b + perpDirX * perpDirY * (squeezeFactor - 1);
+            const finalC = c + perpDirX * perpDirY * (squeezeFactor - 1);
+            const finalD = d + perpDirY * perpDirY * (squeezeFactor - 1);
 
-               if (this.$shape) {
-                  this.$shape.style.transform = `matrix(${finalA}, ${finalB}, ${finalC}, ${finalD}, 0, 0)`;
-               }
-            } else if (this.$shape) {
-               this.$shape.style.transform = 'matrix(1, 0, 0, 1, 0, 0)';
+            if (this.$shape) {
+               this.$shape.style.transform = `matrix(${finalA}, ${finalB}, ${finalC}, ${finalD}, 0, 0)`;
             }
          } else if (this.$shape) {
             this.$shape.style.transform = 'matrix(1, 0, 0, 1, 0, 0)';
@@ -391,7 +414,6 @@ export default class ProteusCursor{
             this.$shape.style.top = this.cursorY - this.$shape.offsetHeight / 2 + 'px';
          }
 
-         this.velocity *= 0.95;
          this.requestAnimationFrameTracked(this.boundAnimateFluid);
 
    }
@@ -421,23 +443,34 @@ export default class ProteusCursor{
       this.$shape.style.borderRadius = '50%';
       this.$shape.style.pointerEvents = 'none';
       this.$shape.style.zIndex = '9999';
-      // Use 'none' — a CSS transition on left/top conflicts with the RAF loop
-      // and causes visible jitter when switching from circle to fluid mode.
+      // CSS transitions on left/top/transform conflict with the RAF loop — disable.
       this.$shape.style.transition = 'none';
+      // Reset the stretch matrix so the shape starts as a circle.
+      this.$shape.style.transform = 'none';
+
+      // Hide the circle-mode shadow element — fluid uses box-shadow on $shape instead.
+      if (this.$shadow) this.$shadow.style.display = 'none';
 
       if (this.hasShadow) {
          this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`;
+      } else {
+         this.$shape.style.boxShadow = 'none';
       }
 
-      // Seed fluid cursor at the current mouse position so there's no jump to
-      // the centre of the viewport when switching from circle to fluid mode.
-      // endX/endY are set in page-coordinates by the circle mousemove handler;
-      // fluid uses fixed (viewport) coordinates, so subtract current scroll.
+      // Seed fluid cursor at the current mouse position so there's no jump.
+      // endX/endY are page-coordinates; fluid uses fixed (viewport) coordinates.
       const scrollX = window.scrollX || 0;
       const scrollY = window.scrollY || 0;
       this.velocityInitialized = false;
+      this.smoothDirX = 0;
+      this.smoothDirY = 0;
       this.cursorX = this.endX > 0 ? (this.endX - scrollX) : (this.mouseX || window.innerWidth / 2);
       this.cursorY = this.endY > 0 ? (this.endY - scrollY) : (this.mouseY || window.innerHeight / 2);
+
+      // Set position synchronously so there is no single-frame flash at a wrong position.
+      const halfW = parseInt(this.shape_size) / 2 || 5;
+      this.$shape.style.left = (this.cursorX - halfW) + 'px';
+      this.$shape.style.top  = (this.cursorY - halfW) + 'px';
 
       // start animation
       this.setShape__fluid__animateCursor();
@@ -525,14 +558,14 @@ export default class ProteusCursor{
 
       // 8. RESET DELLE PROPRIETÀ
       this.velocity = 0;
+      this.smoothDirX = 0;
+      this.smoothDirY = 0;
       this._x = 0;
       this._y = 0;
       this.mouseX = 0;
       this.mouseY = 0;
       this.cursorX = 0;
       this.cursorY = 0;
-      this.prevMouseX = 0;
-      this.prevMouseY = 0;
       this.velocityInitialized = false;
 
    }
@@ -744,6 +777,16 @@ export default class ProteusCursor{
    _clickScale() {
       if (!this.$shape) return;
       const duration = this.click_duration;
+      if (this.shape === 'fluid') {
+         // In fluid mode the RAF loop owns transform — setting a CSS transition on it
+         // causes persistent jitter. Use opacity pulse instead.
+         this.$shape.style.opacity = '0.35';
+         const tid = setTimeout(() => {
+            if (!this.isDestroyed && this.$shape) this.$shape.style.opacity = '1';
+         }, duration / 3);
+         this.timeouts.push(tid);
+         return;
+      }
       this.$shape.style.transition = `transform ${duration / 2}ms cubic-bezier(.215,.61,.355,1)`;
       this.$shape.style.transform = 'translate(-50%, -50%) scale(0.6)';
       const tid = setTimeout(() => {
@@ -809,6 +852,7 @@ export default class ProteusCursor{
    _applyState(name) {
       const state = this.states[name];
       if (!state) return;
+      if (state.shape !== undefined && state.shape !== this.shape) this._activateShape(state.shape);
       if (state.shape_size  !== undefined) this.setShapeSize(state.shape_size, state.shape_size);
       if (state.shape_color !== undefined) this.setShapeColor(state.shape_color);
       if (state.hasShadow   !== undefined) this.setShadowEnabled(state.hasShadow);
@@ -821,6 +865,7 @@ export default class ProteusCursor{
    }
 
    _resetState() {
+      if (this.shape !== this._baseShape) this._activateShape(this._baseShape);
       this.setShapeSize(this.shape_size, this.shape_size);
       this.setShapeColor(this.shape_color);
       this.setShadowEnabled(this.hasShadow);
