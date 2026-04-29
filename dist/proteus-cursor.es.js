@@ -24,7 +24,7 @@ var e = class e {
 		return !this.isDestroyed && !this.isTouch && !this.isReducedMotion;
 	}
 	init() {
-		this.init_HTMLcursorAndShadow(), this.$shape = document.getElementById("proteus-cursor-shape"), this.$shadow = document.getElementById("proteus-cursor-shadow"), this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shadow.style.width = this.shadow_size || "40px", this.$shadow.style.height = this.shadow_size || "40px", this.setShape(this.shape), this.blend_mode && this.blend_mode !== "normal" && (this.$shape.style.mixBlendMode = this.blend_mode);
+		this.init_HTMLcursorAndShadow(), this.$shape = document.getElementById("proteus-cursor-shape"), this.$shadow = document.getElementById("proteus-cursor-shadow"), this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shape.style.backgroundColor = this.shape_color, this.$shadow.style.width = this.shadow_size || "40px", this.$shadow.style.height = this.shadow_size || "40px", this.$shadow.style.backgroundColor = this.shadow_color, this.setShape(this.shape), this.blend_mode && this.blend_mode !== "normal" && (this.$shape.style.mixBlendMode = this.blend_mode);
 	}
 	init_HTMLcursorAndShadow() {
 		if (document.getElementById("proteus-cursor-shape")) return;

@@ -153,8 +153,10 @@ export default class ProteusCursor{
       this.$shadow = document.getElementById('proteus-cursor-shadow');
       this.$shape.style.width = this.shape_size || '20px';
       this.$shape.style.height = this.shape_size || '20px';
+      this.$shape.style.backgroundColor = this.shape_color;
       this.$shadow.style.width = this.shadow_size || '40px';
       this.$shadow.style.height = this.shadow_size || '40px';
+      this.$shadow.style.backgroundColor = this.shadow_color;
       this.setShape(this.shape);
       if (this.blend_mode && this.blend_mode !== 'normal') {
          this.$shape.style.mixBlendMode = this.blend_mode;
