@@ -269,9 +269,14 @@ export default class ProteusCursor{
          this.$shadow.style.display = this.hasShadow ? '' : 'none';
          this.$shadow.style.transform = 'translate(-50%, -50%) scale(1)';
       }
-      // Reset fluid transform so shape returns to a circle.
+      // Clear all fluid-specific inline styles so the CSS rules for circle mode
+      // take over cleanly. Fluid sets position:fixed, boxShadow and transition:none
+      // directly on $shape — if left in place they corrupt circle positioning
+      // (circle uses pageX/pageY with position:absolute from CSS).
       if (this.$shape) {
-         this.$shape.style.transform = 'translate(-50%, -50%) scale(1)';
+         this.$shape.style.position   = '';   // let CSS restore position:absolute
+         this.$shape.style.boxShadow  = '';   // circle uses $shadow element, not boxShadow
+         this.$shape.style.transform  = 'translate(-50%, -50%) scale(1)';
          this.$shape.style.transition = '';
       }
 

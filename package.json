@@ -1,6 +1,6 @@
 {
    "name": "proteuscursor",
-   "version": "2.0.0",
+   "version": "2.0.1",
    "description": "Zero-dependency shapeshifting cursor library. Two modes — circle and fluid — state machine, built-in presets, blend mode, click animations, and first-class adapters for React, Vue 3 and Svelte.",
    "type": "module",
    "main": "./dist/proteus-cursor.umd.js",
