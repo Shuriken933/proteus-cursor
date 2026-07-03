@@ -350,6 +350,33 @@ export default class ProteusCursor{
          this.$shape.style.top = this.endY + 'px';
          this.$shape.style.left = this.endX + 'px';
       }
+
+      // Cached for _clickRipple/_clickScale velocity lookup in circle mode —
+      // circle has no per-frame velocity loop like fluid does, so it's derived
+      // on-demand at click time from the last two known mousemove samples.
+      this._lastMoveX = this.endX;
+      this._lastMoveY = this.endY;
+      this._lastMoveTime = performance.now();
+   }
+
+   /**
+    * Returns a 0..1 normalized click velocity, used to scale click animation
+    * intensity. Fluid mode already computes this every RAF frame (cached in
+    * _lastNormalizedVelocity); circle mode has no continuous velocity signal,
+    * so it's derived on-demand from the last mousemove sample.
+    * @private
+    */
+   _getClickVelocity(e) {
+      if (this.shape === 'fluid') return this._lastNormalizedVelocity || 0;
+      if (this._lastMoveTime === undefined) return 0;
+      const dt = performance.now() - this._lastMoveTime;
+      if (dt <= 0 || dt > 200) return 0; // stale sample (mouse was idle before the click)
+      const dist = Math.hypot(e.pageX - this._lastMoveX, e.pageY - this._lastMoveY);
+      const pxPerMs = dist / dt;
+      // ~1.2 px/ms is a brisk mouse flick — matches the "fast" end of fluid's
+      // own maxVelocity-based normalization, kept independent so circle mode
+      // doesn't depend on fluid-only state.
+      return Math.min(pxPerMs / 1.2, 1);
    }
 
    handleMouseEnter() {
@@ -453,6 +480,9 @@ export default class ProteusCursor{
 
          const mag = Math.sqrt(this.smoothDirX * this.smoothDirX + this.smoothDirY * this.smoothDirY);
          const normalizedVelocity = Math.min(mag / this.maxVelocity, 1);
+         // Cached for _clickRipple/_clickScale — cheaper than recomputing velocity
+         // on every click, and this loop already updates it every frame anyway.
+         this._lastNormalizedVelocity = normalizedVelocity;
 
          if (normalizedVelocity > 0.015 && mag > 0.05) {
             const dirX = this.smoothDirX / mag;
@@ -1004,6 +1034,15 @@ export default class ProteusCursor{
    }
 
    _clickRipple(e) {
+      // Scale ripple intensity with how fast the mouse was moving at click time.
+      // A floor (0.15) keeps a stationary click from feeling "dead" — it still
+      // produces a normal-looking ripple, just at the low end of the range.
+      const velocity = this._getClickVelocity(e);
+      const t = 0.15 + 0.85 * velocity;
+      const scale = 4 + t * 4;                       // [4, 8]
+      const duration = this.click_duration * (1 - t * 0.3); // [0.7, 1.0] * click_duration
+      const opacity = 0.5 + t * 0.25;                 // [0.5, 0.75]
+
       const ripple = document.createElement('div');
       ripple.className = 'proteus-ripple';
       const size = parseInt(this.shape_size) || 10;
@@ -1015,21 +1054,24 @@ export default class ProteusCursor{
          height: ${size}px;
          border-radius: 50%;
          background: ${this.shape_color};
-         opacity: 0.6;
+         opacity: ${opacity};
          pointer-events: none;
          z-index: 9999999998;
          transform: translate(-50%, -50%) scale(1);
-         transition: transform ${this.click_duration}ms ease-out, opacity ${this.click_duration}ms ease-out;
+         transition: transform ${duration}ms ease-out, opacity ${duration}ms ease-out;
       `;
       document.body.appendChild(ripple);
 
       // Trigger animation on next frame so transition fires
       requestAnimationFrame(() => {
-         ripple.style.transform = 'translate(-50%, -50%) scale(6)';
+         ripple.style.transform = `translate(-50%, -50%) scale(${scale})`;
          ripple.style.opacity = '0';
       });
 
-      const tid = setTimeout(() => ripple.remove(), this.click_duration);
+      // Use the same (velocity-scaled) duration used for the transition, not the
+      // static click_duration — otherwise a shortened ripple lingers in the DOM
+      // longer than its own animation.
+      const tid = setTimeout(() => ripple.remove(), duration);
       this.timeouts.push(tid);
    }
    //endregion

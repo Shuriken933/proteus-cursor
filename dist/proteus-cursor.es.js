@@ -92,7 +92,15 @@ var e = class e {
 		}), this._circleListeners = []);
 	}
 	handleMouseMove(e) {
-		this.isDestroyed || (this.cursorVisible = !0, this.toggleCursorVisibility(), this.endX = e.pageX, this.endY = e.pageY, this.$shape && (this.$shape.style.top = this.endY + "px", this.$shape.style.left = this.endX + "px"));
+		this.isDestroyed || (this.cursorVisible = !0, this.toggleCursorVisibility(), this.endX = e.pageX, this.endY = e.pageY, this.$shape && (this.$shape.style.top = this.endY + "px", this.$shape.style.left = this.endX + "px"), this._lastMoveX = this.endX, this._lastMoveY = this.endY, this._lastMoveTime = performance.now());
+	}
+	_getClickVelocity(e) {
+		if (this.shape === "fluid") return this._lastNormalizedVelocity || 0;
+		if (this._lastMoveTime === void 0) return 0;
+		let t = performance.now() - this._lastMoveTime;
+		if (t <= 0 || t > 200) return 0;
+		let n = Math.hypot(e.pageX - this._lastMoveX, e.pageY - this._lastMoveY) / t;
+		return Math.min(n / 1.2, 1);
 	}
 	handleMouseEnter() {
 		this.isDestroyed || (this.cursorEnlarged = !0, this.toggleCursorSize());
@@ -125,7 +133,7 @@ var e = class e {
 		let e = .88;
 		this.smoothDirX *= e, this.smoothDirY *= e;
 		let t = Math.sqrt(this.smoothDirX * this.smoothDirX + this.smoothDirY * this.smoothDirY), n = Math.min(t / this.maxVelocity, 1);
-		if (n > .015 && t > .05) {
+		if (this._lastNormalizedVelocity = n, n > .015 && t > .05) {
 			let e = this.smoothDirX / t, r = this.smoothDirY / t, i = 1 + n * 1.5, a = 1 - n * .3, o = e * e * (i - 1) + 1, s = e * r * (i - 1), c = e * r * (i - 1), l = r * r * (i - 1) + 1, u = -r, d = e, f = o + u * u * (a - 1), p = s + u * d * (a - 1), m = c + u * d * (a - 1), h = l + d * d * (a - 1);
 			this.$shape && (this.$shape.style.transform = `matrix(${f}, ${p}, ${m}, ${h}, 0, 0)`);
 		} else this.$shape && (this.$shape.style.transform = "matrix(1, 0, 0, 1, 0, 0)");
@@ -304,27 +312,27 @@ var e = class e {
 		this.timeouts.push(t);
 	}
 	_clickRipple(e) {
-		let t = document.createElement("div");
-		t.className = "proteus-ripple";
-		let n = parseInt(this.shape_size) || 10;
-		t.style.cssText = `
+		let t = .15 + .85 * this._getClickVelocity(e), n = 4 + t * 4, r = this.click_duration * (1 - t * .3), i = .5 + t * .25, a = document.createElement("div");
+		a.className = "proteus-ripple";
+		let o = parseInt(this.shape_size) || 10;
+		a.style.cssText = `
          position: fixed;
          left: ${e.clientX}px;
          top: ${e.clientY}px;
-         width: ${n}px;
-         height: ${n}px;
+         width: ${o}px;
+         height: ${o}px;
          border-radius: 50%;
          background: ${this.shape_color};
-         opacity: 0.6;
+         opacity: ${i};
          pointer-events: none;
          z-index: 9999999998;
          transform: translate(-50%, -50%) scale(1);
-         transition: transform ${this.click_duration}ms ease-out, opacity ${this.click_duration}ms ease-out;
-      `, document.body.appendChild(t), requestAnimationFrame(() => {
-			t.style.transform = "translate(-50%, -50%) scale(6)", t.style.opacity = "0";
+         transition: transform ${r}ms ease-out, opacity ${r}ms ease-out;
+      `, document.body.appendChild(a), requestAnimationFrame(() => {
+			a.style.transform = `translate(-50%, -50%) scale(${n})`, a.style.opacity = "0";
 		});
-		let r = setTimeout(() => t.remove(), this.click_duration);
-		this.timeouts.push(r);
+		let s = setTimeout(() => a.remove(), r);
+		this.timeouts.push(s);
 	}
 	addState(e, t = {}) {
 		return this.isTouch || this.isReducedMotion ? this : (this.states[e] = t, this._bindStateElements(e), this);
