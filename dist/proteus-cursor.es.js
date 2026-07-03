@@ -63,7 +63,7 @@ var e = class e {
 		}
 	}
 	setShape__circle(e) {
-		this.animationIds.forEach((e) => cancelAnimationFrame(e)), this.animationIds = [], this.delay = 8, this._x = 0, this._y = 0, this.endX = this.mouseX > 0 ? this.mouseX : window.innerWidth / 2, this.endY = this.mouseY > 0 ? this.mouseY : window.innerHeight / 2, this._x = this.endX, this._y = this.endY, this.cursorVisible = !0, this.cursorEnlarged = !1, document.querySelector("body").classList.add("proteus-is-a-circle"), document.body.style.cursor = "none", this.$shadow && (this.$shadow.style.display = this.hasShadow ? "" : "none", this.$shadow.style.transform = "translate(-50%, -50%) scale(1)"), this.$shape && (this.$shape.style.position = "", this.$shape.style.boxShadow = "", this.$shape.style.transform = "translate(-50%, -50%) scale(1)", this.$shape.style.transition = ""), this.shape__circle__interactions(), this.shape__circle__animateShadow();
+		this.animationIds.forEach((e) => cancelAnimationFrame(e)), this.animationIds = [], this.delay = 8, this._x = 0, this._y = 0, this.endX = this.mouseX > 0 ? this.mouseX : window.innerWidth / 2, this.endY = this.mouseY > 0 ? this.mouseY : window.innerHeight / 2, this._x = this.endX, this._y = this.endY, this.cursorVisible = !0, this.cursorEnlarged = !1, document.querySelector("body").classList.add("proteus-is-a-circle"), document.body.style.cursor = "none", this.$shadow && (this.$shadow.style.display = this.hasShadow ? "" : "none", this.$shadow.style.transform = "translate(-50%, -50%) scale(1)"), this.$shape && (this.$shape.style.position = "", this.$shape.style.boxShadow = "", this.$shape.style.transform = "translate(-50%, -50%) scale(1)", this.$shape.style.transition = ""), this._updateCircleGlow(), this.shape__circle__interactions(), this.shape__circle__animateShadow();
 	}
 	shape__circle__interactions() {
 		this.isDestroyed || (this._teardownCircleInteractions(), document.querySelectorAll("a, button, input").forEach((e) => {
@@ -163,7 +163,7 @@ var e = class e {
 		if (this._destroyTrail(), this.trail_length <= 0) return;
 		let e = parseInt(this.shape_size) || 10;
 		for (let t = 0; t < this.trail_length; t++) {
-			let n = document.createElement("div");
+			let n = document.createElement("div"), i = t < 2 ? r(e, this.shape_color, .6) : `0 0 ${e}px ${this.shape_color}`;
 			n.style.cssText = [
 				"position:fixed",
 				"pointer-events:none",
@@ -171,8 +171,7 @@ var e = class e {
 				`width:${e}px`,
 				`height:${e}px`,
 				`background:${this.shape_color}`,
-				`box-shadow:0 0 ${e}px ${this.shape_color}`,
-				`filter:blur(${Math.max(1, Math.round(e / 6))}px)`,
+				`box-shadow:${i}`,
 				"transform:translate(-50%,-50%)",
 				"opacity:0",
 				"will-change:left,top",
@@ -210,18 +209,27 @@ var e = class e {
 		this._isActive() && (this.shape_size = e || "20px", n && this._defaultPreset && (this._defaultPreset.shape_size = this.shape_size), this.$shape.style.width = e || "20px", this.$shape.style.height = t || "20px");
 	}
 	setShapeColor(e, t = !1) {
-		this._isActive() && (this.shape_color = e, t && this._defaultPreset && (this._defaultPreset.shape_color = e), this.$shape.style.backgroundColor = e);
+		this._isActive() && (this.shape_color = e, t && this._defaultPreset && (this._defaultPreset.shape_color = e), this.$shape.style.backgroundColor = e, this._updateCircleGlow());
 	}
 	setShadowEnabled(e, t = !1) {
-		this._isActive() && (this.hasShadow = e, t && this._defaultPreset && (this._defaultPreset.hasShadow = e), this.shape === "circle" ? this.$shadow.style.display = e ? "block" : "none" : this.shape === "fluid" && (this.$shape.style.boxShadow = e ? `0 0 ${this.shadow_size} ${this.shadow_color}` : "none"));
+		this._isActive() && (this.hasShadow = e, t && this._defaultPreset && (this._defaultPreset.hasShadow = e), this.shape === "circle" ? (this.$shadow.style.display = e ? "block" : "none", this._updateCircleGlow()) : this.shape === "fluid" && (this.$shape.style.boxShadow = e ? `0 0 ${this.shadow_size} ${this.shadow_color}` : "none"));
 	}
 	setShadowSize(e, t, n = !1) {
-		this._isActive() && (this.shadow_size = e || "20px", n && this._defaultPreset && (this._defaultPreset.shadow_size = this.shadow_size), this.$shadow.style.width = e || "20px", this.$shadow.style.height = t || "20px", this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`));
+		this._isActive() && (this.shadow_size = e || "20px", n && this._defaultPreset && (this._defaultPreset.shadow_size = this.shadow_size), this.$shadow.style.width = e || "20px", this.$shadow.style.height = t || "20px", this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`), this._updateCircleGlow());
 	}
 	setShadowColor(e, n = .5, r = !1) {
 		if (!this._isActive()) return;
 		let i = t(e, n);
-		this.shadow_color = i, r && this._defaultPreset && (this._defaultPreset.shadow_color = i), this.$shadow.style.backgroundColor = i, this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${i}`);
+		this.shadow_color = i, r && this._defaultPreset && (this._defaultPreset.shadow_color = i), this.$shadow.style.backgroundColor = i, this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${i}`), this._updateCircleGlow();
+	}
+	_updateCircleGlow() {
+		if (this.shape !== "circle" || !this.$shape || !this.$shadow) return;
+		if (!this.hasShadow) {
+			this.$shape.style.boxShadow = "none", this.$shadow.style.boxShadow = "none";
+			return;
+		}
+		let e = parseInt(this.shape_size) || 10, t = parseInt(this.shadow_size) || 40;
+		this.$shape.style.boxShadow = r(e * 1.5, this.shape_color, .7), this.$shadow.style.boxShadow = r(t, this.shadow_color, .5);
 	}
 	setText(e, t = !1) {
 		this._isActive() && (this.text = e, t && this._defaultPreset && (this._defaultPreset.text = e), this.$shape && (this.$shape.textContent = e));
@@ -248,7 +256,7 @@ var e = class e {
 		this._isActive() && (this.blend_mode = e, t && this._defaultPreset && (this._defaultPreset.blend_mode = e), this.$shape.style.mixBlendMode = e);
 	}
 	_applyShadowColor(e, t = !1) {
-		this._isActive() && (this.shadow_color = e, t && this._defaultPreset && (this._defaultPreset.shadow_color = e), this.shape === "circle" ? this.$shadow.style.backgroundColor = e : this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${e}`));
+		this._isActive() && (this.shadow_color = e, t && this._defaultPreset && (this._defaultPreset.shadow_color = e), this.shape === "circle" ? (this.$shadow.style.backgroundColor = e, this._updateCircleGlow()) : this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${e}`));
 	}
 	loadPreset(t, n = {}) {
 		if (!this._isActive()) return this;
@@ -401,7 +409,7 @@ e._PRESET_BASELINE = {
 	neon: {
 		shape: "circle",
 		shape_size: "10px",
-		shape_color: "#00D4AA",
+		shape_color: "#CFFFF5",
 		hasShadow: !0,
 		shadow_size: "52px",
 		shadow_color: "rgba(0,212,170,0.30)",
@@ -439,6 +447,41 @@ e._PRESET_BASELINE = {
 };
 function t(e, t = 1) {
 	return `rgba(${parseInt(e.slice(1, 3), 16)}, ${parseInt(e.slice(3, 5), 16)}, ${parseInt(e.slice(5, 7), 16)}, ${t})`;
+}
+function n(e) {
+	if (typeof e != "string") return null;
+	if (e[0] === "#") {
+		let t = e.slice(1);
+		return t.length === 3 && (t = t.split("").map((e) => e + e).join("")), t.length === 6 ? [
+			parseInt(t.slice(0, 2), 16),
+			parseInt(t.slice(2, 4), 16),
+			parseInt(t.slice(4, 6), 16)
+		] : null;
+	}
+	let t = e.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+	return t ? [
+		parseInt(t[1]),
+		parseInt(t[2]),
+		parseInt(t[3])
+	] : null;
+}
+function r(e, t, r = .5) {
+	let i = n(t), a = (n, a, o) => {
+		let s = Math.max(1, Math.round(e * n));
+		if (!i) return `0 0 ${s}px ${t}`;
+		let [c, l, u] = o || i;
+		return `0 0 ${s}px rgba(${c}, ${l}, ${u}, ${Math.min(1, r * a).toFixed(2)})`;
+	};
+	return [
+		a(.15, 1.8, [
+			255,
+			255,
+			255
+		]),
+		a(.4, 1.2),
+		a(.8, .7),
+		a(1.3, .35)
+	].join(", ");
 }
 //#endregion
 export { e as default };

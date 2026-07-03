@@ -292,6 +292,7 @@ export default class ProteusCursor{
       // this.$shape.style.height = this.shape_size || '20px';
       // this.$shadow.style.width = this.shadow_size || '40px';
       // this.$shadow.style.height = this.shadow_size || '40px';
+      this._updateCircleGlow();
       this.shape__circle__interactions();
       this.shape__circle__animateShadow();
    }
@@ -659,6 +660,12 @@ export default class ProteusCursor{
       const size = parseInt(this.shape_size) || 10;
       for (let i = 0; i < this.trail_length; i++) {
          const el = document.createElement('div');
+         // Each trail dot glows on its own — without this the trail is just
+         // fading flat circles, which doesn't read as a "fluo"/neon streak.
+         // Full layered glow only on the first couple of dots (closest to the
+         // cursor, most visible) — the rest get one lighter layer so 8+ dots
+         // don't each pay for a 4-layer box-shadow every frame.
+         const glow = i < 2 ? layeredGlow(size, this.shape_color, 0.6) : `0 0 ${size}px ${this.shape_color}`;
          el.style.cssText = [
             'position:fixed',
             'pointer-events:none',
@@ -666,11 +673,7 @@ export default class ProteusCursor{
             `width:${size}px`,
             `height:${size}px`,
             `background:${this.shape_color}`,
-            // Each trail dot glows on its own — without this the trail is just
-            // fading flat circles, which doesn't read as a "fluo"/neon streak
-            // even when trail_length/trail_opacity are configured for it.
-            `box-shadow:0 0 ${size}px ${this.shape_color}`,
-            `filter:blur(${Math.max(1, Math.round(size / 6))}px)`,
+            `box-shadow:${glow}`,
             'transform:translate(-50%,-50%)',
             'opacity:0',
             'will-change:left,top',
@@ -755,6 +758,7 @@ export default class ProteusCursor{
       this.shape_color = color;
       if (isPermanent && this._defaultPreset) this._defaultPreset.shape_color = color;
       this.$shape.style.backgroundColor = color;
+      this._updateCircleGlow();
    }
 
    setShadowEnabled(isEnabled, isPermanent = false){
@@ -763,6 +767,7 @@ export default class ProteusCursor{
       if (isPermanent && this._defaultPreset) this._defaultPreset.hasShadow = isEnabled;
       if (this.shape === 'circle') {
          this.$shadow.style.display = isEnabled ? 'block' : 'none';
+         this._updateCircleGlow();
       } else if (this.shape === 'fluid') {
          this.$shape.style.boxShadow = isEnabled ? `0 0 ${this.shadow_size} ${this.shadow_color}` : 'none';
       }
@@ -777,6 +782,7 @@ export default class ProteusCursor{
       if (this.shape === 'fluid' && this.hasShadow) {
          this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`;
       }
+      this._updateCircleGlow();
    }
    setShadowColor(hexColor, alpha = 0.5, isPermanent = false){
       if (!this._isActive()) return;
@@ -787,6 +793,31 @@ export default class ProteusCursor{
       if (this.shape === 'fluid' && this.hasShadow) {
          this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${rgba}`;
       }
+      this._updateCircleGlow();
+   }
+
+   /**
+    * Applies (or clears) the layered glow box-shadow on $shape and $shadow
+    * for circle mode. A no-op outside circle mode — fluid renders its own
+    * boxShadow directly on $shape (see setShape__fluid/setShadowEnabled).
+    * Called any time shape/shadow color, size, or visibility changes, and
+    * when (re)entering circle mode, so the glow always reflects current state.
+    * @private
+    */
+   _updateCircleGlow() {
+      if (this.shape !== 'circle' || !this.$shape || !this.$shadow) return;
+      if (!this.hasShadow) {
+         this.$shape.style.boxShadow = 'none';
+         this.$shadow.style.boxShadow = 'none';
+         return;
+      }
+      const shapeSizePx = parseInt(this.shape_size) || 10;
+      const shadowSizePx = parseInt(this.shadow_size) || 40;
+      // The dot itself gets a tight "hot" glow scaled to its own size/color —
+      // this is what makes it read as a lit point rather than a flat circle.
+      this.$shape.style.boxShadow = layeredGlow(shapeSizePx * 1.5, this.shape_color, 0.7);
+      // The trailing $shadow gets the larger, softer halo scaled to shadow_size/color.
+      this.$shadow.style.boxShadow = layeredGlow(shadowSizePx, this.shadow_color, 0.5);
    }
 
    setText(text, isPermanent = false){
@@ -849,6 +880,7 @@ export default class ProteusCursor{
       if (isPermanent && this._defaultPreset) this._defaultPreset.shadow_color = cssColor;
       if (this.shape === 'circle') {
          this.$shadow.style.backgroundColor = cssColor;
+         this._updateCircleGlow();
       } else if (this.shape === 'fluid') {
          if (this.hasShadow) {
             this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${cssColor}`;
@@ -1296,7 +1328,10 @@ ProteusCursor.PRESETS = {
    neon: {
       shape:           'circle',
       shape_size:      '10px',
-      shape_color:     '#00D4AA',
+      // Near-white core, not solid teal — a flat colored dot never reads as
+      // "lit", real neon light always has a bright/white filament at the
+      // center with the color living in the surrounding glow (see _updateCircleGlow).
+      shape_color:     '#CFFFF5',
       hasShadow:       true,
       shadow_size:     '52px',
       shadow_color:    'rgba(0,212,170,0.30)',
@@ -1358,6 +1393,56 @@ function hexToRgba(hex, alpha = 1) {
    const g = parseInt(hex.slice(3, 5), 16);
    const b = parseInt(hex.slice(5, 7), 16);
    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * Extracts [r,g,b] from '#rgb', '#rrggbb', 'rgb(...)' or 'rgba(...)'.
+ * Returns null for anything else (named colors, hsl, etc.) — callers should
+ * fall back to using the original color string as-is in that case.
+ */
+function colorToRgb(color) {
+   if (typeof color !== 'string') return null;
+   if (color[0] === '#') {
+      let hex = color.slice(1);
+      if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+      if (hex.length !== 6) return null;
+      return [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)];
+   }
+   const m = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+   return m ? [parseInt(m[1]), parseInt(m[2]), parseInt(m[3])] : null;
+}
+
+/**
+ * Builds a layered (stacked) box-shadow string that reads as a real glow
+ * instead of a single uniform blur — a single box-shadow decays as one flat
+ * Gaussian ramp and never looks "hot", no matter the color. Real neon/glow
+ * effects layer multiple blur radii (fast falloff near the source, long soft
+ * tail further out) with a near-white innermost layer to fake a lit filament.
+ *
+ * Generic by design — used for any shadow_color/shadow_size the instance is
+ * configured with (not hardcoded to a specific preset), so it benefits every
+ * preset with hasShadow: true, not just 'neon'.
+ *
+ * @param {number} basePx   Reference size (e.g. parsed shape_size/shadow_size) the layer radii scale from.
+ * @param {string} color    Any CSS color — parsed to RGB when possible for per-layer alpha blending.
+ * @param {number} [baseAlpha=0.5]  Overall intensity multiplier, roughly the color's own alpha.
+ * @returns {string} box-shadow value with 4 stacked layers.
+ */
+function layeredGlow(basePx, color, baseAlpha = 0.5) {
+   const rgb = colorToRgb(color);
+   const layer = (radiusFactor, alphaFactor, tint) => {
+      const radius = Math.max(1, Math.round(basePx * radiusFactor));
+      if (!rgb) return `0 0 ${radius}px ${color}`;
+      const [r, g, b] = tint || rgb;
+      const a = Math.min(1, baseAlpha * alphaFactor).toFixed(2);
+      return `0 0 ${radius}px rgba(${r}, ${g}, ${b}, ${a})`;
+   };
+   return [
+      layer(0.15, 1.8, [255, 255, 255]), // hot near-white core sliver
+      layer(0.4,  1.2),                  // bright inner ring
+      layer(0.8,  0.7),                  // main glow body
+      layer(1.3,  0.35),                 // wide soft tail
+   ].join(', ');
 }
 //endregion
 
