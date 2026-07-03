@@ -482,6 +482,11 @@ export default class ProteusCursor{
             this.$shape.style.top = this.cursorY - this.$shape.offsetHeight / 2 + 'px';
          }
 
+         // Trail dots are position:fixed (viewport coordinates), so use cursorX/cursorY
+         // (already viewport-relative) rather than endX/endY, which in fluid mode are
+         // page-coordinates and would drift from the trail by the current scroll offset.
+         if (this.trail_length > 0) this._updateTrail(this.cursorX, this.cursorY);
+
          this.requestAnimationFrameTracked(this.boundAnimateFluid);
 
    }
