@@ -67,11 +67,13 @@ export default class ProteusCursor{
       // blend mode
       this.blend_mode = options.blend_mode || 'normal';
 
-      // trail
+      // trail (Canvas 2D ribbon — see _initTrail)
       this.trail_length = options.trail_length || 0;
       this.trail_opacity = options.trail_opacity ?? 0.3;
-      this._trailElements = [];
-      this._trailPositions = [];
+      this._trailCanvas = null;
+      this._trailCtx = null;
+      this._trailPoints = [];
+      this._trailResizeHandler = null;
 
       // click animation
       this.click_animation = options.click_animation || 'scale';
@@ -292,6 +294,7 @@ export default class ProteusCursor{
       // this.$shape.style.height = this.shape_size || '20px';
       // this.$shadow.style.width = this.shadow_size || '40px';
       // this.$shadow.style.height = this.shadow_size || '40px';
+      this._updateCircleGlow();
       this.shape__circle__interactions();
       this.shape__circle__animateShadow();
    }
@@ -403,7 +406,9 @@ export default class ProteusCursor{
          this.$shadow.style.left = this._x + 'px';
       }
 
-      this._updateTrail(this.endX, this.endY);
+      // The trail canvas lives in viewport coordinates (position:fixed);
+      // endX/endY are page coordinates in circle mode, so strip the scroll.
+      this._updateTrail(this.endX - (window.scrollX || 0), this.endY - (window.scrollY || 0));
 
       this.requestAnimationFrameTracked(this.boundAnimateCircle);
    }
@@ -511,6 +516,11 @@ export default class ProteusCursor{
             this.$shape.style.left = this.cursorX - this.$shape.offsetWidth / 2 + 'px';
             this.$shape.style.top = this.cursorY - this.$shape.offsetHeight / 2 + 'px';
          }
+
+         // Trail dots are position:fixed (viewport coordinates), so use cursorX/cursorY
+         // (already viewport-relative) rather than endX/endY, which in fluid mode are
+         // page-coordinates and would drift from the trail by the current scroll offset.
+         if (this.trail_length > 0) this._updateTrail(this.cursorX, this.cursorY);
 
          this.requestAnimationFrameTracked(this.boundAnimateFluid);
 
@@ -683,54 +693,153 @@ export default class ProteusCursor{
    //region ✨ Trail
    /* -------------------------------------------------------------------------------- */
 
+   // The trail is rendered on a single full-viewport Canvas 2D layer, not DOM
+   // elements. This is how dedicated cursor-effect libraries do it (Cursify's
+   // neon cursor, Tron-style trails): discrete DOM dots can never read as a
+   // continuous streak of light, and a light streak needs two things only a
+   // canvas can provide — connected line segments between samples, and
+   // additive blending (globalCompositeOperation: 'lighter') so overlapping
+   // glow sums up like real light instead of stacking as translucency.
+   // It's also cheaper: one composited layer vs N divs repainting layered
+   // box-shadows every frame. Canvas 2D is a native browser API, so the
+   // zero-dependency constraint holds.
    _initTrail() {
       this._destroyTrail();
       if (this.trail_length <= 0) return;
-      const size = parseInt(this.shape_size) || 10;
-      for (let i = 0; i < this.trail_length; i++) {
-         const el = document.createElement('div');
-         el.style.cssText = [
-            'position:fixed',
-            'pointer-events:none',
-            'border-radius:50%',
-            `width:${size}px`,
-            `height:${size}px`,
-            `background:${this.shape_color}`,
-            'transform:translate(-50%,-50%)',
-            'opacity:0',
-            'will-change:left,top',
-            `z-index:${9997 - i}`,
-         ].join(';');
-         document.body.appendChild(el);
-         this._trailElements.push(el);
-      }
-      this._trailPositions = new Array(this.trail_length).fill(null);
-   }
 
-   _updateTrail(x, y) {
-      if (!this._trailElements.length) return;
-      this._trailPositions.unshift({ x, y });
-      if (this._trailPositions.length > this.trail_length) {
-         this._trailPositions.length = this.trail_length;
-      }
-      const n = this.trail_length;
-      this._trailElements.forEach((el, i) => {
-         const pos = this._trailPositions[i];
-         if (!pos) { el.style.opacity = '0'; return; }
-         el.style.left = pos.x + 'px';
-         el.style.top = pos.y + 'px';
-         el.style.opacity = String(this.trail_opacity * (1 - i / n));
-      });
-   }
+      const canvas = document.createElement('canvas');
+      canvas.id = 'proteus-cursor-trail';
+      canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9996;';
+      const ctx = canvas.getContext('2d');
+      // No 2D context (rare embedded/webview case): degrade to no trail
+      // rather than a broken cursor.
+      if (!ctx) return;
 
-   _destroyTrail() {
-      this._trailElements.forEach(el => el.parentNode && el.parentNode.removeChild(el));
-      this._trailElements = [];
-      this._trailPositions = [];
+      this._trailResizeHandler = () => {
+         if (!this._trailCanvas) return;
+         const dpr = window.devicePixelRatio || 1;
+         // Logical (CSS-pixel) size, kept for clearRect under the dpr transform.
+         this._trailW = window.innerWidth;
+         this._trailH = window.innerHeight;
+         this._trailCanvas.width = this._trailW * dpr;
+         this._trailCanvas.height = this._trailH * dpr;
+         // The CSS size must be set explicitly: a canvas with only inset:0
+         // keeps its intrinsic (bitmap) size, so on dpr > 1 screens the
+         // oversized bitmap would render 1:1 and every stroke would appear
+         // shifted/scaled away from the real cursor position.
+         this._trailCanvas.style.width = this._trailW + 'px';
+         this._trailCanvas.style.height = this._trailH + 'px';
+         this._trailCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      };
+
+      document.body.appendChild(canvas);
+      this._trailCanvas = canvas;
+      this._trailCtx = ctx;
+      this._trailPoints = [];
+      this._trailResizeHandler();
+      window.addEventListener('resize', this._trailResizeHandler);
    }
 
    /**
-    * Set the number of trail dots following the cursor. Pass 0 to disable.
+    * Records the current cursor position (viewport coordinates) and redraws
+    * the trail ribbon. Called once per frame by both RAF loops, so it also
+    * advances the fade when the mouse is stationary.
+    * @private
+    */
+   _updateTrail(x, y) {
+      if (!this._trailCtx) return;
+
+      const points = this._trailPoints;
+      const last = points[points.length - 1];
+      // Skip sub-pixel duplicates so a stationary cursor doesn't pile up
+      // points, but still let existing ones fade out below.
+      if (!last || Math.abs(last.x - x) > 0.5 || Math.abs(last.y - y) > 0.5) {
+         points.push({ x, y, life: 1 });
+      }
+
+      // trail_length keeps its public meaning of "how long the trail is":
+      // it scales how many frames a point survives (8 → ~24 frames ≈ 400ms).
+      const decay = 1 / Math.max(6, this.trail_length * 3);
+      for (const p of points) p.life -= decay;
+      while (points.length && points[0].life <= 0) points.shift();
+      if (points.length > 64) points.splice(0, points.length - 64);
+
+      this._renderTrail();
+   }
+
+   /** @private — draws the ribbon: wide blurred glow pass + thin hot core pass. */
+   _renderTrail() {
+      // Recover from a zero-sized canvas (initialized while the window/tab
+      // reported no dimensions, e.g. a background tab) as soon as the
+      // viewport becomes real.
+      if (this._trailCanvas.width === 0 && window.innerWidth > 0) this._trailResizeHandler();
+
+      const ctx = this._trailCtx;
+      ctx.clearRect(0, 0, this._trailW || 0, this._trailH || 0);
+
+      const points = this._trailPoints;
+      if (points.length < 2) return;
+
+      const size = parseInt(this.shape_size) || 10;
+      // Glow takes the shadow color (the preset's "light color"); the core is
+      // the shape color, which for neon is already a near-white filament tint.
+      const glowRgb = colorToRgb(this.hasShadow ? this.shadow_color : this.shape_color) || [255, 255, 255];
+      const coreRgb = colorToRgb(this.shape_color) || [255, 255, 255];
+
+      // Additive blending: overlapping strokes sum toward white like real
+      // light. Round caps/joins keep the ribbon smooth through curves.
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      for (let i = 1; i < points.length; i++) {
+         const p0 = points[i - 1];
+         const p1 = points[i];
+         const life = p1.life;
+         if (life <= 0) continue;
+
+         // Pass 1 — wide soft halo. shadowBlur does the diffusion, exactly
+         // like the dual-layer technique in canvas glow-trail implementations.
+         ctx.strokeStyle = `rgba(${glowRgb[0]}, ${glowRgb[1]}, ${glowRgb[2]}, ${(life * this.trail_opacity * 0.6).toFixed(3)})`;
+         ctx.lineWidth = Math.max(1, size * 1.4 * life);
+         ctx.shadowColor = `rgb(${glowRgb[0]}, ${glowRgb[1]}, ${glowRgb[2]})`;
+         ctx.shadowBlur = size * 2;
+         ctx.beginPath();
+         ctx.moveTo(p0.x, p0.y);
+         ctx.lineTo(p1.x, p1.y);
+         ctx.stroke();
+
+         // Pass 2 — thin bright core, the "lit filament" inside the halo.
+         ctx.strokeStyle = `rgba(${coreRgb[0]}, ${coreRgb[1]}, ${coreRgb[2]}, ${(life * this.trail_opacity * 1.5).toFixed(3)})`;
+         ctx.lineWidth = Math.max(1, size * 0.45 * life);
+         ctx.shadowBlur = size * 0.8;
+         ctx.beginPath();
+         ctx.moveTo(p0.x, p0.y);
+         ctx.lineTo(p1.x, p1.y);
+         ctx.stroke();
+      }
+
+      // Reset state so nothing leaks into other canvas users of this context.
+      ctx.shadowBlur = 0;
+      ctx.globalCompositeOperation = 'source-over';
+   }
+
+   _destroyTrail() {
+      if (this._trailResizeHandler) {
+         window.removeEventListener('resize', this._trailResizeHandler);
+         this._trailResizeHandler = null;
+      }
+      if (this._trailCanvas && this._trailCanvas.parentNode) {
+         this._trailCanvas.parentNode.removeChild(this._trailCanvas);
+      }
+      this._trailCanvas = null;
+      this._trailCtx = null;
+      this._trailPoints = [];
+   }
+
+   /**
+    * Set the length of the glowing trail following the cursor (higher = the
+    * streak persists longer behind the cursor). Pass 0 to disable.
     * @param {number} n
     * @param {boolean} [isPermanent=false]  When true, persists across state resets.
     * @returns {this}
@@ -780,6 +889,7 @@ export default class ProteusCursor{
       this.shape_color = color;
       if (isPermanent && this._defaultPreset) this._defaultPreset.shape_color = color;
       this.$shape.style.backgroundColor = color;
+      this._updateCircleGlow();
    }
 
    setShadowEnabled(isEnabled, isPermanent = false){
@@ -788,6 +898,7 @@ export default class ProteusCursor{
       if (isPermanent && this._defaultPreset) this._defaultPreset.hasShadow = isEnabled;
       if (this.shape === 'circle') {
          this.$shadow.style.display = isEnabled ? 'block' : 'none';
+         this._updateCircleGlow();
       } else if (this.shape === 'fluid') {
          this.$shape.style.boxShadow = isEnabled ? `0 0 ${this.shadow_size} ${this.shadow_color}` : 'none';
       }
@@ -802,6 +913,7 @@ export default class ProteusCursor{
       if (this.shape === 'fluid' && this.hasShadow) {
          this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`;
       }
+      this._updateCircleGlow();
    }
    setShadowColor(hexColor, alpha = 0.5, isPermanent = false){
       if (!this._isActive()) return;
@@ -812,6 +924,31 @@ export default class ProteusCursor{
       if (this.shape === 'fluid' && this.hasShadow) {
          this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${rgba}`;
       }
+      this._updateCircleGlow();
+   }
+
+   /**
+    * Applies (or clears) the layered glow box-shadow on $shape and $shadow
+    * for circle mode. A no-op outside circle mode — fluid renders its own
+    * boxShadow directly on $shape (see setShape__fluid/setShadowEnabled).
+    * Called any time shape/shadow color, size, or visibility changes, and
+    * when (re)entering circle mode, so the glow always reflects current state.
+    * @private
+    */
+   _updateCircleGlow() {
+      if (this.shape !== 'circle' || !this.$shape || !this.$shadow) return;
+      if (!this.hasShadow) {
+         this.$shape.style.boxShadow = 'none';
+         this.$shadow.style.boxShadow = 'none';
+         return;
+      }
+      const shapeSizePx = parseInt(this.shape_size) || 10;
+      const shadowSizePx = parseInt(this.shadow_size) || 40;
+      // The dot itself gets a tight "hot" glow scaled to its own size/color —
+      // this is what makes it read as a lit point rather than a flat circle.
+      this.$shape.style.boxShadow = layeredGlow(shapeSizePx * 1.5, this.shape_color, 0.7);
+      // The trailing $shadow gets the larger, softer halo scaled to shadow_size/color.
+      this.$shadow.style.boxShadow = layeredGlow(shadowSizePx, this.shadow_color, 0.5);
    }
 
    setText(text, isPermanent = false){
@@ -874,6 +1011,7 @@ export default class ProteusCursor{
       if (isPermanent && this._defaultPreset) this._defaultPreset.shadow_color = cssColor;
       if (this.shape === 'circle') {
          this.$shadow.style.backgroundColor = cssColor;
+         this._updateCircleGlow();
       } else if (this.shape === 'fluid') {
          if (this.hasShadow) {
             this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${cssColor}`;
@@ -1333,7 +1471,10 @@ ProteusCursor.PRESETS = {
    neon: {
       shape:           'circle',
       shape_size:      '10px',
-      shape_color:     '#00D4AA',
+      // Near-white core, not solid teal — a flat colored dot never reads as
+      // "lit", real neon light always has a bright/white filament at the
+      // center with the color living in the surrounding glow (see _updateCircleGlow).
+      shape_color:     '#CFFFF5',
       hasShadow:       true,
       shadow_size:     '52px',
       shadow_color:    'rgba(0,212,170,0.30)',
@@ -1395,6 +1536,56 @@ function hexToRgba(hex, alpha = 1) {
    const g = parseInt(hex.slice(3, 5), 16);
    const b = parseInt(hex.slice(5, 7), 16);
    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * Extracts [r,g,b] from '#rgb', '#rrggbb', 'rgb(...)' or 'rgba(...)'.
+ * Returns null for anything else (named colors, hsl, etc.) — callers should
+ * fall back to using the original color string as-is in that case.
+ */
+function colorToRgb(color) {
+   if (typeof color !== 'string') return null;
+   if (color[0] === '#') {
+      let hex = color.slice(1);
+      if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+      if (hex.length !== 6) return null;
+      return [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)];
+   }
+   const m = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+   return m ? [parseInt(m[1]), parseInt(m[2]), parseInt(m[3])] : null;
+}
+
+/**
+ * Builds a layered (stacked) box-shadow string that reads as a real glow
+ * instead of a single uniform blur — a single box-shadow decays as one flat
+ * Gaussian ramp and never looks "hot", no matter the color. Real neon/glow
+ * effects layer multiple blur radii (fast falloff near the source, long soft
+ * tail further out) with a near-white innermost layer to fake a lit filament.
+ *
+ * Generic by design — used for any shadow_color/shadow_size the instance is
+ * configured with (not hardcoded to a specific preset), so it benefits every
+ * preset with hasShadow: true, not just 'neon'.
+ *
+ * @param {number} basePx   Reference size (e.g. parsed shape_size/shadow_size) the layer radii scale from.
+ * @param {string} color    Any CSS color — parsed to RGB when possible for per-layer alpha blending.
+ * @param {number} [baseAlpha=0.5]  Overall intensity multiplier, roughly the color's own alpha.
+ * @returns {string} box-shadow value with 4 stacked layers.
+ */
+function layeredGlow(basePx, color, baseAlpha = 0.5) {
+   const rgb = colorToRgb(color);
+   const layer = (radiusFactor, alphaFactor, tint) => {
+      const radius = Math.max(1, Math.round(basePx * radiusFactor));
+      if (!rgb) return `0 0 ${radius}px ${color}`;
+      const [r, g, b] = tint || rgb;
+      const a = Math.min(1, baseAlpha * alphaFactor).toFixed(2);
+      return `0 0 ${radius}px rgba(${r}, ${g}, ${b}, ${a})`;
+   };
+   return [
+      layer(0.15, 1.8, [255, 255, 255]), // hot near-white core sliver
+      layer(0.4,  1.2),                  // bright inner ring
+      layer(0.8,  0.7),                  // main glow body
+      layer(1.3,  0.35),                 // wide soft tail
+   ].join(', ');
 }
 //endregion
 
