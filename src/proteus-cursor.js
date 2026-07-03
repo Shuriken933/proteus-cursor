@@ -67,11 +67,13 @@ export default class ProteusCursor{
       // blend mode
       this.blend_mode = options.blend_mode || 'normal';
 
-      // trail
+      // trail (Canvas 2D ribbon — see _initTrail)
       this.trail_length = options.trail_length || 0;
       this.trail_opacity = options.trail_opacity ?? 0.3;
-      this._trailElements = [];
-      this._trailPositions = [];
+      this._trailCanvas = null;
+      this._trailCtx = null;
+      this._trailPoints = [];
+      this._trailResizeHandler = null;
 
       // click animation
       this.click_animation = options.click_animation || 'scale';
@@ -377,7 +379,9 @@ export default class ProteusCursor{
          this.$shadow.style.left = this._x + 'px';
       }
 
-      this._updateTrail(this.endX, this.endY);
+      // The trail canvas lives in viewport coordinates (position:fixed);
+      // endX/endY are page coordinates in circle mode, so strip the scroll.
+      this._updateTrail(this.endX - (window.scrollX || 0), this.endY - (window.scrollY || 0));
 
       this.requestAnimationFrameTracked(this.boundAnimateCircle);
    }
@@ -654,61 +658,147 @@ export default class ProteusCursor{
    //region ✨ Trail
    /* -------------------------------------------------------------------------------- */
 
+   // The trail is rendered on a single full-viewport Canvas 2D layer, not DOM
+   // elements. This is how dedicated cursor-effect libraries do it (Cursify's
+   // neon cursor, Tron-style trails): discrete DOM dots can never read as a
+   // continuous streak of light, and a light streak needs two things only a
+   // canvas can provide — connected line segments between samples, and
+   // additive blending (globalCompositeOperation: 'lighter') so overlapping
+   // glow sums up like real light instead of stacking as translucency.
+   // It's also cheaper: one composited layer vs N divs repainting layered
+   // box-shadows every frame. Canvas 2D is a native browser API, so the
+   // zero-dependency constraint holds.
    _initTrail() {
       this._destroyTrail();
       if (this.trail_length <= 0) return;
-      const size = parseInt(this.shape_size) || 10;
-      for (let i = 0; i < this.trail_length; i++) {
-         const el = document.createElement('div');
-         // Each trail dot glows on its own — without this the trail is just
-         // fading flat circles, which doesn't read as a "fluo"/neon streak.
-         // Full layered glow only on the first couple of dots (closest to the
-         // cursor, most visible) — the rest get one lighter layer so 8+ dots
-         // don't each pay for a 4-layer box-shadow every frame.
-         const glow = i < 2 ? layeredGlow(size, this.shape_color, 0.6) : `0 0 ${size}px ${this.shape_color}`;
-         el.style.cssText = [
-            'position:fixed',
-            'pointer-events:none',
-            'border-radius:50%',
-            `width:${size}px`,
-            `height:${size}px`,
-            `background:${this.shape_color}`,
-            `box-shadow:${glow}`,
-            'transform:translate(-50%,-50%)',
-            'opacity:0',
-            'will-change:left,top',
-            `z-index:${9997 - i}`,
-         ].join(';');
-         document.body.appendChild(el);
-         this._trailElements.push(el);
-      }
-      this._trailPositions = new Array(this.trail_length).fill(null);
-   }
 
-   _updateTrail(x, y) {
-      if (!this._trailElements.length) return;
-      this._trailPositions.unshift({ x, y });
-      if (this._trailPositions.length > this.trail_length) {
-         this._trailPositions.length = this.trail_length;
-      }
-      const n = this.trail_length;
-      this._trailElements.forEach((el, i) => {
-         const pos = this._trailPositions[i];
-         if (!pos) { el.style.opacity = '0'; return; }
-         el.style.left = pos.x + 'px';
-         el.style.top = pos.y + 'px';
-         el.style.opacity = String(this.trail_opacity * (1 - i / n));
-      });
-   }
+      const canvas = document.createElement('canvas');
+      canvas.id = 'proteus-cursor-trail';
+      canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9996;';
+      const ctx = canvas.getContext('2d');
+      // No 2D context (rare embedded/webview case): degrade to no trail
+      // rather than a broken cursor.
+      if (!ctx) return;
 
-   _destroyTrail() {
-      this._trailElements.forEach(el => el.parentNode && el.parentNode.removeChild(el));
-      this._trailElements = [];
-      this._trailPositions = [];
+      this._trailResizeHandler = () => {
+         if (!this._trailCanvas) return;
+         const dpr = window.devicePixelRatio || 1;
+         // Logical (CSS-pixel) size, kept for clearRect under the dpr transform.
+         this._trailW = window.innerWidth;
+         this._trailH = window.innerHeight;
+         this._trailCanvas.width = this._trailW * dpr;
+         this._trailCanvas.height = this._trailH * dpr;
+         this._trailCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      };
+
+      document.body.appendChild(canvas);
+      this._trailCanvas = canvas;
+      this._trailCtx = ctx;
+      this._trailPoints = [];
+      this._trailResizeHandler();
+      window.addEventListener('resize', this._trailResizeHandler);
    }
 
    /**
-    * Set the number of trail dots following the cursor. Pass 0 to disable.
+    * Records the current cursor position (viewport coordinates) and redraws
+    * the trail ribbon. Called once per frame by both RAF loops, so it also
+    * advances the fade when the mouse is stationary.
+    * @private
+    */
+   _updateTrail(x, y) {
+      if (!this._trailCtx) return;
+
+      const points = this._trailPoints;
+      const last = points[points.length - 1];
+      // Skip sub-pixel duplicates so a stationary cursor doesn't pile up
+      // points, but still let existing ones fade out below.
+      if (!last || Math.abs(last.x - x) > 0.5 || Math.abs(last.y - y) > 0.5) {
+         points.push({ x, y, life: 1 });
+      }
+
+      // trail_length keeps its public meaning of "how long the trail is":
+      // it scales how many frames a point survives (8 → ~24 frames ≈ 400ms).
+      const decay = 1 / Math.max(6, this.trail_length * 3);
+      for (const p of points) p.life -= decay;
+      while (points.length && points[0].life <= 0) points.shift();
+      if (points.length > 64) points.splice(0, points.length - 64);
+
+      this._renderTrail();
+   }
+
+   /** @private — draws the ribbon: wide blurred glow pass + thin hot core pass. */
+   _renderTrail() {
+      // Recover from a zero-sized canvas (initialized while the window/tab
+      // reported no dimensions, e.g. a background tab) as soon as the
+      // viewport becomes real.
+      if (this._trailCanvas.width === 0 && window.innerWidth > 0) this._trailResizeHandler();
+
+      const ctx = this._trailCtx;
+      ctx.clearRect(0, 0, this._trailW || 0, this._trailH || 0);
+
+      const points = this._trailPoints;
+      if (points.length < 2) return;
+
+      const size = parseInt(this.shape_size) || 10;
+      // Glow takes the shadow color (the preset's "light color"); the core is
+      // the shape color, which for neon is already a near-white filament tint.
+      const glowRgb = colorToRgb(this.hasShadow ? this.shadow_color : this.shape_color) || [255, 255, 255];
+      const coreRgb = colorToRgb(this.shape_color) || [255, 255, 255];
+
+      // Additive blending: overlapping strokes sum toward white like real
+      // light. Round caps/joins keep the ribbon smooth through curves.
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      for (let i = 1; i < points.length; i++) {
+         const p0 = points[i - 1];
+         const p1 = points[i];
+         const life = p1.life;
+         if (life <= 0) continue;
+
+         // Pass 1 — wide soft halo. shadowBlur does the diffusion, exactly
+         // like the dual-layer technique in canvas glow-trail implementations.
+         ctx.strokeStyle = `rgba(${glowRgb[0]}, ${glowRgb[1]}, ${glowRgb[2]}, ${(life * this.trail_opacity * 0.6).toFixed(3)})`;
+         ctx.lineWidth = Math.max(1, size * 1.4 * life);
+         ctx.shadowColor = `rgb(${glowRgb[0]}, ${glowRgb[1]}, ${glowRgb[2]})`;
+         ctx.shadowBlur = size * 2;
+         ctx.beginPath();
+         ctx.moveTo(p0.x, p0.y);
+         ctx.lineTo(p1.x, p1.y);
+         ctx.stroke();
+
+         // Pass 2 — thin bright core, the "lit filament" inside the halo.
+         ctx.strokeStyle = `rgba(${coreRgb[0]}, ${coreRgb[1]}, ${coreRgb[2]}, ${(life * this.trail_opacity * 1.5).toFixed(3)})`;
+         ctx.lineWidth = Math.max(1, size * 0.45 * life);
+         ctx.shadowBlur = size * 0.8;
+         ctx.beginPath();
+         ctx.moveTo(p0.x, p0.y);
+         ctx.lineTo(p1.x, p1.y);
+         ctx.stroke();
+      }
+
+      // Reset state so nothing leaks into other canvas users of this context.
+      ctx.shadowBlur = 0;
+      ctx.globalCompositeOperation = 'source-over';
+   }
+
+   _destroyTrail() {
+      if (this._trailResizeHandler) {
+         window.removeEventListener('resize', this._trailResizeHandler);
+         this._trailResizeHandler = null;
+      }
+      if (this._trailCanvas && this._trailCanvas.parentNode) {
+         this._trailCanvas.parentNode.removeChild(this._trailCanvas);
+      }
+      this._trailCanvas = null;
+      this._trailCtx = null;
+      this._trailPoints = [];
+   }
+
+   /**
+    * Set the length of the glowing trail following the cursor (higher = the
+    * streak persists longer behind the cursor). Pass 0 to disable.
     * @param {number} n
     * @param {boolean} [isPermanent=false]  When true, persists across state resets.
     * @returns {this}

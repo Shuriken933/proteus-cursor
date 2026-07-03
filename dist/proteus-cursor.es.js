@@ -12,7 +12,7 @@ var e = class e {
 	cursorY = 0;
 	_baseShape = "default";
 	constructor(t = {}) {
-		this.testMode = !1, this.shape = t.shape || "default", this._baseShape = this.shape, this.shape_size = t.shape_size || "10px", this.shape_color = t.shape_color || "#fff", this.hasShadow = t.hasShadow ?? !0, this.shadow_delay = this.hasShadow ? t.shadow_delay || "0.3s" : "0s", this.shadow_size = t.shadow_size || "40px", this.shadow_color = t.shadow_color || "#ffffff", this.text = t.text || "", this.text_color = t.text_color || "", this.text_weight = t.text_weight || "", this.text_size = t.text_size || "", this.speed = .9, this.maxVelocity = 10, this.isMagnetic = t.magnetic ?? !1, this.blend_mode = t.blend_mode || "normal", this.trail_length = t.trail_length || 0, this.trail_opacity = t.trail_opacity ?? .3, this._trailElements = [], this._trailPositions = [], this.click_animation = t.click_animation || "scale", this.click_duration = t.click_duration ?? 300, this.states = {}, this.eventListeners = [], this._circleListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.isTouch = e.isTouchOnly(), !this.isTouch && (this.respectReducedMotion = t.respectReducedMotion ?? !0, this.isReducedMotion = this.respectReducedMotion && e.prefersReducedMotion(), !this.isReducedMotion && (this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.hasShadow || (this.$shadow.style.display = "none"), this.trail_length > 0 && this._initTrail(), this.dataAttributeEvents(), this._initClickAnimation(), this._captureDefaults()));
+		this.testMode = !1, this.shape = t.shape || "default", this._baseShape = this.shape, this.shape_size = t.shape_size || "10px", this.shape_color = t.shape_color || "#fff", this.hasShadow = t.hasShadow ?? !0, this.shadow_delay = this.hasShadow ? t.shadow_delay || "0.3s" : "0s", this.shadow_size = t.shadow_size || "40px", this.shadow_color = t.shadow_color || "#ffffff", this.text = t.text || "", this.text_color = t.text_color || "", this.text_weight = t.text_weight || "", this.text_size = t.text_size || "", this.speed = .9, this.maxVelocity = 10, this.isMagnetic = t.magnetic ?? !1, this.blend_mode = t.blend_mode || "normal", this.trail_length = t.trail_length || 0, this.trail_opacity = t.trail_opacity ?? .3, this._trailCanvas = null, this._trailCtx = null, this._trailPoints = [], this._trailResizeHandler = null, this.click_animation = t.click_animation || "scale", this.click_duration = t.click_duration ?? 300, this.states = {}, this.eventListeners = [], this._circleListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.isTouch = e.isTouchOnly(), !this.isTouch && (this.respectReducedMotion = t.respectReducedMotion ?? !0, this.isReducedMotion = this.respectReducedMotion && e.prefersReducedMotion(), !this.isReducedMotion && (this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.hasShadow || (this.$shadow.style.display = "none"), this.trail_length > 0 && this._initTrail(), this.dataAttributeEvents(), this._initClickAnimation(), this._captureDefaults()));
 	}
 	static isTouchOnly() {
 		return typeof window > "u" ? !1 : window.matchMedia("(pointer: coarse)").matches;
@@ -101,7 +101,7 @@ var e = class e {
 		this.isDestroyed || (this.cursorEnlarged = !1, this.toggleCursorSize());
 	}
 	animateCircleShadow() {
-		this.isDestroyed || (this._x += (this.endX - this._x) / this.delay, this._y += (this.endY - this._y) / this.delay, this.$shadow && (this.$shadow.style.top = this._y + "px", this.$shadow.style.left = this._x + "px"), this._updateTrail(this.endX, this.endY), this.requestAnimationFrameTracked(this.boundAnimateCircle));
+		this.isDestroyed || (this._x += (this.endX - this._x) / this.delay, this._y += (this.endY - this._y) / this.delay, this.$shadow && (this.$shadow.style.top = this._y + "px", this.$shadow.style.left = this._x + "px"), this._updateTrail(this.endX - (window.scrollX || 0), this.endY - (window.scrollY || 0)), this.requestAnimationFrameTracked(this.boundAnimateCircle));
 	}
 	shape__circle__animateShadow() {
 		this.animateCircleShadow();
@@ -161,43 +161,52 @@ var e = class e {
 	}
 	_initTrail() {
 		if (this._destroyTrail(), this.trail_length <= 0) return;
-		let e = parseInt(this.shape_size) || 10;
-		for (let t = 0; t < this.trail_length; t++) {
-			let n = document.createElement("div"), i = t < 2 ? r(e, this.shape_color, .6) : `0 0 ${e}px ${this.shape_color}`;
-			n.style.cssText = [
-				"position:fixed",
-				"pointer-events:none",
-				"border-radius:50%",
-				`width:${e}px`,
-				`height:${e}px`,
-				`background:${this.shape_color}`,
-				`box-shadow:${i}`,
-				"transform:translate(-50%,-50%)",
-				"opacity:0",
-				"will-change:left,top",
-				`z-index:${9997 - t}`
-			].join(";"), document.body.appendChild(n), this._trailElements.push(n);
-		}
-		this._trailPositions = Array(this.trail_length).fill(null);
+		let e = document.createElement("canvas");
+		e.id = "proteus-cursor-trail", e.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:9996;";
+		let t = e.getContext("2d");
+		t && (this._trailResizeHandler = () => {
+			if (!this._trailCanvas) return;
+			let e = window.devicePixelRatio || 1;
+			this._trailW = window.innerWidth, this._trailH = window.innerHeight, this._trailCanvas.width = this._trailW * e, this._trailCanvas.height = this._trailH * e, this._trailCtx.setTransform(e, 0, 0, e, 0, 0);
+		}, document.body.appendChild(e), this._trailCanvas = e, this._trailCtx = t, this._trailPoints = [], this._trailResizeHandler(), window.addEventListener("resize", this._trailResizeHandler));
 	}
 	_updateTrail(e, t) {
-		if (!this._trailElements.length) return;
-		this._trailPositions.unshift({
+		if (!this._trailCtx) return;
+		let n = this._trailPoints, r = n[n.length - 1];
+		(!r || Math.abs(r.x - e) > .5 || Math.abs(r.y - t) > .5) && n.push({
 			x: e,
-			y: t
-		}), this._trailPositions.length > this.trail_length && (this._trailPositions.length = this.trail_length);
-		let n = this.trail_length;
-		this._trailElements.forEach((e, t) => {
-			let r = this._trailPositions[t];
-			if (!r) {
-				e.style.opacity = "0";
-				return;
-			}
-			e.style.left = r.x + "px", e.style.top = r.y + "px", e.style.opacity = String(this.trail_opacity * (1 - t / n));
+			y: t,
+			life: 1
 		});
+		let i = 1 / Math.max(6, this.trail_length * 3);
+		for (let e of n) e.life -= i;
+		for (; n.length && n[0].life <= 0;) n.shift();
+		n.length > 64 && n.splice(0, n.length - 64), this._renderTrail();
+	}
+	_renderTrail() {
+		this._trailCanvas.width === 0 && window.innerWidth > 0 && this._trailResizeHandler();
+		let e = this._trailCtx;
+		e.clearRect(0, 0, this._trailW || 0, this._trailH || 0);
+		let t = this._trailPoints;
+		if (t.length < 2) return;
+		let r = parseInt(this.shape_size) || 10, i = n(this.hasShadow ? this.shadow_color : this.shape_color) || [
+			255,
+			255,
+			255
+		], a = n(this.shape_color) || [
+			255,
+			255,
+			255
+		];
+		e.globalCompositeOperation = "lighter", e.lineCap = "round", e.lineJoin = "round";
+		for (let n = 1; n < t.length; n++) {
+			let o = t[n - 1], s = t[n], c = s.life;
+			c <= 0 || (e.strokeStyle = `rgba(${i[0]}, ${i[1]}, ${i[2]}, ${(c * this.trail_opacity * .6).toFixed(3)})`, e.lineWidth = Math.max(1, r * 1.4 * c), e.shadowColor = `rgb(${i[0]}, ${i[1]}, ${i[2]})`, e.shadowBlur = r * 2, e.beginPath(), e.moveTo(o.x, o.y), e.lineTo(s.x, s.y), e.stroke(), e.strokeStyle = `rgba(${a[0]}, ${a[1]}, ${a[2]}, ${(c * this.trail_opacity * 1.5).toFixed(3)})`, e.lineWidth = Math.max(1, r * .45 * c), e.shadowBlur = r * .8, e.beginPath(), e.moveTo(o.x, o.y), e.lineTo(s.x, s.y), e.stroke());
+		}
+		e.shadowBlur = 0, e.globalCompositeOperation = "source-over";
 	}
 	_destroyTrail() {
-		this._trailElements.forEach((e) => e.parentNode && e.parentNode.removeChild(e)), this._trailElements = [], this._trailPositions = [];
+		this._trailResizeHandler &&= (window.removeEventListener("resize", this._trailResizeHandler), null), this._trailCanvas && this._trailCanvas.parentNode && this._trailCanvas.parentNode.removeChild(this._trailCanvas), this._trailCanvas = null, this._trailCtx = null, this._trailPoints = [];
 	}
 	setTrailLength(e, t = !1) {
 		return this._isActive() ? (this.trail_length = Math.max(0, e), t && this._defaultPreset && (this._defaultPreset.trail_length = this.trail_length), this._initTrail(), this) : this;
