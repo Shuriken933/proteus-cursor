@@ -14,7 +14,7 @@
 body.proteus-is-a-circle .proteus-cursor-shape,
 body.proteus-is-a-circle .proteus-cursor-shadow { pointer-events: none; position: absolute; top: 50%; left: 50%; border-radius: 50%; opacity: 0; transform: translate(-50%, -50%); transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;}
 body.proteus-is-a-circle .proteus-cursor-shape { width: 8px; height: 8px; background-color: #fff; z-index: 9999999999;display: flex; align-items: center; justify-content: center;}
-body.proteus-is-a-circle .proteus-cursor-shadow { width: 40px; height: 40px; background-color: rgba(255, 255, 255, 0.5); z-index: 999999999}
+body.proteus-is-a-circle .proteus-cursor-shadow { width: 40px; height: 40px; background-color: rgba(255, 255, 255, 0.5); z-index: 999999999; filter: blur(6px);}
 
 body.proteus-is-a-fluid #proteus-cursor-shape { position: fixed;width: 20px; height: 20px; background: rgba(255, 255, 255, 0.8); border-radius: 50%; pointer-events: none; z-index: 9999; /*transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);*/ transition: all 0.25s cubic-bezier(.215, .61, .355, 1); box-shadow: 0 0 20px rgba(255, 255, 255, 0.3); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #333;}
 
