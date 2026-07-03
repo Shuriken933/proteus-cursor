@@ -1,4 +1,4 @@
-/*! Proteus Cursor v2.0.2 | https://github.com/Shuriken933/proteus-cursor | MIT */
+/*! Proteus Cursor v2.1.0 | https://github.com/Shuriken933/proteus-cursor | MIT */
 //#region src/proteus-cursor.js
 var e = class e {
 	velocity = 0;
