@@ -1,5 +1,5 @@
 /*!
- * Proteus Cursor v2.0.0
+ * Proteus Cursor v2.0.2
  * https://github.com/Shuriken933/proteus-cursor
  *
  * A dynamic JavaScript library that transforms the default mouse cursor
@@ -54,10 +54,10 @@ export default class ProteusCursor{
       this.shadow_color = options.shadow_color || '#ffffff';
 
       // text
-      this.text = ''
-      this.text_color = ''
-      this.text_weight = ''
-      this.text_size = ''
+      this.text = options.text || '';
+      this.text_color = options.text_color || '';
+      this.text_weight = options.text_weight || '';
+      this.text_size = options.text_size || '';
 
       this.speed = 0.9;
       this.maxVelocity = 10;
@@ -82,6 +82,7 @@ export default class ProteusCursor{
 
       // events
       this.eventListeners = [];
+      this._circleListeners = [];
       this.animationIds = [];
       this.intervals = [];
       this.timeouts = [];
@@ -162,6 +163,13 @@ export default class ProteusCursor{
       this.$shadow.style.width = this.shadow_size || '40px';
       this.$shadow.style.height = this.shadow_size || '40px';
       this.$shadow.style.backgroundColor = this.shadow_color;
+      // Apply the initial text config to the DOM — a reused #proteus-cursor-shape
+      // element (e.g. a previous instance destroyed and recreated) may still carry
+      // stale textContent/color/size/weight from before, so always write, even when empty.
+      this.$shape.textContent = this.text;
+      this.$shape.style.color = this.text_color;
+      this.$shape.style.fontSize = this.text_size;
+      this.$shape.style.fontWeight = this.text_weight;
       this.setShape(this.shape);
       if (this.blend_mode && this.blend_mode !== 'normal') {
          this.$shape.style.mixBlendMode = this.blend_mode;
@@ -291,14 +299,43 @@ export default class ProteusCursor{
       // Salva i references degli handlers
       if (this.isDestroyed) return;
 
+      // Tear down any listeners bound by a previous entry into circle mode —
+      // without this, switching circle -> fluid -> circle repeatedly (directly
+      // or via the state machine on hover/leave) re-registers a full set of
+      // mouseover/mouseout listeners on every a/button/input each time,
+      // growing this.eventListeners unbounded.
+      this._teardownCircleInteractions();
+
       // Aggiungi event listeners tracciabili
       document.querySelectorAll('a, button, input').forEach(el => {
          this.addEventListenerTracked(el, 'mouseover', this.boundMouseEnter);
          this.addEventListenerTracked(el, 'mouseout', this.boundMouseLeave);
+         this._circleListeners.push({ element: el, event: 'mouseover', handler: this.boundMouseEnter });
+         this._circleListeners.push({ element: el, event: 'mouseout', handler: this.boundMouseLeave });
       });
 
       this.addEventListenerTracked(document, 'mousemove', this.boundMouseMove);
+      this._circleListeners.push({ element: document, event: 'mousemove', handler: this.boundMouseMove });
 
+   }
+
+   /**
+    * Remove the mouseover/mouseout/mousemove listeners bound for circle-mode
+    * hover interactions. Called before re-binding (re-entering circle mode)
+    * and when leaving circle mode for fluid, so listeners never accumulate
+    * and circle's hover handlers never fire while fluid is active.
+    * @private
+    */
+   _teardownCircleInteractions() {
+      if (!this._circleListeners || !this._circleListeners.length) return;
+      this._circleListeners.forEach(({ element, event, handler }) => {
+         try {
+            element.removeEventListener(event, handler);
+         } catch (e) { /* element may no longer exist */ }
+         const idx = this.eventListeners.findIndex(l => l.element === element && l.event === event && l.handler === handler);
+         if (idx !== -1) this.eventListeners.splice(idx, 1);
+      });
+      this._circleListeners = [];
    }
 
    handleMouseMove(e) {
@@ -393,10 +430,18 @@ export default class ProteusCursor{
 
          if (this.isDestroyed) return;
 
-         if (!this.velocityInitialized) {
+         // Bind the direction-tracking mousemove listener at most once per
+         // instance lifetime. `_fluidVelocityHandlerBound` (unlike
+         // `velocityInitialized`, which setShape__fluid() resets on every
+         // re-entry into fluid mode) is never reset — otherwise switching
+         // circle -> fluid repeatedly (directly or via hover states) adds a
+         // brand-new closure listener each time, and since every closure is a
+         // distinct function reference, addEventListener never de-dupes them.
+         if (!this._fluidVelocityHandlerBound) {
             this.setShape__fluid__animateCursor__calcVelocity();
-            this.velocityInitialized = true;
+            this._fluidVelocityHandlerBound = true;
          }
+         this.velocityInitialized = true;
 
          this.cursorX += (this.mouseX - this.cursorX) * this.speed;
          this.cursorY += (this.mouseY - this.cursorY) * this.speed;
@@ -448,6 +493,11 @@ export default class ProteusCursor{
       // Stop any running animation frames (e.g. circle shadow loop) before starting fluid.
       this.animationIds.forEach(id => cancelAnimationFrame(id));
       this.animationIds = [];
+
+      // Leaving circle mode — remove its hover listeners so they don't keep
+      // firing (and calling toggleCursorSize(), which fights the fluid RAF
+      // loop for control of $shape's transform) while fluid is active.
+      this._teardownCircleInteractions();
 
       document.querySelector('body').classList.add('proteus-is-a-fluid');
       // hide cursor system
@@ -531,6 +581,7 @@ export default class ProteusCursor{
          }
       });
       this.eventListeners = [];
+      this._circleListeners = [];
 
       // 4. RIPRISTINA IL CURSORE DI SISTEMA
       document.body.style.cursor = '';
@@ -821,7 +872,13 @@ export default class ProteusCursor{
          console.warn(`[ProteusCursor] Unknown preset: "${name}". Available: ${Object.keys(ProteusCursor.PRESETS).join(', ')}`);
          return this;
       }
-      return this.setDefaultPreset({ ...base, ...overrides });
+      // setDefaultPreset() only touches properties present in its config —
+      // that partial-update behaviour is correct for setDefaultPreset() itself,
+      // but loadPreset() is meant to fully replace the look. Without the
+      // baseline below, a property a preset doesn't mention (e.g. `trail_length`)
+      // would keep whatever value the PREVIOUSLY loaded preset left behind
+      // (e.g. 8 leftover trail dots from 'neon' bleeding into 'ink').
+      return this.setDefaultPreset({ ...ProteusCursor._PRESET_BASELINE, ...base, ...overrides });
    }
 
    /**
@@ -1182,6 +1239,29 @@ export default class ProteusCursor{
 /* -------------------------------------------------------------------------------- */
 //region 🎨 Built-in Presets
 /* -------------------------------------------------------------------------------- */
+
+/**
+ * Neutral fallback for every property a preset can omit. loadPreset() merges
+ * this underneath a preset's own config so switching presets always fully
+ * replaces the look — properties the target preset doesn't mention reset to
+ * this baseline instead of leaking from whichever preset/state was active
+ * before (e.g. 'neon' trail dots surviving a switch to 'ink').
+ */
+ProteusCursor._PRESET_BASELINE = {
+   shape_size:      '10px',
+   shape_color:     '#fff',
+   hasShadow:       true,
+   shadow_size:     '40px',
+   shadow_color:    '#ffffff',
+   text:            '',
+   text_color:      '',
+   text_size:       '',
+   text_weight:     '',
+   blend_mode:      'normal',
+   click_animation: 'scale',
+   trail_length:    0,
+   trail_opacity:   0.3,
+};
 
 /**
  * Five ready-to-use cursor presets.
