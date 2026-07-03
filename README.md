@@ -418,6 +418,9 @@ For quick one-off customizations without defining a full state, you can use data
 
 ---
 
+## 🗺️ Roadmap
+Looking for what's next? See [ROADMAP.md](ROADMAP.md) for planned features and the [public project board](https://github.com/users/Shuriken933/projects/11).
+
 ## 📜 License
 This project is licensed under the MIT License.
 Feel free to use, modify, and share! 💫
