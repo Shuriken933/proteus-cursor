@@ -666,6 +666,11 @@ export default class ProteusCursor{
             `width:${size}px`,
             `height:${size}px`,
             `background:${this.shape_color}`,
+            // Each trail dot glows on its own — without this the trail is just
+            // fading flat circles, which doesn't read as a "fluo"/neon streak
+            // even when trail_length/trail_opacity are configured for it.
+            `box-shadow:0 0 ${size}px ${this.shape_color}`,
+            `filter:blur(${Math.max(1, Math.round(size / 6))}px)`,
             'transform:translate(-50%,-50%)',
             'opacity:0',
             'will-change:left,top',

@@ -171,6 +171,8 @@ var e = class e {
 				`width:${e}px`,
 				`height:${e}px`,
 				`background:${this.shape_color}`,
+				`box-shadow:0 0 ${e}px ${this.shape_color}`,
+				`filter:blur(${Math.max(1, Math.round(e / 6))}px)`,
 				"transform:translate(-50%,-50%)",
 				"opacity:0",
 				"will-change:left,top",
