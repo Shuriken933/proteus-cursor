@@ -167,7 +167,7 @@ var e = class e {
 		t && (this._trailResizeHandler = () => {
 			if (!this._trailCanvas) return;
 			let e = window.devicePixelRatio || 1;
-			this._trailW = window.innerWidth, this._trailH = window.innerHeight, this._trailCanvas.width = this._trailW * e, this._trailCanvas.height = this._trailH * e, this._trailCtx.setTransform(e, 0, 0, e, 0, 0);
+			this._trailW = window.innerWidth, this._trailH = window.innerHeight, this._trailCanvas.width = this._trailW * e, this._trailCanvas.height = this._trailH * e, this._trailCanvas.style.width = this._trailW + "px", this._trailCanvas.style.height = this._trailH + "px", this._trailCtx.setTransform(e, 0, 0, e, 0, 0);
 		}, document.body.appendChild(e), this._trailCanvas = e, this._trailCtx = t, this._trailPoints = [], this._trailResizeHandler(), window.addEventListener("resize", this._trailResizeHandler));
 	}
 	_updateTrail(e, t) {

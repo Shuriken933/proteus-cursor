@@ -688,6 +688,12 @@ export default class ProteusCursor{
          this._trailH = window.innerHeight;
          this._trailCanvas.width = this._trailW * dpr;
          this._trailCanvas.height = this._trailH * dpr;
+         // The CSS size must be set explicitly: a canvas with only inset:0
+         // keeps its intrinsic (bitmap) size, so on dpr > 1 screens the
+         // oversized bitmap would render 1:1 and every stroke would appear
+         // shifted/scaled away from the real cursor position.
+         this._trailCanvas.style.width = this._trailW + 'px';
+         this._trailCanvas.style.height = this._trailH + 'px';
          this._trailCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
       };
 
