@@ -575,6 +575,9 @@
         <a href="#states" class="sidebar__link" data-section="states">
           <span class="dot"></span> State Machine
         </a>
+        <a href="#debug-overlay" class="sidebar__link" data-section="debug-overlay">
+          <span class="dot"></span> Debug Overlay
+        </a>
         <a href="#data-attributes" class="sidebar__link" data-section="data-attributes">
           <span class="dot"></span> Data Attributes
         </a>
@@ -767,6 +770,40 @@ cursor
         <p style="font-size:0.875rem;color:var(--color-text-muted);">
           <code>addState()</code> is chainable. Remove a state at runtime with <code>cursor.removeState('gallery')</code>.
         </p>
+      </section>
+
+      <!-- DEBUG OVERLAY -->
+      <section class="docs-section" id="debug-overlay">
+        <div class="section-label">Core Concepts</div>
+        <h2 class="section-title">Debug Overlay</h2>
+        <p class="section-sub">
+          A read-only panel that shows what the state machine is doing in real time: the active state, the default preset snapshot, the current behaviour flags (<code>magnetic</code>, <code>magnetic_parallax</code>, <code>blend_mode</code>) and the last 10 hover/leave transitions, timestamped. Built for projects juggling many <code>addState()</code> definitions — distinct from <code>enableTestMode()</code>, which is interactive.
+        </p>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">JavaScript — enable / disable</span></div>
+          <div class="code-block__body"><span class="sh-prop">cursor</span>.<span class="sh-fn">enableDebugOverlay</span><span class="sh-punct">();</span>                              <span class="sh-comment">// default corner: top-left</span>
+<span class="sh-prop">cursor</span>.<span class="sh-fn">enableDebugOverlay</span><span class="sh-punct">({</span> <span class="sh-prop">position</span><span class="sh-punct">:</span> <span class="sh-string">'bottom-right'</span> <span class="sh-punct">});</span> <span class="sh-comment">// or pick one of the 4 corners</span>
+<span class="sh-prop">cursor</span>.<span class="sh-fn">disableDebugOverlay</span><span class="sh-punct">();</span>                             <span class="sh-comment">// removes the panel, keeps the log</span></div>
+        </div>
+
+        <p class="section-sub" style="margin-top:1.5rem;">
+          The panel updates by itself every time a <code>data-cursor-state</code> element is entered or left. A handy pattern while developing: expose your instance in dev builds, then toggle the overlay straight from the browser console.
+        </p>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">Dev-only patterns</span></div>
+          <div class="code-block__body"><span class="sh-comment">// enable only in development builds (Vite example)</span>
+<span class="sh-keyword">if</span> <span class="sh-punct">(</span><span class="sh-prop">import</span>.<span class="sh-prop">meta</span>.<span class="sh-prop">env</span>.<span class="sh-prop">DEV</span><span class="sh-punct">)</span> <span class="sh-prop">cursor</span>.<span class="sh-fn">enableDebugOverlay</span><span class="sh-punct">();</span>
+
+<span class="sh-comment">// or expose the instance and call it from the browser console</span>
+<span class="sh-prop">window</span>.<span class="sh-prop">cursor</span> <span class="sh-punct">=</span> <span class="sh-prop">cursor</span><span class="sh-punct">;</span>   <span class="sh-comment">// → then in DevTools: cursor.enableDebugOverlay()</span></div>
+        </div>
+
+        <div class="callout callout--tip">
+          <span class="callout__icon">💡</span>
+          <div class="callout__body">The panel is purely passive: it has <code>pointer-events: none</code>, so it can never become a hover target itself and pollute the very transitions it logs. It re-renders only on state transitions — no per-frame work — and costs literally one <code>if</code> when disabled. On touch devices or with <code>prefers-reduced-motion</code> active the call is a safe no-op, like every other public method.</div>
+        </div>
       </section>
 
       <!-- DATA ATTRIBUTES -->

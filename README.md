@@ -346,6 +346,18 @@ cursor
 cursor.removeState('video');
 ```
 
+### Debug overlay
+
+Integrating many states? Turn on the read-only debug panel to see what the state machine is doing in real time — the active state, the default preset snapshot, the last 10 hover/leave transitions (timestamped) and the current behaviour flags:
+
+```js
+cursor.enableDebugOverlay();                          // default: top-left corner
+cursor.enableDebugOverlay({ position: 'bottom-right' }); // or pick a corner
+cursor.disableDebugOverlay();
+```
+
+The panel is purely passive: `pointer-events: none`, so it can never become a hover target itself, and it only re-renders on state transitions (no per-frame work). Both methods are chainable.
+
 ---
 
 ## 9) 🎨 Blend Mode

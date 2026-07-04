@@ -300,6 +300,22 @@ export default class ProteusCursor {
    */
   static prefersReducedMotion(): boolean;
 
+  // ── Debug overlay ────────────────────────────────────────────────────────
+  /**
+   * Show a read-only debug panel for the state machine: current active
+   * state, default preset snapshot, last 10 hover/leave transitions and the
+   * main behaviour flags. Distinct from `enableTestMode()` (interactive).
+   * @returns `this` for chaining
+   */
+  enableDebugOverlay(options?: { position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' }): this;
+
+  /**
+   * Remove the debug panel from the DOM (the transition log is kept for a
+   * later re-enable).
+   * @returns `this` for chaining
+   */
+  disableDebugOverlay(): this;
+
   // ── Lifecycle ────────────────────────────────────────────────────────────
   /** Remove all event listeners, cancel animations and restore the native cursor */
   destroy(): void;

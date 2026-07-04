@@ -98,6 +98,11 @@ export default class ProteusCursor{
 
       // state machine
       this.states = {};
+      this._activeStateName = null;
+
+      // debug overlay (see enableDebugOverlay)
+      this._debugOverlay = null;
+      this._debugTransitions = [];
 
       // events
       this.eventListeners = [];
@@ -856,6 +861,14 @@ export default class ProteusCursor{
       // 7. RIMUOVI TRAIL ELEMENTS
       this._destroyTrail();
 
+      // 7b. RIMUOVI DEBUG OVERLAY
+      if (this._debugOverlay && this._debugOverlay.parentNode) {
+         this._debugOverlay.parentNode.removeChild(this._debugOverlay);
+      }
+      this._debugOverlay = null;
+      this._debugTransitions = [];
+      this._activeStateName = null;
+
       // 8. NULLIFICA TUTTI I RIFERIMENTI
       this.$shape = null;
       this.$shadow = null;
@@ -1518,6 +1531,8 @@ export default class ProteusCursor{
       if (state.click_animation !== undefined) this.setClickAnimation(state.click_animation);
       if (state.trail_length !== undefined) this.setTrailLength(state.trail_length);
       if (state.trail_opacity !== undefined) this.setTrailOpacity(state.trail_opacity);
+      this._activeStateName = name;
+      this._notifyStateChange('apply', name);
    }
 
    /**
@@ -1552,6 +1567,105 @@ export default class ProteusCursor{
       this.setMagneticStrength(p.magnetic_strength);
       this.setMagneticParallax(p.magnetic_parallax);
       this.magnetic_parallax_strength = clampParallaxStrength(p.magnetic_parallax_strength);
+      const leftState = this._activeStateName;
+      this._activeStateName = null;
+      this._notifyStateChange('reset', leftState);
+   }
+
+   /**
+    * Show a read-only debug panel for the state machine: current active
+    * state, the default preset snapshot, the last 10 hover/leave transitions
+    * and the main behaviour flags. Meant for integrators juggling many
+    * addState() definitions — distinct from enableTestMode(), which is
+    * interactive. No RAF involved: transitions are discrete events, the
+    * panel re-renders only when one happens.
+    *
+    * @param {{ position?: 'top-left'|'top-right'|'bottom-left'|'bottom-right' }} [options]
+    * @returns {this}
+    */
+   enableDebugOverlay(options = {}) {
+      if (!this._isActive()) return this;
+      this._debugPosition = options.position || 'top-left';
+      if (!this._debugOverlay) {
+         const panel = document.createElement('div');
+         panel.id = 'proteus-debug-overlay';
+         document.body.appendChild(panel);
+         this._debugOverlay = panel;
+      }
+      const offsets = {
+         'top-left':     'top:12px;left:12px;',
+         'top-right':    'top:12px;right:12px;',
+         'bottom-left':  'bottom:12px;left:12px;',
+         'bottom-right': 'bottom:12px;right:12px;',
+      };
+      // pointer-events:none — the panel must never become a hover target
+      // itself, or opening it would pollute the very transitions it logs.
+      this._debugOverlay.style.cssText =
+         'position:fixed;' + (offsets[this._debugPosition] || offsets['top-left']) +
+         'z-index:2147483646;pointer-events:none;max-width:320px;' +
+         'background:rgba(10,12,16,0.88);color:#d7e0e8;' +
+         'font:11px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;' +
+         'padding:10px 12px;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere;';
+      this._renderDebugOverlay();
+      return this;
+   }
+
+   /**
+    * Remove the debug panel from the DOM. The transition log is kept, so
+    * re-enabling the overlay shows history from before it was hidden.
+    * @returns {this}
+    */
+   disableDebugOverlay() {
+      if (!this._isActive()) return this;
+      if (this._debugOverlay && this._debugOverlay.parentNode) {
+         this._debugOverlay.parentNode.removeChild(this._debugOverlay);
+      }
+      this._debugOverlay = null;
+      return this;
+   }
+
+   /**
+    * Hook called by _applyState/_resetState on every state transition.
+    * A single-if no-op while the overlay is disabled — zero cost on the
+    * hot path when debugging is off.
+    * @private
+    */
+   _notifyStateChange(type, name) {
+      if (!this._debugOverlay) return;
+      const now = new Date();
+      this._debugTransitions.push({
+         type,
+         name: name || null,
+         time: now.toLocaleTimeString('en-GB', { hour12: false }) + '.' + String(now.getMilliseconds()).padStart(3, '0'),
+      });
+      // Circular buffer: only the last 10 transitions are kept.
+      if (this._debugTransitions.length > 10) this._debugTransitions.shift();
+      this._renderDebugOverlay();
+   }
+
+   /** @private — rebuild the panel content (textContent only, never innerHTML). */
+   _renderDebugOverlay() {
+      if (!this._debugOverlay) return;
+      const lines = [];
+      lines.push('ProteusCursor · debug');
+      lines.push('state:  ' + (this._activeStateName || '(default)'));
+      lines.push('shape:  ' + this.shape);
+      lines.push('flags:  magnetic=' + this.isMagnetic +
+                 '  parallax=' + this.magnetic_parallax +
+                 '  blend=' + this.blend_mode);
+      lines.push('');
+      lines.push('default preset:');
+      lines.push(JSON.stringify(this._defaultPreset, null, 1));
+      lines.push('');
+      lines.push('transitions (last 10):');
+      if (!this._debugTransitions.length) {
+         lines.push(' (none yet)');
+      } else {
+         for (const t of this._debugTransitions) {
+            lines.push(` ${t.time} ${t.type === 'apply' ? '>' : '<'} ${t.type}${t.name ? ' ' + t.name : ''}`);
+         }
+      }
+      this._debugOverlay.textContent = lines.join('\n');
    }
 
    _bindStateElements(name) {
