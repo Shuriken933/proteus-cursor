@@ -212,11 +212,20 @@ export default class ProteusCursor{
       });
    }
 
-   // Metodo helper per requestAnimationFrame tracciabile
+   // Metodo helper per requestAnimationFrame tracciabile.
+   // Only PENDING frames stay in animationIds: once a frame fires it can no
+   // longer be cancelled, so it is untracked before the callback runs. This
+   // keeps the array bounded (per-frame loops would otherwise grow it ~60
+   // ids/sec) while cancel-all in setShape__circle/setShape__fluid/destroy
+   // still cancels every frame that hasn't fired yet.
    requestAnimationFrameTracked(callback) {
       if (this.isDestroyed) return;
 
-      const id = requestAnimationFrame(callback);
+      const id = requestAnimationFrame((timestamp) => {
+         const index = this.animationIds.indexOf(id);
+         if (index !== -1) this.animationIds.splice(index, 1);
+         callback(timestamp);
+      });
       this.animationIds.push(id);
       return id;
    }

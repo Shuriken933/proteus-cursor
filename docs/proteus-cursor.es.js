@@ -45,7 +45,10 @@ var e = class e {
 	}
 	requestAnimationFrameTracked(e) {
 		if (this.isDestroyed) return;
-		let t = requestAnimationFrame(e);
+		let t = requestAnimationFrame((n) => {
+			let r = this.animationIds.indexOf(t);
+			r !== -1 && this.animationIds.splice(r, 1), e(n);
+		});
 		return this.animationIds.push(t), t;
 	}
 	setShape(e) {
