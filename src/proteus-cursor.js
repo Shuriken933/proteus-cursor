@@ -70,6 +70,17 @@ export default class ProteusCursor{
       this._magneticTarget = null;  // element currently attracting the cursor
       this._magneticLock = false;   // true while the RAF loop owns $shape positioning
 
+      // magnetic parallax: the hovered element itself shifts toward the
+      // cursor. Separate opt-in — never implied by `magnetic` (it mutates
+      // the page's own elements, not just the cursor overlay).
+      this.magnetic_parallax = options.magnetic_parallax ?? false;
+      this.magnetic_parallax_strength = clampParallaxStrength(options.magnetic_parallax_strength ?? 0.15);
+      // Per-element saved style state (inline transform/transition, computed
+      // baseline, current shift). A Map rather than a WeakMap so every shifted
+      // element can be found and restored on teardown/destroy — with a WeakMap
+      // an element whose mouseleave never fired would stay shifted forever.
+      this._parallaxEntries = new Map();
+
       // blend mode
       this.blend_mode = options.blend_mode || 'normal';
 
@@ -335,23 +346,33 @@ export default class ProteusCursor{
       this.addEventListenerTracked(document, 'mousemove', this.boundMouseMove);
       this._circleListeners.push({ element: document, event: 'mousemove', handler: this.boundMouseMove });
 
-      // Magnetic attraction targets. Bound only while magnetic is enabled —
-      // setMagnetic() re-runs this whole method, and the teardown above keeps
-      // re-entry idempotent. mouseenter/mouseleave (non-bubbling) rather than
-      // mouseover/mouseout: child elements must not steal or drop the target.
-      if (this.isMagnetic) {
+      // Magnetic attraction targets. Bound only while magnetic and/or
+      // parallax are enabled — setMagnetic()/setMagneticParallax() re-run
+      // this whole method, and the teardown above keeps re-entry idempotent.
+      // mouseenter/mouseleave (non-bubbling) rather than mouseover/mouseout:
+      // child elements must not steal or drop the target.
+      if (this.isMagnetic || this.magnetic_parallax) {
          document.querySelectorAll(this.magnetic_targets).forEach(el => {
             const enter = () => {
-               // Seed the interpolated position from the real cursor position,
-               // unless the RAF loop already owns it (target-to-target hop).
-               if (!this._magneticLock) {
-                  this._magneticX = this.endX;
-                  this._magneticY = this.endY;
+               // The lock (RAF ownership of $shape) belongs to cursor
+               // attraction only — parallax alone moves the element, so the
+               // shape must keep following the mouse directly.
+               if (this.isMagnetic) {
+                  // Seed the interpolated position from the real cursor position,
+                  // unless the RAF loop already owns it (target-to-target hop).
+                  if (!this._magneticLock) {
+                     this._magneticX = this.endX;
+                     this._magneticY = this.endY;
+                  }
+                  this._magneticLock = true;
                }
                this._magneticTarget = el;
-               this._magneticLock = true;
             };
             const leave = () => {
+               // Restore the element's own transform/transition regardless of
+               // who the current target is — with nested targets, this leave
+               // can fire while a child already took over _magneticTarget.
+               this._releaseParallax(el);
                // Only release the shape — _magneticLock stays on until the
                // RAF loop has eased it back onto the real mouse position.
                if (this._magneticTarget === el) this._magneticTarget = null;
@@ -375,7 +396,9 @@ export default class ProteusCursor{
    _teardownCircleInteractions() {
       // The magnetic listeners live in _circleListeners, so leaving circle
       // mode (or rebinding) must also drop the current attraction state —
-      // otherwise a stale lock would freeze $shape on re-entry.
+      // otherwise a stale lock would freeze $shape on re-entry — and put
+      // back the transform/transition of any element parallax has shifted.
+      this._releaseAllParallax();
       this._magneticTarget = null;
       this._magneticLock = false;
       if (!this._circleListeners || !this._circleListeners.length) return;
@@ -455,15 +478,21 @@ export default class ProteusCursor{
       // position and then returns ownership to handleMouseMove.
       let followX = this.endX;
       let followY = this.endY;
+      // One getBoundingClientRect per frame, shared by cursor attraction and
+      // parallax. Recomputed every frame — the element can move under the
+      // cursor (scroll, layout shifts, its own hover animations).
+      const magTarget = this._magneticTarget;
+      let centerX = 0;
+      let centerY = 0;
+      if (magTarget) {
+         const rect = magTarget.getBoundingClientRect();
+         centerX = rect.left + rect.width / 2 + (window.scrollX || 0);
+         centerY = rect.top + rect.height / 2 + (window.scrollY || 0);
+      }
       if (this._magneticLock) {
          let targetX = this.endX;
          let targetY = this.endY;
-         if (this.isMagnetic && this._magneticTarget) {
-            // Recomputed every frame — the element can move under the cursor
-            // (scroll, layout shifts, its own hover animations).
-            const rect = this._magneticTarget.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2 + (window.scrollX || 0);
-            const centerY = rect.top + rect.height / 2 + (window.scrollY || 0);
+         if (this.isMagnetic && magTarget) {
             // Falloff: full pull at the centre fading to zero at
             // magnetic_radius. Without a radius the pull is total — the
             // cursor snaps onto the centre for the whole hover.
@@ -492,6 +521,10 @@ export default class ProteusCursor{
          }
       }
 
+      if (this.magnetic_parallax && magTarget) {
+         this._applyParallax(magTarget, centerX, centerY);
+      }
+
       this._x += (followX - this._x) / this.delay;
       this._y += (followY - this._y) / this.delay;
 
@@ -511,6 +544,66 @@ export default class ProteusCursor{
 
    shape__circle__animateShadow() {
       this.animateCircleShadow();
+   }
+
+   /**
+    * Shift the hovered element toward the cursor (magnetic parallax).
+    * Called once per frame from animateCircleShadow with the element's
+    * centre already measured — no extra layout read here.
+    *
+    * The translate is ADDITIVE: the element's pre-existing computed
+    * transform is captured on first contact and re-applied after our shift,
+    * so CSS transforms already present on the target keep working. Its
+    * `transition` is suspended for the whole hover — a CSS transition on
+    * transform fighting a per-frame RAF write produces elastic jitter.
+    * @private
+    */
+   _applyParallax(el, centerX, centerY) {
+      let entry = this._parallaxEntries.get(el);
+      if (!entry) {
+         const computed = getComputedStyle(el).transform;
+         entry = {
+            baseline: computed === 'none' ? '' : computed,
+            inlineTransform: el.style.transform,
+            inlineTransition: el.style.transition,
+            dx: 0,
+            dy: 0,
+         };
+         this._parallaxEntries.set(el, entry);
+         el.style.transition = 'none';
+      }
+      // The measured centre includes our own current shift — subtract it to
+      // get the element's natural centre, otherwise the displacement feeds
+      // back into itself and the element drifts.
+      const naturalX = centerX - entry.dx;
+      const naturalY = centerY - entry.dy;
+      // Clamped so the element leans toward the cursor without visually
+      // detaching from its surrounding layout.
+      const max = ProteusCursor._PARALLAX_MAX_SHIFT;
+      entry.dx = Math.max(-max, Math.min(max, (this.endX - naturalX) * this.magnetic_parallax_strength));
+      entry.dy = Math.max(-max, Math.min(max, (this.endY - naturalY) * this.magnetic_parallax_strength));
+      el.style.transform = `translate(${entry.dx.toFixed(2)}px, ${entry.dy.toFixed(2)}px)` +
+         (entry.baseline ? ` ${entry.baseline}` : '');
+   }
+
+   /**
+    * Restore an element's own inline transform/transition after a parallax
+    * hover ends. Safe to call for elements that were never shifted.
+    * @private
+    */
+   _releaseParallax(el) {
+      if (!el || !this._parallaxEntries) return;
+      const entry = this._parallaxEntries.get(el);
+      if (!entry) return;
+      el.style.transform = entry.inlineTransform;
+      el.style.transition = entry.inlineTransition;
+      this._parallaxEntries.delete(el);
+   }
+
+   /** @private — restore every element still shifted (teardown/destroy). */
+   _releaseAllParallax() {
+      if (!this._parallaxEntries) return;
+      this._parallaxEntries.forEach((entry, el) => this._releaseParallax(el));
    }
 
    toggleCursorSize() {
@@ -707,6 +800,9 @@ export default class ProteusCursor{
       this.timeouts.forEach(id => clearTimeout(id));
       this.intervals = [];
       this.timeouts = [];
+
+      // 2b. RIPRISTINA GLI ELEMENTI SPOSTATI DAL PARALLAX
+      this._releaseAllParallax();
 
       // 3. RIMUOVI TUTTI GLI EVENT LISTENERS
       this.eventListeners.forEach(({ element, event, handler, options }) => {
@@ -1119,6 +1215,26 @@ export default class ProteusCursor{
    }
 
    /**
+    * Enable or disable magnetic parallax at runtime — the hovered magnetic
+    * target itself shifts toward the cursor. Independent from setMagnetic():
+    * either can be on without the other. Circle mode only.
+    * @param {boolean} enabled
+    * @param {boolean} [isPermanent=false]  When true, persists across state resets.
+    * @returns {this}
+    */
+   setMagneticParallax(enabled, isPermanent = false) {
+      if (!this._isActive()) return this;
+      if (isPermanent && this._defaultPreset) this._defaultPreset.magnetic_parallax = enabled;
+      if (enabled === this.magnetic_parallax) return this;
+      this.magnetic_parallax = enabled;
+      if (!enabled) this._releaseAllParallax();
+      // Rebind circle interactions from scratch: the magnetic target
+      // listeners are (un)registered as part of that pass.
+      if (this.shape === 'circle') this.shape__circle__interactions();
+      return this;
+   }
+
+   /**
     * Apply a CSS mix-blend-mode to the cursor shape element.
     * @param {'normal'|'difference'|'exclusion'|string} mode  Any valid CSS mix-blend-mode value.
     * @param {boolean} [isPermanent=false]  When true, persists across state resets.
@@ -1218,6 +1334,11 @@ export default class ProteusCursor{
       if (config.trail_opacity !== undefined) this.setTrailOpacity(config.trail_opacity, true);
       if (config.magnetic !== undefined) this.setMagnetic(config.magnetic, true);
       if (config.magnetic_strength !== undefined) this.setMagneticStrength(config.magnetic_strength, true);
+      if (config.magnetic_parallax !== undefined) this.setMagneticParallax(config.magnetic_parallax, true);
+      if (config.magnetic_parallax_strength !== undefined) {
+         this.magnetic_parallax_strength = clampParallaxStrength(config.magnetic_parallax_strength);
+         if (this._defaultPreset) this._defaultPreset.magnetic_parallax_strength = this.magnetic_parallax_strength;
+      }
       return this;
    }
 
@@ -1245,6 +1366,8 @@ export default class ProteusCursor{
          trail_opacity:   this.trail_opacity,
          magnetic:        this.isMagnetic,
          magnetic_strength: this.magnetic_strength,
+         magnetic_parallax: this.magnetic_parallax,
+         magnetic_parallax_strength: this.magnetic_parallax_strength,
       };
    }
 
@@ -1422,10 +1545,13 @@ export default class ProteusCursor{
       this.setClickAnimation(p.click_animation);
       if (this.trail_length !== p.trail_length) this.setTrailLength(p.trail_length);
       this.setTrailOpacity(p.trail_opacity);
-      // setMagnetic early-returns when the value is unchanged, so this does
-      // NOT rebind circle listeners on every state mouseleave.
+      // setMagnetic/setMagneticParallax early-return when the value is
+      // unchanged, so this does NOT rebind circle listeners on every state
+      // mouseleave.
       this.setMagnetic(p.magnetic);
       this.setMagneticStrength(p.magnetic_strength);
+      this.setMagneticParallax(p.magnetic_parallax);
+      this.magnetic_parallax_strength = clampParallaxStrength(p.magnetic_parallax_strength);
    }
 
    _bindStateElements(name) {
@@ -1565,6 +1691,13 @@ export default class ProteusCursor{
  * this baseline instead of leaking from whichever preset/state was active
  * before (e.g. 'neon' trail dots surviving a switch to 'ink').
  */
+/**
+ * Maximum parallax displacement in px, per axis. Keeps the shifted element
+ * visually anchored to its own layout (spec: ±8-12px) no matter how large
+ * the element or how high magnetic_parallax_strength is.
+ */
+ProteusCursor._PARALLAX_MAX_SHIFT = 10;
+
 ProteusCursor._PRESET_BASELINE = {
    shape_size:      '10px',
    shape_color:     '#fff',
@@ -1669,6 +1802,17 @@ ProteusCursor.PRESETS = {
 /* -------------------------------------------------------------------------------- */
 //region 🔹 Helper
 /* -------------------------------------------------------------------------------- */
+/**
+ * Clamps magnetic_parallax_strength to [0, 1]. Unlike magnetic_strength there
+ * is no convergence concern (the shift is computed absolutely every frame,
+ * not by easing), so 0 is a valid "no movement" value.
+ */
+function clampParallaxStrength(strength) {
+   const n = Number(strength);
+   if (!Number.isFinite(n)) return 0.15;
+   return Math.min(1, Math.max(0, n));
+}
+
 /**
  * Clamps magnetic_strength to (0, 1]. The lower bound is 0.01 rather than 0:
  * a strength of exactly 0 would never recover any distance, so the release

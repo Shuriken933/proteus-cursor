@@ -11,8 +11,8 @@ var e = class e {
 	cursorX = 0;
 	cursorY = 0;
 	_baseShape = "default";
-	constructor(n = {}) {
-		this.testMode = !1, this.shape = n.shape || "default", this._baseShape = this.shape, this.shape_size = n.shape_size || "10px", this.shape_color = n.shape_color || "#fff", this.hasShadow = n.hasShadow ?? !0, this.shadow_delay = this.hasShadow ? n.shadow_delay || "0.3s" : "0s", this.shadow_size = n.shadow_size || "40px", this.shadow_color = n.shadow_color || "#ffffff", this.text = n.text || "", this.text_color = n.text_color || "", this.text_weight = n.text_weight || "", this.text_size = n.text_size || "", this.speed = .9, this.maxVelocity = 10, this.isMagnetic = n.magnetic ?? !1, this.magnetic_strength = t(n.magnetic_strength ?? .4), this.magnetic_radius = n.magnetic_radius ?? null, this.magnetic_targets = n.magnetic_targets || "a, button, [data-cursor-magnetic]", this._magneticTarget = null, this._magneticLock = !1, this.blend_mode = n.blend_mode || "normal", this.trail_length = n.trail_length || 0, this.trail_opacity = n.trail_opacity ?? .3, this._trailCanvas = null, this._trailCtx = null, this._trailPoints = [], this._trailResizeHandler = null, this.click_animation = n.click_animation || "scale", this.click_duration = n.click_duration ?? 300, this.states = {}, this.eventListeners = [], this._circleListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.isTouch = e.isTouchOnly(), !this.isTouch && (this.respectReducedMotion = n.respectReducedMotion ?? !0, this.isReducedMotion = this.respectReducedMotion && e.prefersReducedMotion(), !this.isReducedMotion && (this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.hasShadow || (this.$shadow.style.display = "none"), this.trail_length > 0 && this._initTrail(), this.dataAttributeEvents(), this._initClickAnimation(), this._captureDefaults()));
+	constructor(r = {}) {
+		this.testMode = !1, this.shape = r.shape || "default", this._baseShape = this.shape, this.shape_size = r.shape_size || "10px", this.shape_color = r.shape_color || "#fff", this.hasShadow = r.hasShadow ?? !0, this.shadow_delay = this.hasShadow ? r.shadow_delay || "0.3s" : "0s", this.shadow_size = r.shadow_size || "40px", this.shadow_color = r.shadow_color || "#ffffff", this.text = r.text || "", this.text_color = r.text_color || "", this.text_weight = r.text_weight || "", this.text_size = r.text_size || "", this.speed = .9, this.maxVelocity = 10, this.isMagnetic = r.magnetic ?? !1, this.magnetic_strength = n(r.magnetic_strength ?? .4), this.magnetic_radius = r.magnetic_radius ?? null, this.magnetic_targets = r.magnetic_targets || "a, button, [data-cursor-magnetic]", this._magneticTarget = null, this._magneticLock = !1, this.magnetic_parallax = r.magnetic_parallax ?? !1, this.magnetic_parallax_strength = t(r.magnetic_parallax_strength ?? .15), this._parallaxEntries = /* @__PURE__ */ new Map(), this.blend_mode = r.blend_mode || "normal", this.trail_length = r.trail_length || 0, this.trail_opacity = r.trail_opacity ?? .3, this._trailCanvas = null, this._trailCtx = null, this._trailPoints = [], this._trailResizeHandler = null, this.click_animation = r.click_animation || "scale", this.click_duration = r.click_duration ?? 300, this.states = {}, this.eventListeners = [], this._circleListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.isTouch = e.isTouchOnly(), !this.isTouch && (this.respectReducedMotion = r.respectReducedMotion ?? !0, this.isReducedMotion = this.respectReducedMotion && e.prefersReducedMotion(), !this.isReducedMotion && (this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.hasShadow || (this.$shadow.style.display = "none"), this.trail_length > 0 && this._initTrail(), this.dataAttributeEvents(), this._initClickAnimation(), this._captureDefaults()));
 	}
 	static isTouchOnly() {
 		return typeof window > "u" ? !1 : window.matchMedia("(pointer: coarse)").matches;
@@ -83,11 +83,11 @@ var e = class e {
 			element: document,
 			event: "mousemove",
 			handler: this.boundMouseMove
-		}), this.isMagnetic && document.querySelectorAll(this.magnetic_targets).forEach((e) => {
+		}), (this.isMagnetic || this.magnetic_parallax) && document.querySelectorAll(this.magnetic_targets).forEach((e) => {
 			let t = () => {
-				this._magneticLock || (this._magneticX = this.endX, this._magneticY = this.endY), this._magneticTarget = e, this._magneticLock = !0;
+				this.isMagnetic && (this._magneticLock || (this._magneticX = this.endX, this._magneticY = this.endY), this._magneticLock = !0), this._magneticTarget = e;
 			}, n = () => {
-				this._magneticTarget === e && (this._magneticTarget = null);
+				this._releaseParallax(e), this._magneticTarget === e && (this._magneticTarget = null);
 			};
 			this.addEventListenerTracked(e, "mouseenter", t), this.addEventListenerTracked(e, "mouseleave", n), this._circleListeners.push({
 				element: e,
@@ -101,7 +101,7 @@ var e = class e {
 		}));
 	}
 	_teardownCircleInteractions() {
-		this._magneticTarget = null, this._magneticLock = !1, !(!this._circleListeners || !this._circleListeners.length) && (this._circleListeners.forEach(({ element: e, event: t, handler: n }) => {
+		this._releaseAllParallax(), this._magneticTarget = null, this._magneticLock = !1, !(!this._circleListeners || !this._circleListeners.length) && (this._circleListeners.forEach(({ element: e, event: t, handler: n }) => {
 			try {
 				e.removeEventListener(t, n);
 			} catch {}
@@ -128,23 +128,50 @@ var e = class e {
 	}
 	animateCircleShadow() {
 		if (this.isDestroyed) return;
-		let e = this.endX, t = this.endY;
-		if (this._magneticLock) {
-			let n = this.endX, r = this.endY;
-			if (this.isMagnetic && this._magneticTarget) {
-				let e = this._magneticTarget.getBoundingClientRect(), t = e.left + e.width / 2 + (window.scrollX || 0), i = e.top + e.height / 2 + (window.scrollY || 0), a = 1;
-				if (this.magnetic_radius) {
-					let e = Math.hypot(this.endX - t, this.endY - i);
-					a = Math.max(0, 1 - e / this.magnetic_radius);
-				}
-				n = this.endX + (t - this.endX) * a, r = this.endY + (i - this.endY) * a;
-			}
-			this._magneticX += (n - this._magneticX) * this.magnetic_strength, this._magneticY += (r - this._magneticY) * this.magnetic_strength, this.$shape && (this.$shape.style.left = this._magneticX + "px", this.$shape.style.top = this._magneticY + "px"), e = this._magneticX, t = this._magneticY, !this._magneticTarget && Math.abs(this._magneticX - this.endX) < .5 && Math.abs(this._magneticY - this.endY) < .5 && (this._magneticLock = !1);
+		let e = this.endX, t = this.endY, n = this._magneticTarget, r = 0, i = 0;
+		if (n) {
+			let e = n.getBoundingClientRect();
+			r = e.left + e.width / 2 + (window.scrollX || 0), i = e.top + e.height / 2 + (window.scrollY || 0);
 		}
-		this._x += (e - this._x) / this.delay, this._y += (t - this._y) / this.delay, this.$shadow && (this.$shadow.style.top = this._y + "px", this.$shadow.style.left = this._x + "px"), this._updateTrail(e - (window.scrollX || 0), t - (window.scrollY || 0)), this.requestAnimationFrameTracked(this.boundAnimateCircle);
+		if (this._magneticLock) {
+			let a = this.endX, o = this.endY;
+			if (this.isMagnetic && n) {
+				let e = 1;
+				if (this.magnetic_radius) {
+					let t = Math.hypot(this.endX - r, this.endY - i);
+					e = Math.max(0, 1 - t / this.magnetic_radius);
+				}
+				a = this.endX + (r - this.endX) * e, o = this.endY + (i - this.endY) * e;
+			}
+			this._magneticX += (a - this._magneticX) * this.magnetic_strength, this._magneticY += (o - this._magneticY) * this.magnetic_strength, this.$shape && (this.$shape.style.left = this._magneticX + "px", this.$shape.style.top = this._magneticY + "px"), e = this._magneticX, t = this._magneticY, !this._magneticTarget && Math.abs(this._magneticX - this.endX) < .5 && Math.abs(this._magneticY - this.endY) < .5 && (this._magneticLock = !1);
+		}
+		this.magnetic_parallax && n && this._applyParallax(n, r, i), this._x += (e - this._x) / this.delay, this._y += (t - this._y) / this.delay, this.$shadow && (this.$shadow.style.top = this._y + "px", this.$shadow.style.left = this._x + "px"), this._updateTrail(e - (window.scrollX || 0), t - (window.scrollY || 0)), this.requestAnimationFrameTracked(this.boundAnimateCircle);
 	}
 	shape__circle__animateShadow() {
 		this.animateCircleShadow();
+	}
+	_applyParallax(t, n, r) {
+		let i = this._parallaxEntries.get(t);
+		if (!i) {
+			let e = getComputedStyle(t).transform;
+			i = {
+				baseline: e === "none" ? "" : e,
+				inlineTransform: t.style.transform,
+				inlineTransition: t.style.transition,
+				dx: 0,
+				dy: 0
+			}, this._parallaxEntries.set(t, i), t.style.transition = "none";
+		}
+		let a = n - i.dx, o = r - i.dy, s = e._PARALLAX_MAX_SHIFT;
+		i.dx = Math.max(-s, Math.min(s, (this.endX - a) * this.magnetic_parallax_strength)), i.dy = Math.max(-s, Math.min(s, (this.endY - o) * this.magnetic_parallax_strength)), t.style.transform = `translate(${i.dx.toFixed(2)}px, ${i.dy.toFixed(2)}px)` + (i.baseline ? ` ${i.baseline}` : "");
+	}
+	_releaseParallax(e) {
+		if (!e || !this._parallaxEntries) return;
+		let t = this._parallaxEntries.get(e);
+		t && (e.style.transform = t.inlineTransform, e.style.transition = t.inlineTransition, this._parallaxEntries.delete(e));
+	}
+	_releaseAllParallax() {
+		this._parallaxEntries && this._parallaxEntries.forEach((e, t) => this._releaseParallax(t));
 	}
 	toggleCursorSize() {
 		this.cursorEnlarged ? (this.$shape.style.transform = "translate(-50%, -50%) scale(1.5)", this.$shadow.style.transform = "translate(-50%, -50%) scale(1.5)") : (this.$shape.style.transform = "translate(-50%, -50%) scale(1)", this.$shadow.style.transform = "translate(-50%, -50%) scale(1)");
@@ -189,7 +216,7 @@ var e = class e {
 		if (this.isTouch || this.isReducedMotion) return;
 		this.isDestroyed = !0, this.animationIds.forEach((e) => {
 			cancelAnimationFrame(e);
-		}), this.animationIds = [], this.intervals.forEach((e) => clearInterval(e)), this.timeouts.forEach((e) => clearTimeout(e)), this.intervals = [], this.timeouts = [], this.eventListeners.forEach(({ element: e, event: t, handler: n, options: r }) => {
+		}), this.animationIds = [], this.intervals.forEach((e) => clearInterval(e)), this.timeouts.forEach((e) => clearTimeout(e)), this.intervals = [], this.timeouts = [], this._releaseAllParallax(), this.eventListeners.forEach(({ element: e, event: t, handler: n, options: r }) => {
 			try {
 				e.removeEventListener(t, n, r);
 			} catch (e) {
@@ -229,19 +256,19 @@ var e = class e {
 		e.clearRect(0, 0, this._trailW || 0, this._trailH || 0);
 		let t = this._trailPoints;
 		if (t.length < 2) return;
-		let n = parseInt(this.shape_size) || 10, i = r(this.hasShadow ? this.shadow_color : this.shape_color) || [
+		let n = parseInt(this.shape_size) || 10, r = i(this.hasShadow ? this.shadow_color : this.shape_color) || [
 			255,
 			255,
 			255
-		], a = r(this.shape_color) || [
+		], a = i(this.shape_color) || [
 			255,
 			255,
 			255
 		];
 		e.globalCompositeOperation = "lighter", e.lineCap = "round", e.lineJoin = "round";
-		for (let r = 1; r < t.length; r++) {
-			let o = t[r - 1], s = t[r], c = s.life;
-			c <= 0 || (e.strokeStyle = `rgba(${i[0]}, ${i[1]}, ${i[2]}, ${(c * this.trail_opacity * .6).toFixed(3)})`, e.lineWidth = Math.max(1, n * 1.4 * c), e.shadowColor = `rgb(${i[0]}, ${i[1]}, ${i[2]})`, e.shadowBlur = n * 2, e.beginPath(), e.moveTo(o.x, o.y), e.lineTo(s.x, s.y), e.stroke(), e.strokeStyle = `rgba(${a[0]}, ${a[1]}, ${a[2]}, ${(c * this.trail_opacity * 1.5).toFixed(3)})`, e.lineWidth = Math.max(1, n * .45 * c), e.shadowBlur = n * .8, e.beginPath(), e.moveTo(o.x, o.y), e.lineTo(s.x, s.y), e.stroke());
+		for (let i = 1; i < t.length; i++) {
+			let o = t[i - 1], s = t[i], c = s.life;
+			c <= 0 || (e.strokeStyle = `rgba(${r[0]}, ${r[1]}, ${r[2]}, ${(c * this.trail_opacity * .6).toFixed(3)})`, e.lineWidth = Math.max(1, n * 1.4 * c), e.shadowColor = `rgb(${r[0]}, ${r[1]}, ${r[2]})`, e.shadowBlur = n * 2, e.beginPath(), e.moveTo(o.x, o.y), e.lineTo(s.x, s.y), e.stroke(), e.strokeStyle = `rgba(${a[0]}, ${a[1]}, ${a[2]}, ${(c * this.trail_opacity * 1.5).toFixed(3)})`, e.lineWidth = Math.max(1, n * .45 * c), e.shadowBlur = n * .8, e.beginPath(), e.moveTo(o.x, o.y), e.lineTo(s.x, s.y), e.stroke());
 		}
 		e.shadowBlur = 0, e.globalCompositeOperation = "source-over";
 	}
@@ -266,10 +293,10 @@ var e = class e {
 	setShadowSize(e, t, n = !1) {
 		this._isActive() && (this.shadow_size = e || "20px", n && this._defaultPreset && (this._defaultPreset.shadow_size = this.shadow_size), this.$shadow.style.width = e || "20px", this.$shadow.style.height = t || "20px", this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`), this._updateCircleGlow());
 	}
-	setShadowColor(e, t = .5, r = !1) {
+	setShadowColor(e, t = .5, n = !1) {
 		if (!this._isActive()) return;
-		let i = n(e, t);
-		this.shadow_color = i, r && this._defaultPreset && (this._defaultPreset.shadow_color = i), this.$shadow.style.backgroundColor = i, this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${i}`), this._updateCircleGlow();
+		let i = r(e, t);
+		this.shadow_color = i, n && this._defaultPreset && (this._defaultPreset.shadow_color = i), this.$shadow.style.backgroundColor = i, this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${i}`), this._updateCircleGlow();
 	}
 	_updateCircleGlow() {
 		if (this.shape !== "circle" || !this.$shape || !this.$shadow) return;
@@ -278,7 +305,7 @@ var e = class e {
 			return;
 		}
 		let e = parseInt(this.shape_size) || 10, t = parseInt(this.shadow_size) || 40;
-		this.$shape.style.boxShadow = i(e * 1.5, this.shape_color, .7), this.$shadow.style.boxShadow = i(t, this.shadow_color, .5);
+		this.$shape.style.boxShadow = a(e * 1.5, this.shape_color, .7), this.$shadow.style.boxShadow = a(t, this.shadow_color, .5);
 	}
 	setText(e, t = !1) {
 		this._isActive() && (this.text = e, t && this._defaultPreset && (this._defaultPreset.text = e), this.$shape && (this.$shape.textContent = e));
@@ -304,8 +331,11 @@ var e = class e {
 	setMagnetic(e, t = !1) {
 		return !this._isActive() || (t && this._defaultPreset && (this._defaultPreset.magnetic = e), e === this.isMagnetic) ? this : (this.isMagnetic = e, this.shape === "circle" && this.shape__circle__interactions(), this);
 	}
-	setMagneticStrength(e, n = !1) {
-		return this._isActive() ? (this.magnetic_strength = t(e), n && this._defaultPreset && (this._defaultPreset.magnetic_strength = this.magnetic_strength), this) : this;
+	setMagneticStrength(e, t = !1) {
+		return this._isActive() ? (this.magnetic_strength = n(e), t && this._defaultPreset && (this._defaultPreset.magnetic_strength = this.magnetic_strength), this) : this;
+	}
+	setMagneticParallax(e, t = !1) {
+		return !this._isActive() || (t && this._defaultPreset && (this._defaultPreset.magnetic_parallax = e), e === this.magnetic_parallax) ? this : (this.magnetic_parallax = e, e || this._releaseAllParallax(), this.shape === "circle" && this.shape__circle__interactions(), this);
 	}
 	setBlendMode(e, t = !1) {
 		this._isActive() && (this.blend_mode = e, t && this._defaultPreset && (this._defaultPreset.blend_mode = e), this.$shape.style.mixBlendMode = e);
@@ -323,7 +353,7 @@ var e = class e {
 		}) : (console.warn(`[ProteusCursor] Unknown preset: "${t}". Available: ${Object.keys(e.PRESETS).join(", ")}`), this);
 	}
 	setDefaultPreset(e = {}) {
-		return this._isActive() ? (e.shape !== void 0 && e.shape !== this.shape ? this.setShape(e.shape) : e.shape !== void 0 && (this._baseShape = e.shape, this._defaultPreset && (this._defaultPreset.shape = e.shape)), e.shape_size !== void 0 && this.setShapeSize(e.shape_size, e.shape_size, !0), e.shape_color !== void 0 && this.setShapeColor(e.shape_color, !0), e.hasShadow !== void 0 && this.setShadowEnabled(e.hasShadow, !0), e.shadow_size !== void 0 && this.setShadowSize(e.shadow_size, e.shadow_size, !0), e.shadow_color !== void 0 && this._applyShadowColor(e.shadow_color, !0), e.text !== void 0 && this.setText(e.text, !0), e.text_color !== void 0 && this.setTextColor(e.text_color, !0), e.text_size !== void 0 && this.setTextSize(e.text_size, !0), e.text_weight !== void 0 && this.setTextWeight(e.text_weight, !0), e.blend_mode !== void 0 && this.setBlendMode(e.blend_mode, !0), e.click_animation !== void 0 && this.setClickAnimation(e.click_animation, !0), e.trail_length !== void 0 && this.setTrailLength(e.trail_length, !0), e.trail_opacity !== void 0 && this.setTrailOpacity(e.trail_opacity, !0), e.magnetic !== void 0 && this.setMagnetic(e.magnetic, !0), e.magnetic_strength !== void 0 && this.setMagneticStrength(e.magnetic_strength, !0), this) : this;
+		return this._isActive() ? (e.shape !== void 0 && e.shape !== this.shape ? this.setShape(e.shape) : e.shape !== void 0 && (this._baseShape = e.shape, this._defaultPreset && (this._defaultPreset.shape = e.shape)), e.shape_size !== void 0 && this.setShapeSize(e.shape_size, e.shape_size, !0), e.shape_color !== void 0 && this.setShapeColor(e.shape_color, !0), e.hasShadow !== void 0 && this.setShadowEnabled(e.hasShadow, !0), e.shadow_size !== void 0 && this.setShadowSize(e.shadow_size, e.shadow_size, !0), e.shadow_color !== void 0 && this._applyShadowColor(e.shadow_color, !0), e.text !== void 0 && this.setText(e.text, !0), e.text_color !== void 0 && this.setTextColor(e.text_color, !0), e.text_size !== void 0 && this.setTextSize(e.text_size, !0), e.text_weight !== void 0 && this.setTextWeight(e.text_weight, !0), e.blend_mode !== void 0 && this.setBlendMode(e.blend_mode, !0), e.click_animation !== void 0 && this.setClickAnimation(e.click_animation, !0), e.trail_length !== void 0 && this.setTrailLength(e.trail_length, !0), e.trail_opacity !== void 0 && this.setTrailOpacity(e.trail_opacity, !0), e.magnetic !== void 0 && this.setMagnetic(e.magnetic, !0), e.magnetic_strength !== void 0 && this.setMagneticStrength(e.magnetic_strength, !0), e.magnetic_parallax !== void 0 && this.setMagneticParallax(e.magnetic_parallax, !0), e.magnetic_parallax_strength !== void 0 && (this.magnetic_parallax_strength = t(e.magnetic_parallax_strength), this._defaultPreset && (this._defaultPreset.magnetic_parallax_strength = this.magnetic_parallax_strength)), this) : this;
 	}
 	_captureDefaults() {
 		this._defaultPreset = {
@@ -342,7 +372,9 @@ var e = class e {
 			trail_length: this.trail_length,
 			trail_opacity: this.trail_opacity,
 			magnetic: this.isMagnetic,
-			magnetic_strength: this.magnetic_strength
+			magnetic_strength: this.magnetic_strength,
+			magnetic_parallax: this.magnetic_parallax,
+			magnetic_parallax_strength: this.magnetic_parallax_strength
 		};
 	}
 	static getPreset(t) {
@@ -406,7 +438,7 @@ var e = class e {
 	_resetState() {
 		if (!this._defaultPreset || !this._isActive()) return;
 		let e = this._defaultPreset;
-		this.shape !== e.shape && this._activateShape(e.shape), this.setShapeSize(e.shape_size, e.shape_size), this.setShapeColor(e.shape_color), this.setShadowEnabled(e.hasShadow), this.setShadowSize(e.shadow_size, e.shadow_size), this._applyShadowColor(e.shadow_color), this.setText(e.text), this.setTextColor(e.text_color), this.setTextSize(e.text_size), this.setTextWeight(e.text_weight), this.setBlendMode(e.blend_mode), this.setClickAnimation(e.click_animation), this.trail_length !== e.trail_length && this.setTrailLength(e.trail_length), this.setTrailOpacity(e.trail_opacity), this.setMagnetic(e.magnetic), this.setMagneticStrength(e.magnetic_strength);
+		this.shape !== e.shape && this._activateShape(e.shape), this.setShapeSize(e.shape_size, e.shape_size), this.setShapeColor(e.shape_color), this.setShadowEnabled(e.hasShadow), this.setShadowSize(e.shadow_size, e.shadow_size), this._applyShadowColor(e.shadow_color), this.setText(e.text), this.setTextColor(e.text_color), this.setTextSize(e.text_size), this.setTextWeight(e.text_weight), this.setBlendMode(e.blend_mode), this.setClickAnimation(e.click_animation), this.trail_length !== e.trail_length && this.setTrailLength(e.trail_length), this.setTrailOpacity(e.trail_opacity), this.setMagnetic(e.magnetic), this.setMagneticStrength(e.magnetic_strength), this.setMagneticParallax(e.magnetic_parallax), this.magnetic_parallax_strength = t(e.magnetic_parallax_strength);
 	}
 	_bindStateElements(e) {
 		this.isDestroyed || document.querySelectorAll(`[data-cursor-state="${e}"]`).forEach((t) => {
@@ -438,7 +470,7 @@ var e = class e {
 		this.testMode = !1, document.querySelector("#proteus-button-test").classList.remove("active");
 	}
 };
-e._PRESET_BASELINE = {
+e._PARALLAX_MAX_SHIFT = 10, e._PRESET_BASELINE = {
 	shape_size: "10px",
 	shape_color: "#fff",
 	hasShadow: !0,
@@ -504,12 +536,16 @@ e._PRESET_BASELINE = {
 };
 function t(e) {
 	let t = Number(e);
+	return Number.isFinite(t) ? Math.min(1, Math.max(0, t)) : .15;
+}
+function n(e) {
+	let t = Number(e);
 	return Number.isFinite(t) ? Math.min(1, Math.max(.01, t)) : .4;
 }
-function n(e, t = 1) {
+function r(e, t = 1) {
 	return `rgba(${parseInt(e.slice(1, 3), 16)}, ${parseInt(e.slice(3, 5), 16)}, ${parseInt(e.slice(5, 7), 16)}, ${t})`;
 }
-function r(e) {
+function i(e) {
 	if (typeof e != "string") return null;
 	if (e[0] === "#") {
 		let t = e.slice(1);
@@ -526,11 +562,11 @@ function r(e) {
 		parseInt(t[3])
 	] : null;
 }
-function i(e, t, n = .5) {
-	let i = r(t), a = (r, a, o) => {
-		let s = Math.max(1, Math.round(e * r));
-		if (!i) return `0 0 ${s}px ${t}`;
-		let [c, l, u] = o || i;
+function a(e, t, n = .5) {
+	let r = i(t), a = (i, a, o) => {
+		let s = Math.max(1, Math.round(e * i));
+		if (!r) return `0 0 ${s}px ${t}`;
+		let [c, l, u] = o || r;
 		return `0 0 ${s}px rgba(${c}, ${l}, ${u}, ${Math.min(1, n * a).toFixed(2)})`;
 	};
 	return [
