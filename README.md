@@ -192,7 +192,7 @@ const cursor = new ProteusCursor({
     shadow_delay: '0.3s',
     shadow_size: '40px',
     shadow_color: 'rgba(255, 255, 255, 0.5)',
-    magnetic: false,
+    magnetic: false,             // see "Magnetic Behavior" below
     text: '',
 });
 ```
@@ -235,7 +235,43 @@ new ProteusCursor({
 
 ---
 
-## 6) 🔁 State Machine API
+## 7) 🧲 Magnetic Behavior
+
+While hovering an interactive element, the cursor is *pulled* toward the element's centre — and eases back onto the real mouse position when it leaves. Works in `circle` mode (fluid support is planned).
+
+```js
+new ProteusCursor({
+  shape: 'circle',
+  magnetic: true,                // master switch — default: false
+  magnetic_strength: 0.4,        // 0–1, how snappy the pull is — default: 0.4
+  magnetic_radius: null,         // px falloff radius — default: null (full pull)
+  magnetic_targets: 'a, button, [data-cursor-magnetic]', // CSS selector — default shown
+});
+```
+
+| Option | Type | Description |
+|---|---|---|
+| `magnetic` | `boolean` | Enables the effect |
+| `magnetic_strength` | `number` | Fraction (0–1) of the remaining cursor→centre distance recovered each frame. Higher = snappier |
+| `magnetic_radius` | `number \| null` | Attraction falloff in px from the element centre: full pull at the centre, none at this distance. `null` = constant full pull while hovering |
+| `magnetic_targets` | `string` | CSS selector for the elements that attract the cursor |
+
+Any element can opt in via the data attribute included in the default selector:
+
+```html
+<div data-cursor-magnetic>Hover me</div>
+```
+
+Toggle it at runtime (both methods are chainable):
+
+```js
+cursor.setMagnetic(true);              // enable/disable
+cursor.setMagneticStrength(0.6, true); // isPermanent — persists after state resets
+```
+
+---
+
+## 8) 🔁 State Machine API
 
 Define named cursor states once in JS and attach them to HTML elements with a single data attribute. The cursor switches automatically on hover and restores defaults on leave.
 
@@ -295,7 +331,7 @@ cursor.removeState('video');
 
 ---
 
-## 7) 🎨 Blend Mode
+## 9) 🎨 Blend Mode
 
 Apply a CSS `mix-blend-mode` to the cursor shape so it blends with the page content beneath it. The most popular effect is `'difference'`, which automatically inverts the colors underneath the cursor — creating perfect contrast on any background.
 
@@ -335,7 +371,7 @@ cursor.addState('hero', {
 
 ---
 
-## 8) ♿ Accessibility — Reduced Motion
+## 10) ♿ Accessibility — Reduced Motion
 
 Some users enable **"Reduce Motion"** in their OS accessibility settings (macOS → Accessibility → Display, Windows → Accessibility → Visual Effects). This signals that animations may cause discomfort (vestibular disorders, epilepsy, motion sensitivity).
 
@@ -368,7 +404,7 @@ if (!ProteusCursor.prefersReducedMotion()) {
 
 ---
 
-## 9) 📱 Touch Device Support
+## 11) 📱 Touch Device Support
 
 Proteus Cursor automatically detects touch-only devices (phones, tablets without a paired mouse) and **skips initialization entirely** — no DOM elements are injected, no event listeners are registered, and the native cursor behaviour is preserved.
 
@@ -398,7 +434,7 @@ if (!ProteusCursor.isTouchOnly()) {
 
 ---
 
-## 10) 🏷️ Data Attributes (per-element overrides)
+## 12) 🏷️ Data Attributes (per-element overrides)
 
 For quick one-off customizations without defining a full state, you can use data attributes directly on elements:
 
