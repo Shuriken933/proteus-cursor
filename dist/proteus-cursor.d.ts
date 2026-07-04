@@ -50,8 +50,28 @@ export interface ProteusCursorOptions {
   /** Maximum velocity cap for fluid distortion. Default: `10` */
   maxVelocity?: number;
 
-  /** Enable magnetic attraction to interactive elements (coming soon) */
+  /**
+   * Enable magnetic attraction: while hovering a magnetic target the cursor
+   * is pulled toward the element's centre, easing back to the real mouse
+   * position on leave. Circle mode only. Default: `false`
+   */
   magnetic?: boolean;
+  /**
+   * Fraction (0–1) of the remaining cursor→centre distance recovered each
+   * frame — higher means a snappier pull. Default: `0.4`
+   */
+  magnetic_strength?: number;
+  /**
+   * Attraction falloff radius in px, measured from the element centre: full
+   * pull at the centre, fading to none at this distance. `null` (default)
+   * means constant full pull inside the element bounds.
+   */
+  magnetic_radius?: number | null;
+  /**
+   * CSS selector for the elements that attract the cursor.
+   * Default: `'a, button, [data-cursor-magnetic]'`
+   */
+  magnetic_targets?: string;
 
   /** Animation played on mousedown. Default: `'scale'` */
   click_animation?: 'scale' | 'ripple' | 'none';
@@ -96,6 +116,9 @@ export default class ProteusCursor {
   speed: number;
   maxVelocity: number;
   isMagnetic: boolean;
+  magnetic_strength: number;
+  magnetic_radius: number | null;
+  magnetic_targets: string;
   blend_mode: string;
   click_animation: 'scale' | 'ripple' | 'none';
   click_duration: number;
@@ -170,6 +193,22 @@ export default class ProteusCursor {
 
   /** Set maximum velocity cap for fluid distortion */
   setMaxVelocity(maxVelocity: number): void;
+
+  // ── Magnetic ─────────────────────────────────────────────────────────────
+  /**
+   * Enable or disable magnetic attraction at runtime (circle mode only).
+   * @param isPermanent When true, persists across state machine resets
+   * @returns `this` for chaining
+   */
+  setMagnetic(enabled: boolean, isPermanent?: boolean): this;
+
+  /**
+   * Set the magnetic pull strength — the fraction (0–1, clamped) of the
+   * remaining cursor→centre distance recovered each frame.
+   * @param isPermanent When true, persists across state machine resets
+   * @returns `this` for chaining
+   */
+  setMagneticStrength(strength: number, isPermanent?: boolean): this;
 
   // ── State Machine ────────────────────────────────────────────────────────
   /**
