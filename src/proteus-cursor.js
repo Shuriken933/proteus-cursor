@@ -62,7 +62,13 @@ export default class ProteusCursor{
       this.speed = 0.9;
       this.maxVelocity = 10;
 
+      // magnetic (circle mode only — see animateCircleShadow)
       this.isMagnetic = options.magnetic ?? false;
+      this.magnetic_strength = clampMagneticStrength(options.magnetic_strength ?? 0.4);
+      this.magnetic_radius = options.magnetic_radius ?? null;
+      this.magnetic_targets = options.magnetic_targets || 'a, button, [data-cursor-magnetic]';
+      this._magneticTarget = null;  // element currently attracting the cursor
+      this._magneticLock = false;   // true while the RAF loop owns $shape positioning
 
       // blend mode
       this.blend_mode = options.blend_mode || 'normal';
@@ -329,6 +335,34 @@ export default class ProteusCursor{
       this.addEventListenerTracked(document, 'mousemove', this.boundMouseMove);
       this._circleListeners.push({ element: document, event: 'mousemove', handler: this.boundMouseMove });
 
+      // Magnetic attraction targets. Bound only while magnetic is enabled —
+      // setMagnetic() re-runs this whole method, and the teardown above keeps
+      // re-entry idempotent. mouseenter/mouseleave (non-bubbling) rather than
+      // mouseover/mouseout: child elements must not steal or drop the target.
+      if (this.isMagnetic) {
+         document.querySelectorAll(this.magnetic_targets).forEach(el => {
+            const enter = () => {
+               // Seed the interpolated position from the real cursor position,
+               // unless the RAF loop already owns it (target-to-target hop).
+               if (!this._magneticLock) {
+                  this._magneticX = this.endX;
+                  this._magneticY = this.endY;
+               }
+               this._magneticTarget = el;
+               this._magneticLock = true;
+            };
+            const leave = () => {
+               // Only release the shape — _magneticLock stays on until the
+               // RAF loop has eased it back onto the real mouse position.
+               if (this._magneticTarget === el) this._magneticTarget = null;
+            };
+            this.addEventListenerTracked(el, 'mouseenter', enter);
+            this.addEventListenerTracked(el, 'mouseleave', leave);
+            this._circleListeners.push({ element: el, event: 'mouseenter', handler: enter });
+            this._circleListeners.push({ element: el, event: 'mouseleave', handler: leave });
+         });
+      }
+
    }
 
    /**
@@ -339,6 +373,11 @@ export default class ProteusCursor{
     * @private
     */
    _teardownCircleInteractions() {
+      // The magnetic listeners live in _circleListeners, so leaving circle
+      // mode (or rebinding) must also drop the current attraction state —
+      // otherwise a stale lock would freeze $shape on re-entry.
+      this._magneticTarget = null;
+      this._magneticLock = false;
       if (!this._circleListeners || !this._circleListeners.length) return;
       this._circleListeners.forEach(({ element, event, handler }) => {
          try {
@@ -358,7 +397,10 @@ export default class ProteusCursor{
       this.endX = e.pageX;
       this.endY = e.pageY;
 
-      if (this.$shape) {
+      // While a magnetic target holds the lock, the RAF loop owns the shape
+      // position (see animateCircleShadow) — writing it here too would make
+      // the two fight and the cursor stutter between mouse and element centre.
+      if (this.$shape && !this._magneticLock) {
          this.$shape.style.top = this.endY + 'px';
          this.$shape.style.left = this.endX + 'px';
       }
@@ -407,8 +449,51 @@ export default class ProteusCursor{
    animateCircleShadow() {
       if (this.isDestroyed) return;
 
-      this._x += (this.endX - this._x) / this.delay;
-      this._y += (this.endY - this._y) / this.delay;
+      // Magnetic attraction: while the lock is held this loop owns $shape
+      // positioning (handleMouseMove yields), pulling it toward the hovered
+      // element's centre; on mouseleave it eases back onto the real mouse
+      // position and then returns ownership to handleMouseMove.
+      let followX = this.endX;
+      let followY = this.endY;
+      if (this._magneticLock) {
+         let targetX = this.endX;
+         let targetY = this.endY;
+         if (this.isMagnetic && this._magneticTarget) {
+            // Recomputed every frame — the element can move under the cursor
+            // (scroll, layout shifts, its own hover animations).
+            const rect = this._magneticTarget.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2 + (window.scrollX || 0);
+            const centerY = rect.top + rect.height / 2 + (window.scrollY || 0);
+            // Falloff: full pull at the centre fading to zero at
+            // magnetic_radius. Without a radius the pull is total — the
+            // cursor snaps onto the centre for the whole hover.
+            let pull = 1;
+            if (this.magnetic_radius) {
+               const dist = Math.hypot(this.endX - centerX, this.endY - centerY);
+               pull = Math.max(0, 1 - dist / this.magnetic_radius);
+            }
+            targetX = this.endX + (centerX - this.endX) * pull;
+            targetY = this.endY + (centerY - this.endY) * pull;
+         }
+         this._magneticX += (targetX - this._magneticX) * this.magnetic_strength;
+         this._magneticY += (targetY - this._magneticY) * this.magnetic_strength;
+         if (this.$shape) {
+            this.$shape.style.left = this._magneticX + 'px';
+            this.$shape.style.top = this._magneticY + 'px';
+         }
+         followX = this._magneticX;
+         followY = this._magneticY;
+         // Released and converged back onto the mouse: hand position
+         // ownership back to handleMouseMove's direct writes.
+         if (!this._magneticTarget &&
+             Math.abs(this._magneticX - this.endX) < 0.5 &&
+             Math.abs(this._magneticY - this.endY) < 0.5) {
+            this._magneticLock = false;
+         }
+      }
+
+      this._x += (followX - this._x) / this.delay;
+      this._y += (followY - this._y) / this.delay;
 
       if (this.$shadow) {
          this.$shadow.style.top = this._y + 'px';
@@ -416,8 +501,10 @@ export default class ProteusCursor{
       }
 
       // The trail canvas lives in viewport coordinates (position:fixed);
-      // endX/endY are page coordinates in circle mode, so strip the scroll.
-      this._updateTrail(this.endX - (window.scrollX || 0), this.endY - (window.scrollY || 0));
+      // follow coordinates are page coordinates in circle mode, so strip the
+      // scroll. The trail follows the rendered shape, not the raw mouse, so
+      // magnetic attraction bends the streak too.
+      this._updateTrail(followX - (window.scrollX || 0), followY - (window.scrollY || 0));
 
       this.requestAnimationFrameTracked(this.boundAnimateCircle);
    }
@@ -693,6 +780,8 @@ export default class ProteusCursor{
       this.cursorX = 0;
       this.cursorY = 0;
       this.velocityInitialized = false;
+      this._magneticTarget = null;
+      this._magneticLock = false;
 
    }
    //endregion
@@ -998,6 +1087,38 @@ export default class ProteusCursor{
    }
 
    /**
+    * Enable or disable magnetic attraction at runtime. Circle mode only —
+    * in fluid mode the flag is stored but has no effect (v1 limitation).
+    * @param {boolean} enabled
+    * @param {boolean} [isPermanent=false]  When true, persists across state resets.
+    * @returns {this}
+    */
+   setMagnetic(enabled, isPermanent = false) {
+      if (!this._isActive()) return this;
+      if (isPermanent && this._defaultPreset) this._defaultPreset.magnetic = enabled;
+      if (enabled === this.isMagnetic) return this;
+      this.isMagnetic = enabled;
+      // Rebind circle interactions from scratch: the magnetic target
+      // listeners are (un)registered as part of that pass.
+      if (this.shape === 'circle') this.shape__circle__interactions();
+      return this;
+   }
+
+   /**
+    * Set how aggressively the cursor is pulled toward a magnetic target —
+    * the fraction of the remaining distance recovered each frame.
+    * @param {number} strength  0..1 (clamped; higher = snappier attraction)
+    * @param {boolean} [isPermanent=false]  When true, persists across state resets.
+    * @returns {this}
+    */
+   setMagneticStrength(strength, isPermanent = false) {
+      if (!this._isActive()) return this;
+      this.magnetic_strength = clampMagneticStrength(strength);
+      if (isPermanent && this._defaultPreset) this._defaultPreset.magnetic_strength = this.magnetic_strength;
+      return this;
+   }
+
+   /**
     * Apply a CSS mix-blend-mode to the cursor shape element.
     * @param {'normal'|'difference'|'exclusion'|string} mode  Any valid CSS mix-blend-mode value.
     * @param {boolean} [isPermanent=false]  When true, persists across state resets.
@@ -1095,6 +1216,8 @@ export default class ProteusCursor{
       if (config.click_animation !== undefined) this.setClickAnimation(config.click_animation, true);
       if (config.trail_length !== undefined) this.setTrailLength(config.trail_length, true);
       if (config.trail_opacity !== undefined) this.setTrailOpacity(config.trail_opacity, true);
+      if (config.magnetic !== undefined) this.setMagnetic(config.magnetic, true);
+      if (config.magnetic_strength !== undefined) this.setMagneticStrength(config.magnetic_strength, true);
       return this;
    }
 
@@ -1120,6 +1243,8 @@ export default class ProteusCursor{
          click_animation: this.click_animation,
          trail_length:    this.trail_length,
          trail_opacity:   this.trail_opacity,
+         magnetic:        this.isMagnetic,
+         magnetic_strength: this.magnetic_strength,
       };
    }
 
@@ -1297,6 +1422,10 @@ export default class ProteusCursor{
       this.setClickAnimation(p.click_animation);
       if (this.trail_length !== p.trail_length) this.setTrailLength(p.trail_length);
       this.setTrailOpacity(p.trail_opacity);
+      // setMagnetic early-returns when the value is unchanged, so this does
+      // NOT rebind circle listeners on every state mouseleave.
+      this.setMagnetic(p.magnetic);
+      this.setMagneticStrength(p.magnetic_strength);
    }
 
    _bindStateElements(name) {
@@ -1540,6 +1669,18 @@ ProteusCursor.PRESETS = {
 /* -------------------------------------------------------------------------------- */
 //region 🔹 Helper
 /* -------------------------------------------------------------------------------- */
+/**
+ * Clamps magnetic_strength to (0, 1]. The lower bound is 0.01 rather than 0:
+ * a strength of exactly 0 would never recover any distance, so the release
+ * easing in animateCircleShadow could never converge and the shape would
+ * stay frozen under RAF ownership forever.
+ */
+function clampMagneticStrength(strength) {
+   const n = Number(strength);
+   if (!Number.isFinite(n)) return 0.4;
+   return Math.min(1, Math.max(0.01, n));
+}
+
 function hexToRgba(hex, alpha = 1) {
    const r = parseInt(hex.slice(1, 3), 16);
    const g = parseInt(hex.slice(3, 5), 16);

@@ -1,16 +1,14 @@
-# Ignora la cartella dei moduli di Node.js
+# Node.js
 node_modules/
 
-# Ignora le variabili d'ambiente
+# Variabili d'ambiente
 .env
 
-# Ignora i file di log
+# File di log
 *.log
 
-# altri file
-README-private.md
-package.json
-package-lock.json
+# Config IDE (JetBrains)
+.idea/
 
 # Claude Code workspace config (local only, never public)
 .claude/

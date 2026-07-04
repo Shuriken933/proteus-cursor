@@ -74,4 +74,4 @@ Oggi `prefers-reduced-motion: reduce` disattiva l'intero cursore custom. Opzione
 
 ## Come contribuire
 
-Ogni voce è una issue GitHub con la spec completa (API proposta, come si integra con l'architettura esistente, rischi e vincoli). La [Project board](https://github.com/users/Shuriken933/projects/11) tiene traccia dello stato di avanzamento (`To do` → `In progress` → `Done`). Le specifiche sono state elaborate con il contributo dei ruoli specializzati descritti in [`.claude/agents/`](.claude/agents/) (UX, UI, JS core, animazione, grafica web, accessibilità/performance, adapter framework) — ogni issue cita quale ruolo ha prodotto quale parte della spec.
+Ogni voce è una issue GitHub con la spec completa (API proposta, come si integra con l'architettura esistente, rischi e vincoli). La [Project board](https://github.com/users/Shuriken933/projects/11) tiene traccia dello stato di avanzamento (`To do` → `In progress` → `Done`). Ogni spec copre i diversi aspetti del progetto: UX, UI, core JavaScript, animazione, grafica web, accessibilità/performance e adapter framework.
