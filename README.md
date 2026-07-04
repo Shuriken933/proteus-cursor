@@ -269,6 +269,23 @@ cursor.setMagnetic(true);              // enable/disable
 cursor.setMagneticStrength(0.6, true); // isPermanent — persists after state resets
 ```
 
+### Magnetic parallax
+
+With parallax, it's not just the cursor that moves: the hovered element itself *leans* toward the cursor (a few px, clamped) and springs back to its exact original position on leave. It's a **separate opt-in** — enabling `magnetic` never moves your elements; either option works with or without the other.
+
+```js
+new ProteusCursor({
+  shape: 'circle',
+  magnetic: true,                    // cursor pulled toward the element (optional)
+  magnetic_parallax: true,           // element pulled toward the cursor — default: false
+  magnetic_parallax_strength: 0.15,  // 0–1, how far it leans — default: 0.15
+});
+
+cursor.setMagneticParallax(true);    // toggle at runtime (chainable)
+```
+
+The shift is applied *on top of* any CSS `transform` the element already has, and its `transition` is suspended only while the hover is active — both are restored untouched on leave.
+
 ---
 
 ## 8) 🔁 State Machine API

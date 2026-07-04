@@ -72,6 +72,18 @@ export interface ProteusCursorOptions {
    * Default: `'a, button, [data-cursor-magnetic]'`
    */
   magnetic_targets?: string;
+  /**
+   * Enable magnetic parallax: the hovered magnetic target itself shifts
+   * toward the cursor (clamped to a few px) and springs back on leave.
+   * Separate opt-in — never implied by `magnetic`; either can be enabled
+   * without the other. Circle mode only. Default: `false`
+   */
+  magnetic_parallax?: boolean;
+  /**
+   * Fraction (0–1) of the cursor's offset from the element centre applied
+   * as the element's displacement. Default: `0.15`
+   */
+  magnetic_parallax_strength?: number;
 
   /** Animation played on mousedown. Default: `'scale'` */
   click_animation?: 'scale' | 'ripple' | 'none';
@@ -119,6 +131,8 @@ export default class ProteusCursor {
   magnetic_strength: number;
   magnetic_radius: number | null;
   magnetic_targets: string;
+  magnetic_parallax: boolean;
+  magnetic_parallax_strength: number;
   blend_mode: string;
   click_animation: 'scale' | 'ripple' | 'none';
   click_duration: number;
@@ -209,6 +223,14 @@ export default class ProteusCursor {
    * @returns `this` for chaining
    */
   setMagneticStrength(strength: number, isPermanent?: boolean): this;
+
+  /**
+   * Enable or disable magnetic parallax at runtime — the hovered magnetic
+   * target itself shifts toward the cursor. Independent from `setMagnetic()`.
+   * @param isPermanent When true, persists across state machine resets
+   * @returns `this` for chaining
+   */
+  setMagneticParallax(enabled: boolean, isPermanent?: boolean): this;
 
   // ── State Machine ────────────────────────────────────────────────────────
   /**
