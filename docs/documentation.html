@@ -611,6 +611,9 @@
         <a href="#clickanims" class="sidebar__link" data-section="clickanims">
           <span class="dot"></span> Click Animations
         </a>
+        <a href="#magnetic" class="sidebar__link" data-section="magnetic">
+          <span class="dot"></span> Magnetic Behavior
+        </a>
       </div>
 
       <div class="sidebar__divider"></div>
@@ -826,6 +829,7 @@ cursor
               <tr><td><code>data-proteus-textSize="14px"</code></td><td>Text font size for this element's hover state.</td></tr>
               <tr><td><code>data-proteus-textWeight="700"</code></td><td>Text font weight for this element's hover state.</td></tr>
               <tr><td><code>data-proteus-shadowIsEnabled="false"</code></td><td>Disable shadow when hovering this element.</td></tr>
+              <tr><td><code>data-cursor-magnetic</code></td><td>Marks the element as a magnetic target (part of the default <code>magnetic_targets</code> selector). See <a href="#magnetic">Magnetic Behavior</a>.</td></tr>
             </tbody>
           </table>
         </div>
@@ -868,7 +872,12 @@ cursor
               <tr><td><code>text_size</code></td><td class="type">string</td><td class="default">''</td><td>Font size of the cursor text.</td></tr>
               <tr><td><code>speed</code></td><td class="type">number</td><td class="default">0.9</td><td>Lerp factor for fluid mode movement (0–1). Higher = snappier.</td></tr>
               <tr><td><code>maxVelocity</code></td><td class="type">number</td><td class="default">10</td><td>Maximum velocity cap for fluid deformation.</td></tr>
-              <tr><td><code>magnetic</code></td><td class="type">boolean</td><td class="default">false</td><td>Enables magnetic attraction to nearby elements.</td></tr>
+              <tr><td><code>magnetic</code></td><td class="type">boolean</td><td class="default">false</td><td>Pulls the cursor toward the centre of hovered interactive elements (circle mode). See <a href="#magnetic">Magnetic Behavior</a>.</td></tr>
+              <tr><td><code>magnetic_strength</code></td><td class="type">number</td><td class="default">0.4</td><td>Fraction (0–1) of the remaining cursor→centre distance recovered each frame. Higher = snappier pull.</td></tr>
+              <tr><td><code>magnetic_radius</code></td><td class="type">number | null</td><td class="default">null</td><td>Falloff radius in px from the element centre: full pull at the centre, none at this distance. <code>null</code> = constant full pull.</td></tr>
+              <tr><td><code>magnetic_targets</code></td><td class="type">string</td><td class="default">'a, button, [data-cursor-magnetic]'</td><td>CSS selector for the elements that attract the cursor.</td></tr>
+              <tr><td><code>magnetic_parallax</code></td><td class="type">boolean</td><td class="default">false</td><td>The hovered element itself leans toward the cursor (max ±10px) and springs back on leave. Separate opt-in, works with or without <code>magnetic</code>.</td></tr>
+              <tr><td><code>magnetic_parallax_strength</code></td><td class="type">number</td><td class="default">0.15</td><td>Fraction (0–1) of the cursor's offset from the element centre applied as the element's shift.</td></tr>
               <tr><td><code>blend_mode</code></td><td class="type">string</td><td class="default">'normal'</td><td>CSS <code>mix-blend-mode</code> on the cursor. Use <code>'difference'</code> for auto color inversion.</td></tr>
               <tr><td><code>click_animation</code></td><td class="type">string</td><td class="default">'scale'</td><td>Click feedback: <code>scale</code>, <code>ripple</code>, or <code>none</code>.</td></tr>
               <tr><td><code>click_duration</code></td><td class="type">number</td><td class="default">300</td><td>Duration in ms for click animation.</td></tr>
@@ -902,10 +911,15 @@ cursor
               <tr><td><code>setTextSize(size, isPermanent?)</code></td><td class="type">string, bool?</td><td>Set font size of cursor text.</td></tr>
               <tr><td><code>setSpeed(speed)</code></td><td class="type">number</td><td>Adjust fluid interpolation speed (0–1).</td></tr>
               <tr><td><code>setMaxVelocity(max)</code></td><td class="type">number</td><td>Cap maximum fluid deformation.</td></tr>
+              <tr><td><code>setMagnetic(enabled, isPermanent?)</code></td><td class="type">boolean, bool?</td><td>Toggle magnetic attraction at runtime. Chainable.</td></tr>
+              <tr><td><code>setMagneticStrength(strength, isPermanent?)</code></td><td class="type">number, bool?</td><td>Set the magnetic pull strength (0–1, clamped). Chainable.</td></tr>
+              <tr><td><code>setMagneticParallax(enabled, isPermanent?)</code></td><td class="type">boolean, bool?</td><td>Toggle magnetic parallax at runtime. Chainable.</td></tr>
               <tr><td><code>addState(name, config)</code></td><td class="type">string, object</td><td>Register a named state. Chainable.</td></tr>
               <tr><td><code>removeState(name)</code></td><td class="type">string</td><td>Remove a registered state. Chainable.</td></tr>
               <tr><td><code>setBlendMode(mode, isPermanent?)</code></td><td class="type">string, bool?</td><td>Apply CSS <code>mix-blend-mode</code> at runtime.</td></tr>
               <tr><td><code>loadPreset(name, overrides?)</code></td><td class="type">string, object?</td><td>Apply a built-in preset. Chainable.</td></tr>
+              <tr><td><code>enableDebugOverlay(options?)</code></td><td class="type">object?</td><td>Show the read-only state machine debug panel. Chainable. See <a href="#debug-overlay">Debug Overlay</a>.</td></tr>
+              <tr><td><code>disableDebugOverlay()</code></td><td class="type">—</td><td>Remove the debug panel (keeps the transition log). Chainable.</td></tr>
               <tr><td><code>destroy()</code></td><td class="type">—</td><td>Remove cursor elements and all event listeners.</td></tr>
             </tbody>
           </table>
@@ -1064,6 +1078,57 @@ cursor.<span class="sh-fn">setBlendMode</span>(<span class="sh-string">'normal'<
 
 <span class="sh-comment">// Change at runtime</span>
 cursor.click_animation = <span class="sh-string">'scale'</span>;</div>
+        </div>
+      </section>
+
+      <!-- MAGNETIC BEHAVIOR -->
+      <section class="docs-section" id="magnetic">
+        <div class="section-label">Features</div>
+        <h2 class="section-title">Magnetic Behavior</h2>
+        <p class="section-sub">
+          While hovering an interactive element the cursor is <em>pulled</em> toward its centre, easing back onto the real mouse position on leave. Works in <code>circle</code> mode. By default any <code>&lt;a&gt;</code>, <code>&lt;button&gt;</code> or <code>[data-cursor-magnetic]</code> element attracts the cursor — customise it with the <code>magnetic_targets</code> selector.
+        </p>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">JavaScript — enable the attraction</span></div>
+          <div class="code-block__body"><span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span>({
+  shape:             <span class="sh-string">'circle'</span>,
+  magnetic:          <span class="sh-keyword">true</span>,     <span class="sh-comment">// master switch — default: false</span>
+  magnetic_strength: <span class="sh-number">0.4</span>,      <span class="sh-comment">// 0–1, how snappy the pull is</span>
+  magnetic_radius:   <span class="sh-keyword">null</span>,     <span class="sh-comment">// px falloff; null = full pull while hovering</span>
+  magnetic_targets:  <span class="sh-string">'a, button, [data-cursor-magnetic]'</span>,
+});
+
+<span class="sh-comment">// Toggle at runtime (chainable)</span>
+cursor.<span class="sh-fn">setMagnetic</span>(<span class="sh-keyword">true</span>);
+cursor.<span class="sh-fn">setMagneticStrength</span>(<span class="sh-number">0.6</span>, <span class="sh-keyword">true</span>); <span class="sh-comment">// isPermanent — survives state resets</span></div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">HTML — opt any element in</span></div>
+          <div class="code-block__body"><span class="sh-punct">&lt;</span><span class="sh-keyword">div</span> <span class="sh-prop">data-cursor-magnetic</span><span class="sh-punct">&gt;</span>Hover me<span class="sh-punct">&lt;/</span><span class="sh-keyword">div</span><span class="sh-punct">&gt;</span></div>
+        </div>
+
+        <h3 style="font-size:1.05rem;margin:2rem 0 0.5rem;">Magnetic parallax</h3>
+        <p class="section-sub">
+          With parallax it's not just the cursor that moves: the hovered element itself <em>leans</em> toward the cursor (clamped to ±10px) and springs back to its exact original position on leave. It's a <strong>separate opt-in</strong> — enabling <code>magnetic</code> never moves your elements, and parallax also works on its own, without cursor attraction (the classic "magnetic button" pattern).
+        </p>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">JavaScript — element follows the cursor</span></div>
+          <div class="code-block__body"><span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span>({
+  shape:                      <span class="sh-string">'circle'</span>,
+  magnetic:                   <span class="sh-keyword">true</span>,   <span class="sh-comment">// cursor → element (optional)</span>
+  magnetic_parallax:          <span class="sh-keyword">true</span>,   <span class="sh-comment">// element → cursor</span>
+  magnetic_parallax_strength: <span class="sh-number">0.15</span>,   <span class="sh-comment">// 0–1, how far it leans</span>
+});
+
+cursor.<span class="sh-fn">setMagneticParallax</span>(<span class="sh-keyword">true</span>);  <span class="sh-comment">// toggle at runtime (chainable)</span></div>
+        </div>
+
+        <div class="callout callout--tip">
+          <span class="callout__icon">💡</span>
+          <div class="callout__body">The parallax shift is applied <em>on top of</em> any CSS <code>transform</code> the element already has, and its <code>transition</code> is suspended only while the hover is active — both are restored untouched on leave. Safe to use on elements you're already animating with CSS.</div>
         </div>
       </section>
 
