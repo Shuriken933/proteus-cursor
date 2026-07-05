@@ -27,7 +27,7 @@ export default defineConfig(({ command }) => ({
       },
       rollupOptions: {
          output: {
-            banner: `/*! Proteus Cursor v2.1.0 | https://github.com/Shuriken933/proteus-cursor | MIT */`,
+            banner: `/*! Proteus Cursor v2.2.0 | https://github.com/Shuriken933/proteus-cursor | MIT */`,
             globals: {}
          }
       },

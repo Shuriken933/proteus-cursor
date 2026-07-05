@@ -1,5 +1,5 @@
 /*!
- * Proteus Cursor v2.1.0
+ * Proteus Cursor v2.2.0
  * https://github.com/Shuriken933/proteus-cursor
  *
  * A dynamic JavaScript library that transforms the default mouse cursor
