@@ -12,7 +12,13 @@ var e = class e {
 	cursorY = 0;
 	_baseShape = "default";
 	constructor(r = {}) {
-		this.testMode = !1, this.shape = r.shape || "default", this._baseShape = this.shape, this.shape_size = r.shape_size || "10px", this.shape_color = r.shape_color || "#fff", this.hasShadow = r.hasShadow ?? !0, this.shadow_delay = this.hasShadow ? r.shadow_delay || "0.3s" : "0s", this.shadow_size = r.shadow_size || "40px", this.shadow_color = r.shadow_color || "#ffffff", this.text = r.text || "", this.text_color = r.text_color || "", this.text_weight = r.text_weight || "", this.text_size = r.text_size || "", this.speed = .9, this.maxVelocity = 10, this.isMagnetic = r.magnetic ?? !1, this.magnetic_strength = n(r.magnetic_strength ?? .4), this.magnetic_radius = r.magnetic_radius ?? null, this.magnetic_targets = r.magnetic_targets || "a, button, [data-cursor-magnetic]", this._magneticTarget = null, this._magneticLock = !1, this.magnetic_parallax = r.magnetic_parallax ?? !1, this.magnetic_parallax_strength = t(r.magnetic_parallax_strength ?? .15), this._parallaxEntries = /* @__PURE__ */ new Map(), this.blend_mode = r.blend_mode || "normal", this.trail_length = r.trail_length || 0, this.trail_opacity = r.trail_opacity ?? .3, this._trailCanvas = null, this._trailCtx = null, this._trailPoints = [], this._trailResizeHandler = null, this.click_animation = r.click_animation || "scale", this.click_duration = r.click_duration ?? 300, this.states = {}, this._activeStateName = null, this._debugOverlay = null, this._debugTransitions = [], this.eventListeners = [], this._circleListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.isTouch = e.isTouchOnly(), !this.isTouch && (this.respectReducedMotion = r.respectReducedMotion ?? !0, this.isReducedMotion = this.respectReducedMotion && e.prefersReducedMotion(), !this.isReducedMotion && (this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.hasShadow || (this.$shadow.style.display = "none"), this.trail_length > 0 && this._initTrail(), this.dataAttributeEvents(), this._initClickAnimation(), this._captureDefaults()));
+		if (this.testMode = !1, this.shape = r.shape || "default", this._baseShape = this.shape, this.shape_size = r.shape_size || "10px", this.shape_color = r.shape_color || "#fff", this.hasShadow = r.hasShadow ?? !0, this.shadow_delay = this.hasShadow ? r.shadow_delay || "0.3s" : "0s", this.shadow_size = r.shadow_size || "40px", this.shadow_color = r.shadow_color || "#ffffff", this.text = r.text || "", this.text_color = r.text_color || "", this.text_weight = r.text_weight || "", this.text_size = r.text_size || "", this.speed = .9, this.maxVelocity = 10, this.isMagnetic = r.magnetic ?? !1, this.magnetic_strength = n(r.magnetic_strength ?? .4), this.magnetic_radius = r.magnetic_radius ?? null, this.magnetic_targets = r.magnetic_targets || "a, button, [data-cursor-magnetic]", this._magneticTarget = null, this._magneticLock = !1, this.magnetic_parallax = r.magnetic_parallax ?? !1, this.magnetic_parallax_strength = t(r.magnetic_parallax_strength ?? .15), this._parallaxEntries = /* @__PURE__ */ new Map(), this.blend_mode = r.blend_mode || "normal", this.trail_length = r.trail_length || 0, this.trail_opacity = r.trail_opacity ?? .3, this._trailCanvas = null, this._trailCtx = null, this._trailPoints = [], this._trailResizeHandler = null, this.click_animation = r.click_animation || "scale", this.click_duration = r.click_duration ?? 300, this.states = {}, this._activeStateName = null, this._debugOverlay = null, this._debugTransitions = [], this.eventListeners = [], this._circleListeners = [], this.animationIds = [], this.intervals = [], this.timeouts = [], this.isDestroyed = !1, this.isTouch = e.isTouchOnly(), !this.isTouch && (this.respectReducedMotion = r.respectReducedMotion ?? !0, this.reducedMotionFallback = r.reducedMotionFallback === "static" ? "static" : "native", this.isReducedMotion = this.respectReducedMotion && e.prefersReducedMotion(), this.isStaticFallback = this.isReducedMotion && this.reducedMotionFallback === "static", !(this.isReducedMotion && !this.isStaticFallback))) {
+			if (this.isStaticFallback) {
+				this._initStaticFallback(), this._captureDefaults();
+				return;
+			}
+			this.boundMouseMove = this.handleMouseMove.bind(this), this.boundMouseEnter = this.handleMouseEnter.bind(this), this.boundMouseLeave = this.handleMouseLeave.bind(this), this.boundAnimateCircle = this.animateCircleShadow.bind(this), this.boundAnimateFluid = this.animateFluidCursor.bind(this), this.init(), this.hasShadow || (this.$shadow.style.display = "none"), this.trail_length > 0 && this._initTrail(), this.dataAttributeEvents(), this._initClickAnimation(), this._captureDefaults();
+		}
 	}
 	static isTouchOnly() {
 		return typeof window > "u" ? !1 : window.matchMedia("(pointer: coarse)").matches;
@@ -21,10 +27,15 @@ var e = class e {
 		return typeof window > "u" ? !1 : window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 	}
 	_isActive() {
-		return !this.isDestroyed && !this.isTouch && !this.isReducedMotion;
+		return !this.isDestroyed && !this.isTouch && (!this.isReducedMotion || this.isStaticFallback);
+	}
+	_initStaticFallback() {
+		this.shape === "fluid" && console.warn("[ProteusCursor] shape \"fluid\" requires animation; the reduced-motion static fallback uses a static circle instead."), this.shape = "circle", this._baseShape = "circle", this.init_HTMLcursorAndShadow(), this.$shape = document.getElementById("proteus-cursor-shape"), this.$shadow = document.getElementById("proteus-cursor-shadow"), this.$shape.style.display = "", this.$shape.style.opacity = "", this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shape.style.backgroundColor = this.shape_color, this.$shape.textContent = this.text, this.$shape.style.color = this.text_color, this.$shape.style.fontSize = this.text_size, this.$shape.style.fontWeight = this.text_weight, this.blend_mode && this.blend_mode !== "normal" && (this.$shape.style.mixBlendMode = this.blend_mode), this.$shadow.style.display = "none", this._updateCircleGlow(), document.querySelector("body").classList.add("proteus-is-a-circle"), document.body.style.cursor = "none", this.endX = (window.scrollX || 0) + window.innerWidth / 2, this.endY = (window.scrollY || 0) + window.innerHeight / 2, this.$shape.style.left = this.endX + "px", this.$shape.style.top = this.endY + "px", this.addEventListenerTracked(document, "mousemove", (e) => {
+			this.isDestroyed || !this.$shape || (this.endX = e.pageX, this.endY = e.pageY, this.$shape.style.left = this.endX + "px", this.$shape.style.top = this.endY + "px");
+		}), this.dataAttributeEvents();
 	}
 	init() {
-		this.init_HTMLcursorAndShadow(), this.$shape = document.getElementById("proteus-cursor-shape"), this.$shadow = document.getElementById("proteus-cursor-shadow"), this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shape.style.backgroundColor = this.shape_color, this.$shadow.style.width = this.shadow_size || "40px", this.$shadow.style.height = this.shadow_size || "40px", this.$shadow.style.backgroundColor = this.shadow_color, this.$shape.textContent = this.text, this.$shape.style.color = this.text_color, this.$shape.style.fontSize = this.text_size, this.$shape.style.fontWeight = this.text_weight, this.setShape(this.shape), this.blend_mode && this.blend_mode !== "normal" && (this.$shape.style.mixBlendMode = this.blend_mode);
+		this.init_HTMLcursorAndShadow(), this.$shape = document.getElementById("proteus-cursor-shape"), this.$shadow = document.getElementById("proteus-cursor-shadow"), this.$shape.style.display = "", this.$shape.style.opacity = "", this.$shadow.style.opacity = "", this.$shape.style.width = this.shape_size || "20px", this.$shape.style.height = this.shape_size || "20px", this.$shape.style.backgroundColor = this.shape_color, this.$shadow.style.width = this.shadow_size || "40px", this.$shadow.style.height = this.shadow_size || "40px", this.$shadow.style.backgroundColor = this.shadow_color, this.$shape.textContent = this.text, this.$shape.style.color = this.text_color, this.$shape.style.fontSize = this.text_size, this.$shape.style.fontWeight = this.text_weight, this.setShape(this.shape), this.blend_mode && this.blend_mode !== "normal" && (this.$shape.style.mixBlendMode = this.blend_mode);
 	}
 	init_HTMLcursorAndShadow() {
 		if (document.getElementById("proteus-cursor-shape")) return;
@@ -55,7 +66,7 @@ var e = class e {
 		this._isActive() && (this._baseShape = e, this._defaultPreset && (this._defaultPreset.shape = e), this._activateShape(e));
 	}
 	_activateShape(e) {
-		if (this._isActive()) switch (document.querySelector("body").classList.remove("proteus-is-a-fluid"), document.querySelector("body").classList.remove("proteus-is-a-circle"), this.shape = e, this.shape) {
+		if (this._isActive() && !this.isStaticFallback) switch (document.querySelector("body").classList.remove("proteus-is-a-fluid"), document.querySelector("body").classList.remove("proteus-is-a-circle"), this.shape = e, this.shape) {
 			case "default": break;
 			case "circle":
 				this.setShape__circle(this.shape);
@@ -213,7 +224,7 @@ var e = class e {
 		this.$shape.style.left = this.cursorX - n + "px", this.$shape.style.top = this.cursorY - n + "px", this.setShape__fluid__animateCursor();
 	}
 	destroy() {
-		if (this.isTouch || this.isReducedMotion) return;
+		if (this.isTouch || this.isReducedMotion && !this.isStaticFallback) return;
 		this.isDestroyed = !0, this.animationIds.forEach((e) => {
 			cancelAnimationFrame(e);
 		}), this.animationIds = [], this.intervals.forEach((e) => clearInterval(e)), this.timeouts.forEach((e) => clearTimeout(e)), this.intervals = [], this.timeouts = [], this._releaseAllParallax(), this.eventListeners.forEach(({ element: e, event: t, handler: n, options: r }) => {
@@ -227,7 +238,7 @@ var e = class e {
 		e && (e.classList.remove("proteus-is-a-fluid"), e.classList.remove("proteus-is-a-circle")), this.$shape && (this.$shape.style.cssText = "", this.$shape.style.display = "none", this.$shape.style.opacity = "0", this.$shape.style.transform = "", this.$shape.style.left = "", this.$shape.style.top = "", this.$shape.style.width = "", this.$shape.style.height = "", this.$shape.style.backgroundColor = "", this.$shape.style.borderRadius = "", this.$shape.style.boxShadow = "", this.$shape.textContent = ""), this.$shadow && (this.$shadow.style.cssText = "", this.$shadow.style.display = "none", this.$shadow.style.opacity = "0", this.$shadow.style.transform = "", this.$shadow.style.left = "", this.$shadow.style.top = "", this.$shadow.style.width = "", this.$shadow.style.height = "", this.$shadow.style.backgroundColor = ""), this._destroyTrail(), this._debugOverlay && this._debugOverlay.parentNode && this._debugOverlay.parentNode.removeChild(this._debugOverlay), this._debugOverlay = null, this._debugTransitions = [], this._activeStateName = null, this.$shape = null, this.$shadow = null, this.boundMouseMove = null, this.boundMouseEnter = null, this.boundMouseLeave = null, this.boundAnimateCircle = null, this.boundAnimateFluid = null, this.velocity = 0, this.smoothDirX = 0, this.smoothDirY = 0, this._x = 0, this._y = 0, this.mouseX = 0, this.mouseY = 0, this.cursorX = 0, this.cursorY = 0, this.velocityInitialized = !1, this._magneticTarget = null, this._magneticLock = !1;
 	}
 	_initTrail() {
-		if (this._destroyTrail(), this.trail_length <= 0) return;
+		if (this._destroyTrail(), this.trail_length <= 0 || this.isStaticFallback) return;
 		let e = document.createElement("canvas");
 		e.id = "proteus-cursor-trail", e.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:9996;";
 		let t = e.getContext("2d");
@@ -288,7 +299,13 @@ var e = class e {
 		this._isActive() && (this.shape_color = e, t && this._defaultPreset && (this._defaultPreset.shape_color = e), this.$shape.style.backgroundColor = e, this._updateCircleGlow());
 	}
 	setShadowEnabled(e, t = !1) {
-		this._isActive() && (this.hasShadow = e, t && this._defaultPreset && (this._defaultPreset.hasShadow = e), this.shape === "circle" ? (this.$shadow.style.display = e ? "block" : "none", this._updateCircleGlow()) : this.shape === "fluid" && (this.$shape.style.boxShadow = e ? `0 0 ${this.shadow_size} ${this.shadow_color}` : "none"));
+		if (this._isActive()) {
+			if (this.hasShadow = e, t && this._defaultPreset && (this._defaultPreset.hasShadow = e), this.isStaticFallback) {
+				this._updateCircleGlow();
+				return;
+			}
+			this.shape === "circle" ? (this.$shadow.style.display = e ? "block" : "none", this._updateCircleGlow()) : this.shape === "fluid" && (this.$shape.style.boxShadow = e ? `0 0 ${this.shadow_size} ${this.shadow_color}` : "none");
+		}
 	}
 	setShadowSize(e, t, n = !1) {
 		this._isActive() && (this.shadow_size = e || "20px", n && this._defaultPreset && (this._defaultPreset.shadow_size = this.shadow_size), this.$shadow.style.width = e || "20px", this.$shadow.style.height = t || "20px", this.shape === "fluid" && this.hasShadow && (this.$shape.style.boxShadow = `0 0 ${this.shadow_size} ${this.shadow_color}`), this._updateCircleGlow());
@@ -329,13 +346,13 @@ var e = class e {
 		this.maxVelocity = e;
 	}
 	setMagnetic(e, t = !1) {
-		return !this._isActive() || (t && this._defaultPreset && (this._defaultPreset.magnetic = e), e === this.isMagnetic) ? this : (this.isMagnetic = e, this.shape === "circle" && this.shape__circle__interactions(), this);
+		return !this._isActive() || this.isStaticFallback || (t && this._defaultPreset && (this._defaultPreset.magnetic = e), e === this.isMagnetic) ? this : (this.isMagnetic = e, this.shape === "circle" && this.shape__circle__interactions(), this);
 	}
 	setMagneticStrength(e, t = !1) {
 		return this._isActive() ? (this.magnetic_strength = n(e), t && this._defaultPreset && (this._defaultPreset.magnetic_strength = this.magnetic_strength), this) : this;
 	}
 	setMagneticParallax(e, t = !1) {
-		return !this._isActive() || (t && this._defaultPreset && (this._defaultPreset.magnetic_parallax = e), e === this.magnetic_parallax) ? this : (this.magnetic_parallax = e, e || this._releaseAllParallax(), this.shape === "circle" && this.shape__circle__interactions(), this);
+		return !this._isActive() || this.isStaticFallback || (t && this._defaultPreset && (this._defaultPreset.magnetic_parallax = e), e === this.magnetic_parallax) ? this : (this.magnetic_parallax = e, e || this._releaseAllParallax(), this.shape === "circle" && this.shape__circle__interactions(), this);
 	}
 	setBlendMode(e, t = !1) {
 		this._isActive() && (this.blend_mode = e, t && this._defaultPreset && (this._defaultPreset.blend_mode = e), this.$shape.style.mixBlendMode = e);
@@ -426,10 +443,10 @@ var e = class e {
 		this.timeouts.push(s);
 	}
 	addState(e, t = {}) {
-		return this.isTouch || this.isReducedMotion ? this : (this.states[e] = t, this._bindStateElements(e), this);
+		return this.isTouch || this.isReducedMotion && !this.isStaticFallback ? this : (this.states[e] = t, this._bindStateElements(e), this);
 	}
 	removeState(e) {
-		return this.isTouch || this.isReducedMotion || delete this.states[e], this;
+		return this.isTouch || this.isReducedMotion && !this.isStaticFallback || delete this.states[e], this;
 	}
 	_applyState(e) {
 		let t = this.states[e];

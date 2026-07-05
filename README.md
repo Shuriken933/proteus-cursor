@@ -423,6 +423,21 @@ All API methods remain **safe to call** when reduced motion is active — they a
 cursor.addState('cta', { shape_size: '60px' }); // silent no-op
 ```
 
+### Static fallback (opt-in)
+
+If you'd rather keep a branded cursor than fall back to the native one, opt into the **static fallback**: a custom circle that snaps to the mouse on every `mousemove` — no RAF loop, no smoothing, no shadow follow, no trail, no fluid deformation, no click animation, no magnetic effects. Nothing that needs a second tick, by construction.
+
+```js
+const cursor = new ProteusCursor({
+  shape: 'circle',
+  reducedMotionFallback: 'static', // default: 'native' — zero breaking change
+});
+```
+
+What still works in static mode: `shape_color`, `shape_size`, text options, `blend_mode` — including through the **state machine** (`addState` hovers apply as instant restyles) and `data-proteus-*` attributes. A `shape: 'fluid'` config falls back to a static circle with a console warning.
+
+Check which mode you ended up in with `cursor.isStaticFallback`. Cost note: one `mousemove` listener with two direct style writes — negligible, but not free compared to `'native'`.
+
 Use the static helper for your own conditional logic:
 
 ```js
