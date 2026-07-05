@@ -99,6 +99,19 @@ export interface ProteusCursorOptions {
   respectReducedMotion?: boolean;
 
   /**
+   * What to show when reduced motion is active (and respected):
+   * - `'native'` (default): skip initialization entirely, keep the OS cursor.
+   * - `'static'`: a custom circle cursor that snaps to the mouse on every
+   *   `mousemove` — no RAF, no smoothing, no shadow follow, no trail, no
+   *   fluid deformation, no click animation, no magnetic effects. Instant
+   *   restyles (colors, size, text, blend mode) and the state machine keep
+   *   working. One listener and two style writes per move: cheap, but not
+   *   free compared to `'native'`.
+   * Default: `'native'` — zero breaking change.
+   */
+  reducedMotionFallback?: 'native' | 'static';
+
+  /**
    * CSS `mix-blend-mode` applied to the cursor shape element.
    * `'difference'` gives the classic automatic color-inversion effect —
    * works best with `shape_color: '#ffffff'`.
@@ -150,6 +163,14 @@ export default class ProteusCursor {
   readonly isReducedMotion: boolean;
   /** Whether the library will respect the reduced-motion OS preference. Default: `true` */
   respectReducedMotion: boolean;
+  /** The configured reduced-motion fallback mode. Default: `'native'` */
+  reducedMotionFallback: 'native' | 'static';
+  /**
+   * `true` when reduced motion is active and the `'static'` fallback is
+   * running: a motionless custom cursor is shown, instant setters and the
+   * state machine work, everything animated is disabled.
+   */
+  readonly isStaticFallback: boolean;
 
   // ── Shape ────────────────────────────────────────────────────────────────
   /** Switch cursor shape at runtime */

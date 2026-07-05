@@ -119,12 +119,24 @@ export default class ProteusCursor{
       if (this.isTouch) return;
 
       // Reduced-motion: respect the user's OS-level accessibility preference.
-      // When prefers-reduced-motion: reduce is active we skip initialization
-      // entirely so no animations, RAF loops or overlay elements are created.
-      // Can be opted-out by passing respectReducedMotion: false.
+      // When prefers-reduced-motion: reduce is active, the default ('native')
+      // skips initialization entirely — no animations, RAF loops or overlay
+      // elements. The opt-in 'static' fallback keeps a custom cursor that
+      // snaps to the mouse on every mousemove: no RAF, no smoothing, no
+      // shadow-follow, no trail, no deformation, no click animation — nothing
+      // that needs a second tick. Cheap (one listener, two style writes per
+      // move) but not free compared to 'native'.
+      // Can be opted-out entirely by passing respectReducedMotion: false.
       this.respectReducedMotion = options.respectReducedMotion ?? true;
+      this.reducedMotionFallback = options.reducedMotionFallback === 'static' ? 'static' : 'native';
       this.isReducedMotion = this.respectReducedMotion && ProteusCursor.prefersReducedMotion();
-      if (this.isReducedMotion) return;
+      this.isStaticFallback = this.isReducedMotion && this.reducedMotionFallback === 'static';
+      if (this.isReducedMotion && !this.isStaticFallback) return;
+      if (this.isStaticFallback) {
+         this._initStaticFallback();
+         this._captureDefaults();
+         return;
+      }
 
       // Bind dei metodi per poterli rimuovere correttamente
       this.boundMouseMove = this.handleMouseMove.bind(this);
@@ -170,17 +182,94 @@ export default class ProteusCursor{
       return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
    }
 
-   /** @private — returns true when the cursor is active (not destroyed, not touch, not reduced-motion). */
+   /**
+    * @private — returns true when the cursor is active (not destroyed, not
+    * touch, and not reduced-motion — unless the static fallback is running,
+    * which keeps the instant setters and the state machine usable).
+    */
    _isActive() {
-      return !this.isDestroyed && !this.isTouch && !this.isReducedMotion;
+      return !this.isDestroyed && !this.isTouch && (!this.isReducedMotion || this.isStaticFallback);
    }
    //endregion
+
+   /**
+    * Minimal init path for the reduced-motion 'static' fallback: a circle
+    * cursor that snaps to the mouse position on every mousemove event.
+    * Everything that requires a second tick by definition stays out —
+    * no RAF loop, no shadow follow, no trail, no fluid stretch, no click
+    * animation, no magnetic attraction. Instant restyles (colors, size,
+    * text, blend mode — including via the state machine) keep working.
+    * @private
+    */
+   _initStaticFallback() {
+      // Fluid IS animation (per-frame velocity + deformation): fall back to
+      // a static circle and tell the integrator why.
+      if (this.shape === 'fluid') {
+         console.warn('[ProteusCursor] shape "fluid" requires animation; the reduced-motion static fallback uses a static circle instead.');
+      }
+      this.shape = 'circle';
+      this._baseShape = 'circle';
+
+      this.init_HTMLcursorAndShadow();
+      this.$shape = document.getElementById('proteus-cursor-shape');
+      this.$shadow = document.getElementById('proteus-cursor-shadow');
+
+      // Same re-init hygiene as init(): clear the display:none / opacity:0
+      // a previous destroy() may have left on the shared shape element.
+      this.$shape.style.display = '';
+      this.$shape.style.opacity = '';
+      this.$shape.style.width = this.shape_size || '20px';
+      this.$shape.style.height = this.shape_size || '20px';
+      this.$shape.style.backgroundColor = this.shape_color;
+      this.$shape.textContent = this.text;
+      this.$shape.style.color = this.text_color;
+      this.$shape.style.fontSize = this.text_size;
+      this.$shape.style.fontWeight = this.text_weight;
+      if (this.blend_mode && this.blend_mode !== 'normal') {
+         this.$shape.style.mixBlendMode = this.blend_mode;
+      }
+      // The trailing shadow element only exists as a delayed follower — in
+      // static mode it stays hidden no matter what hasShadow says. The
+      // shape keeps its own static glow (a box-shadow moves with the
+      // element in the same paint, no second tick involved).
+      this.$shadow.style.display = 'none';
+      this._updateCircleGlow();
+
+      document.querySelector('body').classList.add('proteus-is-a-circle');
+      document.body.style.cursor = 'none';
+
+      // Seed at the viewport centre so the dot isn't parked at 0,0 until
+      // the first mousemove.
+      this.endX = (window.scrollX || 0) + window.innerWidth / 2;
+      this.endY = (window.scrollY || 0) + window.innerHeight / 2;
+      this.$shape.style.left = this.endX + 'px';
+      this.$shape.style.top = this.endY + 'px';
+
+      // The whole runtime: one listener, two direct style writes per move.
+      const staticMoveHandler = (e) => {
+         if (this.isDestroyed || !this.$shape) return;
+         this.endX = e.pageX;
+         this.endY = e.pageY;
+         this.$shape.style.left = this.endX + 'px';
+         this.$shape.style.top = this.endY + 'px';
+      };
+      this.addEventListenerTracked(document, 'mousemove', staticMoveHandler);
+
+      // data-proteus-* per-element overrides are instant restyles — allowed.
+      this.dataAttributeEvents();
+   }
 
    init(){
       this.init_HTMLcursorAndShadow()
 
       this.$shape = document.getElementById('proteus-cursor-shape');
       this.$shadow = document.getElementById('proteus-cursor-shadow');
+      // A destroyed instance leaves display:none / opacity:0 inline on the
+      // shared elements — a re-created cursor must clear them or it stays
+      // invisible forever (destroy → new, e.g. framework adapter remounts).
+      this.$shape.style.display = '';
+      this.$shape.style.opacity = '';
+      this.$shadow.style.opacity = '';
       this.$shape.style.width = this.shape_size || '20px';
       this.$shape.style.height = this.shape_size || '20px';
       this.$shape.style.backgroundColor = this.shape_color;
@@ -263,6 +352,10 @@ export default class ProteusCursor{
    /** @private — switch mode without updating _baseShape (used by state machine). */
    _activateShape(shape) {
       if (!this._isActive()) return;
+      // Static reduced-motion fallback: mode switching is animation by
+      // definition (circle starts a RAF shadow loop, fluid a velocity loop).
+      // The cursor stays a static circle no matter what a state requests.
+      if (this.isStaticFallback) return;
       document.querySelector('body').classList.remove('proteus-is-a-fluid');
       document.querySelector('body').classList.remove('proteus-is-a-circle');
       this.shape = shape;
@@ -788,8 +881,10 @@ export default class ProteusCursor{
    //region ❌ destroy Proteus
    destroy() {
 
-      // No-op on touch or reduced-motion: nothing was created, nothing to tear down.
-      if (this.isTouch || this.isReducedMotion) return;
+      // No-op on touch or native reduced-motion: nothing was created, nothing
+      // to tear down. The static fallback DID create DOM and a mousemove
+      // listener, so it goes through the full teardown below.
+      if (this.isTouch || (this.isReducedMotion && !this.isStaticFallback)) return;
 
       // Marca come distrutto per fermare tutte le operazioni
       this.isDestroyed = true;
@@ -913,6 +1008,9 @@ export default class ProteusCursor{
    _initTrail() {
       this._destroyTrail();
       if (this.trail_length <= 0) return;
+      // The trail is drawn/faded by the RAF loops — meaningless (and never
+      // updated) in the static reduced-motion fallback.
+      if (this.isStaticFallback) return;
 
       const canvas = document.createElement('canvas');
       canvas.id = 'proteus-cursor-trail';
@@ -1103,6 +1201,13 @@ export default class ProteusCursor{
       if (!this._isActive()) return;
       this.hasShadow = isEnabled;
       if (isPermanent && this._defaultPreset) this._defaultPreset.hasShadow = isEnabled;
+      // Static reduced-motion fallback: the trailing $shadow element only
+      // exists as a delayed follower, so it stays hidden — only the shape's
+      // own static glow reflects the flag.
+      if (this.isStaticFallback) {
+         this._updateCircleGlow();
+         return;
+      }
       if (this.shape === 'circle') {
          this.$shadow.style.display = isEnabled ? 'block' : 'none';
          this._updateCircleGlow();
@@ -1204,6 +1309,9 @@ export default class ProteusCursor{
     */
    setMagnetic(enabled, isPermanent = false) {
       if (!this._isActive()) return this;
+      // Magnetic attraction is RAF-driven interpolation — motion by
+      // definition, never available in the static reduced-motion fallback.
+      if (this.isStaticFallback) return this;
       if (isPermanent && this._defaultPreset) this._defaultPreset.magnetic = enabled;
       if (enabled === this.isMagnetic) return this;
       this.isMagnetic = enabled;
@@ -1237,6 +1345,9 @@ export default class ProteusCursor{
     */
    setMagneticParallax(enabled, isPermanent = false) {
       if (!this._isActive()) return this;
+      // Parallax moves page elements every frame — motion by definition,
+      // never available in the static reduced-motion fallback.
+      if (this.isStaticFallback) return this;
       if (isPermanent && this._defaultPreset) this._defaultPreset.magnetic_parallax = enabled;
       if (enabled === this.magnetic_parallax) return this;
       this.magnetic_parallax = enabled;
@@ -1494,14 +1605,18 @@ export default class ProteusCursor{
     * will activate it on mouseenter and restore defaults on mouseleave.
     */
    addState(name, options = {}) {
-      if (this.isTouch || this.isReducedMotion) return this;
+      // States stay usable in the static reduced-motion fallback: they are
+      // instant restyles (color, size, text…). Anything animated a state may
+      // request (shape switch, trail, magnetic) is filtered out downstream
+      // by the per-setter static guards.
+      if (this.isTouch || (this.isReducedMotion && !this.isStaticFallback)) return this;
       this.states[name] = options;
       this._bindStateElements(name);
       return this;
    }
 
    removeState(name) {
-      if (this.isTouch || this.isReducedMotion) return this;
+      if (this.isTouch || (this.isReducedMotion && !this.isStaticFallback)) return this;
       delete this.states[name];
       return this;
    }

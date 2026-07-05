@@ -882,6 +882,7 @@ cursor
               <tr><td><code>click_animation</code></td><td class="type">string</td><td class="default">'scale'</td><td>Click feedback: <code>scale</code>, <code>ripple</code>, or <code>none</code>.</td></tr>
               <tr><td><code>click_duration</code></td><td class="type">number</td><td class="default">300</td><td>Duration in ms for click animation.</td></tr>
               <tr><td><code>respectReducedMotion</code></td><td class="type">boolean</td><td class="default">true</td><td>When true, skips init if OS has <code>prefers-reduced-motion: reduce</code>.</td></tr>
+              <tr><td><code>reducedMotionFallback</code></td><td class="type">string</td><td class="default">'native'</td><td>What to show under reduced motion: <code>'native'</code> (no custom cursor) or <code>'static'</code> (motionless custom cursor). See <a href="#accessibility">Reduced Motion</a>.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1225,9 +1226,34 @@ cursor.<span class="sh-fn">setMagneticParallax</span>(<span class="sh-keyword">t
             <div class="a11y-card__title">Reduced Motion</div>
             <p class="a11y-card__desc">
               When the OS has <code>prefers-reduced-motion: reduce</code> set, the constructor
-              also skips init entirely. No animation frames, no overlay elements.
-              Disable with <code>respectReducedMotion: false</code> if your site itself handles this flag.
+              skips init entirely by default. No animation frames, no overlay elements.
+              Opt into a motionless custom cursor with <code>reducedMotionFallback: 'static'</code>,
+              or disable the check with <code>respectReducedMotion: false</code> if your site itself handles this flag.
             </p>
+          </div>
+        </div>
+
+        <h3 style="font-size:1.05rem;margin:2rem 0 0.5rem;">Static fallback (opt-in)</h3>
+        <p class="section-sub">
+          Rather keep a branded cursor than fall back to the native one? The static fallback shows a circle that <em>snaps</em> to the mouse on every <code>mousemove</code> — no RAF loop, no smoothing, no shadow follow, no trail, no fluid deformation, no click animation, no magnetic effects. Nothing that needs a second tick, by construction. Instant restyles (<code>shape_color</code>, <code>shape_size</code>, text, <code>blend_mode</code>) keep working — including through the state machine and <code>data-proteus-*</code> attributes.
+        </p>
+
+        <div class="code-block">
+          <div class="code-block__header"><span class="code-block__label">Opt in to the static fallback</span></div>
+          <div class="code-block__body"><span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span>({
+  shape:                 <span class="sh-string">'circle'</span>,
+  reducedMotionFallback: <span class="sh-string">'static'</span>,  <span class="sh-comment">// default: 'native' — zero breaking change</span>
+});
+
+<span class="sh-comment">// Which mode did we end up in?</span>
+cursor.isStaticFallback;  <span class="sh-comment">// true when reduced motion is on AND 'static' was requested</span></div>
+        </div>
+
+        <div class="callout callout--tip">
+          <span class="callout__icon">💡</span>
+          <div class="callout__body">
+            A <code>shape: 'fluid'</code> config falls back to a static circle with a console warning — fluid <em>is</em> animation.
+            Cost note: one <code>mousemove</code> listener with two direct style writes per move — negligible, but not free compared to <code>'native'</code>.
           </div>
         </div>
 
@@ -1261,7 +1287,7 @@ cursor.<span class="sh-fn">setMagneticParallax</span>(<span class="sh-keyword">t
        FOOTER
   ============================================================ -->
   <footer class="docs-footer">
-    <span>Proteus Cursor v2.0.1 &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; Built by <a href="https://github.com/Shuriken933" target="_blank" rel="noopener" style="color:var(--color-accent)">Eros Agostini</a></span>
+    <span>Proteus Cursor v2.1.0 &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; Built by <a href="https://github.com/Shuriken933" target="_blank" rel="noopener" style="color:var(--color-accent)">Eros Agostini</a></span>
     <span style="display:flex;gap:20px;">
       <a href="index.html" style="color:var(--color-text-muted)">← Landing page</a>
       <a href="https://github.com/Shuriken933/proteus-cursor" target="_blank" rel="noopener" style="color:var(--color-text-muted)">GitHub</a>
