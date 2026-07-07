@@ -1,11 +1,44 @@
-# 🌀 Proteus Cursor
-**Proteus Cursor** is a dynamic JavaScript library that revolutionizes web user interaction by transforming the mouse cursor based on HTML element interactions.
+<div align="center">
 
-Inspired by the shape-shifting god **Proteus**, this library allows the cursor to morph into various forms — dot, circle, fluid, or text — depending on the element it's hovering over.
+<img src="https://raw.githubusercontent.com/Shuriken933/proteus-cursor/main/assets/proteus-banner.png" alt="Proteus Cursor — The cursor, transfigured." width="100%" />
+
+<br /><br />
+
+[![npm version](https://img.shields.io/npm/v/proteuscursor?style=flat-square&labelColor=1C1915&color=A64B2A)](https://www.npmjs.com/package/proteuscursor)
+[![downloads](https://img.shields.io/npm/dm/proteuscursor?style=flat-square&labelColor=1C1915&color=8C6F3F)](https://www.npmjs.com/package/proteuscursor)
+[![minzipped size](https://img.shields.io/bundlephobia/minzip/proteuscursor?style=flat-square&labelColor=1C1915&color=8C6F3F)](https://bundlephobia.com/package/proteuscursor)
+[![dependencies](https://img.shields.io/badge/dependencies-0-A64B2A?style=flat-square&labelColor=1C1915)](https://www.npmjs.com/package/proteuscursor)
+[![types](https://img.shields.io/badge/types-included-8C6F3F?style=flat-square&labelColor=1C1915)](https://www.npmjs.com/package/proteuscursor)
+[![license](https://img.shields.io/npm/l/proteuscursor?style=flat-square&labelColor=1C1915&color=A64B2A)](./LICENSE)
+
+**A shapeshifting cursor library.** Two modes — circle and fluid — infinite personality.
+
+[**Live demo**](https://shuriken933.github.io/proteus-cursor/) · [**Documentation**](https://shuriken933.github.io/proteus-cursor/documentation.html) · [**npm**](https://www.npmjs.com/package/proteuscursor)
+
+</div>
 
 ---
 
-## 1) 🚀 Installation
+Named after **Proteus**, the old god of the sea who assumed every form, this zero-dependency library lets the pointer morph into dot, circle, fluid blob or text as it travels across your interface. It changes shape on hover through a tiny state machine, leans into elements with magnetic parallax, ships five polished presets, and stays out of the way on touch devices and under reduced motion. Vanilla JS, with first-class adapters for **React**, **Vue 3** and **Svelte**.
+
+## Contents
+
+- [I. Installation](#i-installation)
+- [II. Importing the library](#ii-importing-the-library)
+- [III. Framework adapters](#iii-framework-adapters)
+- [IV. Preset system](#iv-preset-system)
+- [V. Constructor options](#v-constructor-options)
+- [VI. Click animations](#vi-click-animations)
+- [VII. Magnetic behavior](#vii-magnetic-behavior)
+- [VIII. State machine](#viii-state-machine)
+- [IX. Blend mode](#ix-blend-mode)
+- [X. Reduced motion](#x-reduced-motion)
+- [XI. Touch devices](#xi-touch-devices)
+- [XII. Data attributes](#xii-data-attributes)
+
+---
+
+## I. Installation
 
 Install via **npm**:
 
@@ -13,46 +46,53 @@ Install via **npm**:
 npm i proteuscursor
 ```
 
-## 2) 📦 Import Files
+## II. Importing the library
+
 There are two different import styles.
 
-- ### 🧪 Without bundler
-    Ideal for simple projects
-    ```html
-    <!-- Add minified CSS -->
-    <link rel="stylesheet" href="dist/proteus-cursor.min.css" />
+### Without a bundler
 
-    <!-- Add UMD script -->
-    <script src="dist/proteus-cursor.umd.js"></script>
+Ideal for simple projects.
 
-    <script>
-        // Global initialization
-        const cursor = new ProteusCursor({
-            // proteus options
-        });
-    </script>
-    ```
+```html
+<!-- Add minified CSS -->
+<link rel="stylesheet" href="dist/proteus-cursor.min.css" />
 
-- ### 🧪 With bundler
-    Ideal for modular projects with Vite, Webpack, Nuxt, etc.
-    #### 📁 1. Install with npm
-    ```bash
-    npm install proteuscursor
-    ```
+<!-- Add UMD script -->
+<script src="dist/proteus-cursor.umd.js"></script>
 
-    #### ✍️ 2. Import in your JS modules
-    ```js
-    import ProteusCursor from 'proteuscursor';
-    import 'proteuscursor/style'; // import minified CSS
-    
+<script>
+    // Global initialization
     const cursor = new ProteusCursor({
-      // proteus options
+        // proteus options
     });
-    ```
+</script>
+```
+
+### With a bundler
+
+Ideal for modular projects with Vite, Webpack, Nuxt, etc.
+
+#### 1. Install with npm
+
+```bash
+npm install proteuscursor
+```
+
+#### 2. Import in your JS modules
+
+```js
+import ProteusCursor from 'proteuscursor';
+import 'proteuscursor/style'; // import minified CSS
+
+const cursor = new ProteusCursor({
+  // proteus options
+});
+```
 
 ---
 
-## 3) ⚛️ Framework Adapters
+## III. Framework adapters
 
 Proteus Cursor ships first-class adapters for React, Vue 3 and Svelte. Each adapter handles lifecycle (mount / unmount) automatically and is SSR-safe.
 
@@ -132,7 +172,7 @@ npm install proteuscursor
 
 ---
 
-## 4) 🎨 Preset System
+## IV. Preset system
 
 Five built-in presets let you get a polished cursor in one line — no manual configuration required.
 
@@ -176,13 +216,14 @@ const cursor = new ProteusCursor(ProteusCursor.getPreset('ghost'));
 
 ---
 
-## 5) ⚙️ Constructor Options
-There are a lot of options ✨ for Proteus.
+## V. Constructor options
+
+There are a lot of options for Proteus.
 First of all you can set a cursor mode:
 - `circle`
 - `fluid`
 
-##### 🔵 Circle Cursor
+##### Circle cursor
 ```js
 const cursor = new ProteusCursor({
     shape: 'circle',
@@ -197,7 +238,7 @@ const cursor = new ProteusCursor({
 });
 ```
 
-##### 🌊 Fluid Cursor
+##### Fluid cursor
 ```js
 const cursor = new ProteusCursor({
     shape: 'fluid',
@@ -215,7 +256,7 @@ const cursor = new ProteusCursor({
 
 ---
 
-## 6) 🖱️ Click Animations
+## VI. Click animations
 
 Proteus plays a small animation on every `mousedown` to give tactile feedback. Choose between two built-in effects or disable them entirely.
 
@@ -235,7 +276,7 @@ new ProteusCursor({
 
 ---
 
-## 7) 🧲 Magnetic Behavior
+## VII. Magnetic behavior
 
 While hovering an interactive element, the cursor is *pulled* toward the element's centre — and eases back onto the real mouse position when it leaves. Works in `circle` mode (fluid support is planned).
 
@@ -288,7 +329,7 @@ The shift is applied *on top of* any CSS `transform` the element already has, an
 
 ---
 
-## 8) 🔁 State Machine API
+## VIII. State machine
 
 Define named cursor states once in JS and attach them to HTML elements with a single data attribute. The cursor switches automatically on hover and restores defaults on leave.
 
@@ -360,7 +401,7 @@ The panel is purely passive: `pointer-events: none`, so it can never become a ho
 
 ---
 
-## 9) 🎨 Blend Mode
+## IX. Blend mode
 
 Apply a CSS `mix-blend-mode` to the cursor shape so it blends with the page content beneath it. The most popular effect is `'difference'`, which automatically inverts the colors underneath the cursor — creating perfect contrast on any background.
 
@@ -400,7 +441,7 @@ cursor.addState('hero', {
 
 ---
 
-## 10) ♿ Accessibility — Reduced Motion
+## X. Reduced motion
 
 Some users enable **"Reduce Motion"** in their OS accessibility settings (macOS → Accessibility → Display, Windows → Accessibility → Visual Effects). This signals that animations may cause discomfort (vestibular disorders, epilepsy, motion sensitivity).
 
@@ -448,7 +489,7 @@ if (!ProteusCursor.prefersReducedMotion()) {
 
 ---
 
-## 11) 📱 Touch Device Support
+## XI. Touch devices
 
 Proteus Cursor automatically detects touch-only devices (phones, tablets without a paired mouse) and **skips initialization entirely** — no DOM elements are injected, no event listeners are registered, and the native cursor behaviour is preserved.
 
@@ -456,9 +497,9 @@ Detection is based on the CSS `pointer: coarse` media feature, which correctly h
 
 | Device | Primary pointer | Proteus active? |
 |---|---|---|
-| Phone / tablet (no mouse) | coarse | ❌ skipped |
-| Laptop with touchscreen | fine (mouse) | ✅ active |
-| iPad / Surface + paired mouse | fine | ✅ active |
+| Phone / tablet (no mouse) | coarse | No — skipped |
+| Laptop with touchscreen | fine (mouse) | Yes — active |
+| iPad / Surface + paired mouse | fine | Yes — active |
 
 All API methods remain **safe to call** on touch devices — they are no-ops that return without error. This means you never need to guard your initialization code:
 
@@ -478,7 +519,7 @@ if (!ProteusCursor.isTouchOnly()) {
 
 ---
 
-## 12) 🏷️ Data Attributes (per-element overrides)
+## XII. Data attributes
 
 For quick one-off customizations without defining a full state, you can use data attributes directly on elements:
 
@@ -498,9 +539,12 @@ For quick one-off customizations without defining a full state, you can use data
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
+
 Looking for what's next? See [ROADMAP.md](ROADMAP.md) for planned features and the [public project board](https://github.com/users/Shuriken933/projects/11).
 
-## 📜 License
-This project is licensed under the MIT License.
-Feel free to use, modify, and share! 💫
+## License
+
+This project is licensed under the MIT License — feel free to use, modify, and share.
+
+<div align="center"><sub>MIT License · MMXXVI · <a href="https://shuriken933.github.io/proteus-cursor/">Proteus Cursor</a></sub></div>

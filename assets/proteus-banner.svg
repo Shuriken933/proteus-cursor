@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 420" width="1280" height="420" role="img" aria-label="Proteus Cursor — The cursor, transfigured.">
+  <defs>
+    <pattern id="flute" width="90" height="420" patternUnits="userSpaceOnUse">
+      <rect width="90" height="420" fill="#F3EFE5"/>
+      <rect x="89" width="1" height="420" fill="#1C1915" fill-opacity="0.05"/>
+    </pattern>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#A64B2A" stop-opacity="0.34"/>
+      <stop offset="55%" stop-color="#A64B2A" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#A64B2A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- paper + column flutes -->
+  <rect width="1280" height="420" fill="#F3EFE5"/>
+  <rect width="1280" height="420" fill="url(#flute)"/>
+
+  <!-- editorial frame -->
+  <rect x="40" y="40" width="1200" height="340" fill="none" stroke="#1C1915" stroke-opacity="0.14" stroke-width="1"/>
+
+  <!-- eyebrow row -->
+  <text x="72" y="96" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="15" letter-spacing="4" fill="#A64B2A">A SHAPESHIFTING CURSOR LIBRARY</text>
+  <text x="1208" y="96" text-anchor="end" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="13" letter-spacing="2" fill="#6E665A">ZERO DEPENDENCIES · TYPESCRIPT · &lt; 20 KB</text>
+  <line x1="72" y1="114" x2="1208" y2="114" stroke="#1C1915" stroke-opacity="0.14" stroke-width="1"/>
+
+  <!-- cursor motif -->
+  <circle cx="1058" cy="248" r="150" fill="url(#glow)"/>
+  <circle cx="1058" cy="248" r="13" fill="#1C1915"/>
+
+  <!-- headline -->
+  <text x="66" y="232" font-family="'GFS Didot', Georgia, 'Times New Roman', serif" font-size="92" fill="#1C1915">The cursor,</text>
+  <text x="150" y="326" font-family="'GFS Didot', Georgia, 'Times New Roman', serif" font-size="92" fill="#A64B2A">transfigured.</text>
+
+  <!-- footer row -->
+  <text x="72" y="360" font-family="'GFS Didot', Georgia, 'Times New Roman', serif" font-size="22" letter-spacing="0.5" fill="#1C1915">Proteus<tspan dx="7" fill="#A64B2A">Cursor</tspan></text>
+  <text x="1208" y="360" text-anchor="end" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" letter-spacing="3" fill="#6E665A">MMXXVI</text>
+</svg>
