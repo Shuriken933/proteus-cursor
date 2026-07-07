@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Proteus Cursor — Shapeshifting cursor library</title>
-  <meta name="description" content="A zero-dependency shapeshifting cursor library. Two modes — circle and fluid — infinite personality. Works with React, Vue, Svelte and vanilla JS." />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Proteus Cursor — The shapeshifting cursor</title>
+  <meta name="description" content="A zero-dependency shapeshifting cursor library. Two modes — circle and fluid — infinite personality. First-class adapters for React, Vue 3 and Svelte." />
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
   <!-- Library CSS -->
   <link rel="stylesheet" href="proteus-cursor.min.css" />
@@ -19,2317 +19,1015 @@
        DESIGN TOKENS
     ============================================================ */
     :root {
-      --color-bg-primary:    #080C14;
-      --color-bg-secondary:  #0D1421;
-      --color-accent:        #00D4AA;
-      --color-violet:        #9D6FE8;
-      --color-cyan:          #5BC8F5;
-      --color-cta:           #FF6B35;
-      --color-cta-hover:     #FF9A3C;
-      --color-text:          #E8F4F8;
-      --color-text-muted:    #8BA8B5;
-      --color-code-bg:       #060A10;
-      --color-border:        rgba(0,212,170,0.12);
-      --color-border-active: rgba(0,212,170,0.28);
-      --font-main:  'Poppins', sans-serif;
-      --font-code:  'JetBrains Mono', monospace;
-      --radius-card: 16px;
-      --radius-btn:  10px;
+      --paper:        #F3EFE5;
+      --panel:        #FAF7F0;
+      --ink:          #1C1915;
+      --ink-2:        #4A443B;
+      --muted:        #6E665A;
+      --terra:        #A64B2A;
+      --terra-lt:     #C87B5A;
+      --bronze:       #8C6F3F;
+      --olive:        #556052;
+      --code:         #E8E2D4;
+      --hair:         rgba(28,25,21,0.14);
+      --hair-strong:  rgba(28,25,21,0.30);
+      --serif: 'GFS Didot', serif;
+      --sans:  'Instrument Sans', sans-serif;
+      --mono:  'JetBrains Mono', monospace;
     }
 
     /* ============================================================
-       RESET & BASE
+       BASE
     ============================================================ */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; font-size: 16px; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
-      background: var(--color-bg-primary);
-      color: var(--color-text);
-      font-family: var(--font-main);
-      line-height: 1.6;
-      overflow-x: hidden;
+      margin: 0;
+      background-color: var(--paper);
+      background-image: repeating-linear-gradient(90deg, transparent 0px, transparent 89px, rgba(28,25,21,0.045) 89px, rgba(28,25,21,0.045) 90px);
+      color: var(--ink);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
     }
-    a { text-decoration: none; color: inherit; }
-    button { font-family: var(--font-main); }
-    input, select { font-family: var(--font-main); }
+    ::selection { background: rgba(166,75,42,0.18); }
+    input[type="range"] { accent-color: var(--terra); }
+    a { color: inherit; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    [data-reveal] { opacity: 0; transform: translateY(26px); transition: opacity 0.8s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1); }
+    [data-reveal].on { opacity: 1; transform: none; }
+    [data-rule] { transform: scaleX(0); transform-origin: left center; transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1); }
+    [data-rule].on { transform: scaleX(1); }
 
     /* ============================================================
-       BANNERS (mobile / reduced-motion)
+       OVERLAYS
     ============================================================ */
-    .banner-top {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 10000;
-      padding: 12px 24px;
-      background: var(--color-bg-secondary);
-      border-bottom: 1px solid var(--color-border-active);
-      text-align: center;
-      font-size: 0.875rem;
-      color: var(--color-text-muted);
-    }
-    .banner-top span { color: var(--color-accent); font-weight: 600; }
-    .banner-top.visible { display: block; }
-
-    /* ============================================================
-       LAYOUT UTILITIES
-    ============================================================ */
-    .container {
-      width: 92%;
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 0 1.5rem;
-    }
-    .section { padding: 100px 0; }
-    .section-label {
-      display: inline-block;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--color-accent);
-      margin-bottom: 12px;
-    }
-    .section-title {
-      font-size: clamp(1.8rem, 4vw, 2.8rem);
-      font-weight: 700;
-      color: var(--color-text);
-      line-height: 1.25;
-      margin-bottom: 16px;
-    }
-    .section-sub {
-      font-size: 1.05rem;
-      color: var(--color-text-muted);
-      max-width: 560px;
-    }
-    .gradient-text {
-      background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-violet) 60%, var(--color-cyan) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    .noise {
+      position: fixed; inset: 0; z-index: 9000; pointer-events: none;
+      opacity: 0.55; mix-blend-mode: multiply;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 0.11 0 0 0 0 0.10 0 0 0 0 0.08 0 0 0 0.05 0"/></filter><rect width="180" height="180" filter="url(%23n)"/></svg>');
     }
 
     /* ============================================================
-       NAVIGATION
+       MASTHEAD
     ============================================================ */
-    .nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 9000;
-      padding: 16px 0;
-      transition: background 0.35s ease, border-color 0.35s ease, backdrop-filter 0.35s ease;
+    .masthead {
+      position: sticky; top: 0; z-index: 800;
+      background: rgba(243,239,229,0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--hair);
     }
-    .nav.scrolled {
-      background: rgba(8,12,20,0.75);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--color-border);
+    .masthead-inner {
+      max-width: 1260px; margin: 0 auto;
+      padding: 0 clamp(20px, 4vw, 48px);
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      column-gap: 24px; min-height: 76px;
     }
-    .nav__inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 32px;
+    .wordmark { font-family: var(--serif); font-size: 22px; letter-spacing: 0.04em; color: var(--ink); text-decoration: none; }
+    .wordmark span { color: var(--terra); }
+    .nav { display: flex; flex-wrap: wrap; align-items: center; gap: 16px clamp(16px, 2.5vw, 36px); }
+    .navlink { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.25s ease; }
+    .navlink:hover { color: var(--ink); }
+    .navlink.active { color: var(--ink); border-bottom: 1px solid var(--terra); padding-bottom: 2px; }
+    .npm-btn {
+      font-family: var(--mono); font-size: 12px; color: var(--paper);
+      background: var(--ink); border: none; padding: 10px 18px; cursor: pointer;
+      transition: background 0.25s ease;
     }
-    .nav__logo {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--color-text);
-      letter-spacing: -0.02em;
-    }
-    .nav__logo span { color: var(--color-accent); }
-    .nav__links {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      list-style: none;
-    }
-    .nav__links a {
-      display: block;
-      padding: 6px 14px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: var(--color-text-muted);
-      border-radius: var(--radius-btn);
-      transition: color 0.2s, background 0.2s;
-    }
-    .nav__links a:hover { color: var(--color-text); background: rgba(255,255,255,0.05); }
-    .nav__right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .nav__npm {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 14px;
-      background: var(--color-code-bg);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-btn);
-      font-family: var(--font-code);
-      font-size: 0.8rem;
-      color: var(--color-accent);
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-    }
-    .nav__npm:hover { border-color: var(--color-border-active); background: rgba(0,212,170,0.05); }
-    .nav__npm .copy-icon { opacity: 0.5; transition: opacity 0.2s; font-size: 0.75rem; }
-    .nav__npm:hover .copy-icon { opacity: 1; }
-    .btn-docs {
-      padding: 7px 18px;
-      background: rgba(0,212,170,0.1);
-      border: 1px solid var(--color-border-active);
-      border-radius: var(--radius-btn);
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--color-accent);
-      cursor: pointer;
-      transition: background 0.2s, border-color 0.2s;
-    }
-    .btn-docs:hover { background: rgba(0,212,170,0.18); border-color: var(--color-accent); }
-    .btn-github {
-      padding: 7px 18px;
-      border: 1px solid var(--color-border-active);
-      border-radius: var(--radius-btn);
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--color-text);
-      background: transparent;
-      cursor: pointer;
-      transition: background 0.2s, border-color 0.2s;
-    }
-    .btn-github:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.25); }
+    .npm-btn:hover { background: var(--terra); }
+
+    /* ============================================================
+       LAYOUT PRIMITIVES
+    ============================================================ */
+    .hero { max-width: 1260px; margin: 0 auto; padding: 130px 48px 110px; position: relative; }
+    .section { max-width: 1260px; margin: 0 auto; padding: 90px 48px; }
+    .sgrid { position: relative; display: grid; grid-template-columns: 160px 1fr; gap: 40px; padding-top: 32px; }
+    .rule { position: absolute; top: 0; left: 0; right: 0; height: 1px; background: var(--hair-strong); }
+    .numeral { font-family: var(--serif); font-size: 72px; line-height: 1; color: rgba(28,25,21,0.22); }
+    .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
+    .h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(34px, 4vw, 54px); margin: 0 0 12px; }
+    .lead { font-size: 16px; line-height: 1.7; color: var(--muted); max-width: 60ch; margin: 0 0 48px; }
+    .lead .inline-code { font-family: var(--mono); font-size: 14px; background: rgba(28,25,21,0.06); padding: 2px 8px; }
 
     /* ============================================================
        HERO
     ============================================================ */
-    .hero {
-      position: relative;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      overflow: hidden;
+    .hero-eyebrow-row {
+      display: flex; align-items: baseline; justify-content: space-between;
+      border-bottom: 1px solid var(--hair); padding-bottom: 18px; margin-bottom: 56px;
     }
-    .hero__orb {
-      position: absolute;
-      border-radius: 50%;
-      pointer-events: none;
-      filter: blur(100px);
-      opacity: 0.18;
+    .hero-eyebrow-l { font-family: var(--mono); font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--terra); }
+    .hero-eyebrow-r { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; color: var(--muted); }
+    .hero-title {
+      font-family: var(--serif); font-weight: 400;
+      font-size: clamp(68px, 10.5vw, 172px); line-height: 0.96;
+      margin: 0 0 56px; letter-spacing: -0.01em; animation: fadeUp 0.7s ease both;
     }
-    .hero__orb--teal {
-      width: 700px; height: 700px;
-      background: radial-gradient(circle, var(--color-accent), transparent 70%);
-      top: -200px; left: -200px;
-    }
-    .hero__orb--violet {
-      width: 600px; height: 600px;
-      background: radial-gradient(circle, var(--color-violet), transparent 70%);
-      bottom: -200px; right: -100px;
-    }
-    .hero__inner {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: 45fr 55fr;
-      gap: 64px;
-      align-items: center;
-      padding-top: 80px;
-    }
-    .hero__topbadge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      background: rgba(0,212,170,0.08);
-      border: 1px solid var(--color-border-active);
-      border-radius: 999px;
-      font-size: 0.78rem;
-      font-weight: 500;
-      color: var(--color-accent);
-      margin-bottom: 20px;
-    }
-    .hero__h1 {
-      font-size: clamp(2.4rem, 5.5vw, 4rem);
-      font-weight: 800;
-      line-height: 1.1;
-      letter-spacing: -0.025em;
-      margin-bottom: 20px;
-    }
-    .hero__sub {
-      font-size: 1.1rem;
-      color: var(--color-text-muted);
-      font-weight: 300;
-      margin-bottom: 32px;
-      max-width: 480px;
-      line-height: 1.7;
-    }
-    .hero__npm {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 18px;
-      background: var(--color-code-bg);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-btn);
-      font-family: var(--font-code);
-      font-size: 0.9rem;
-      color: var(--color-accent);
-      cursor: pointer;
-      margin-bottom: 24px;
-      transition: border-color 0.2s, background 0.2s;
-      width: fit-content;
-    }
-    .hero__npm:hover { border-color: var(--color-border-active); background: rgba(0,212,170,0.06); }
-    .hero__ctas {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-bottom: 24px;
-    }
-    /* Accessibility badges — below CTAs, left-aligned */
-    .hero__badges {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-start;
-    }
-    .hero__badge-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      border-radius: 20px;
-      padding: 5px 11px;
-      font-size: 0.73rem;
-      font-weight: 500;
-      border: 1px solid;
-    }
-    .hero__badge-pill--teal  { background: rgba(0,212,170,0.08); border-color: rgba(0,212,170,0.22); color: var(--color-accent); }
-    .hero__badge-pill--violet{ background: rgba(157,111,232,0.08); border-color: rgba(157,111,232,0.22); color: var(--color-violet); }
-    .hero__badge-pill--cyan  { background: rgba(91,200,245,0.08); border-color: rgba(91,200,245,0.22); color: var(--color-cyan); }
-    .hero__badge-pill--cta   { background: rgba(255,107,53,0.08); border-color: rgba(255,107,53,0.22); color: var(--color-cta); }
-    .btn-primary {
-      padding: 12px 28px;
-      background: var(--color-cta);
-      border: none;
-      border-radius: var(--radius-btn);
-      color: #fff;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-    }
-    .btn-primary:hover {
-      background: var(--color-cta-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 32px rgba(255,107,53,0.35);
-    }
-    .btn-ghost {
-      padding: 12px 28px;
-      background: transparent;
-      border: 1px solid var(--color-border-active);
-      border-radius: var(--radius-btn);
-      color: var(--color-text);
-      font-size: 0.95rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.2s, border-color 0.2s, transform 0.15s;
-    }
-    .btn-ghost:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.3); transform: translateY(-2px); }
-
-    /* Hero right — Cursor Bait Zone */
-    .hero__bait {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .bait-item {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 20px 24px;
-      background: rgba(255,255,255,0.025);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-card);
-      transition: border-color 0.25s, background 0.25s;
-      cursor: none;
-    }
-    .bait-item:hover { border-color: var(--color-border-active); background: rgba(0,212,170,0.04); }
-    .bait-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      background: var(--color-accent);
-      flex-shrink: 0;
-    }
-    .bait-dot.violet { background: var(--color-violet); }
-    .bait-dot.cyan   { background: var(--color-cyan); }
-    .bait-dot.cta    { background: var(--color-cta); }
-    .bait-label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--color-text-muted);
-    }
-    .bait-desc { font-size: 0.85rem; color: var(--color-text-muted); margin-left: auto; }
-    .hero__state-label {
-      text-align: center;
-      font-size: 0.78rem;
-      font-weight: 500;
-      color: var(--color-text-muted);
-      letter-spacing: 0.08em;
-      padding: 8px;
-    }
-    .hero__state-label span { color: var(--color-accent); font-family: var(--font-code); }
-    .hero__scroll-arrow {
-      position: absolute;
-      bottom: 36px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      color: var(--color-text-muted);
-      font-size: 0.75rem;
-      letter-spacing: 0.1em;
-      animation: bounce 2s ease-in-out infinite;
-      z-index: 1;
-    }
-    .hero__scroll-arrow svg { width: 20px; height: 20px; }
-    @keyframes bounce {
-      0%, 100% { transform: translateX(-50%) translateY(0); }
-      50%       { transform: translateX(-50%) translateY(6px); }
-    }
+    .hero-title span { display: inline-block; }
+    .hero-title .line-2 { color: var(--terra); margin-left: 0.85em; }
+    .hero-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: end; }
+    .hero-intro { font-size: 19px; line-height: 1.7; color: var(--ink-2); margin: 0; max-width: 52ch; }
+    .hero-intro .serif { font-family: var(--serif); }
+    .try-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+    .try-strip { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid rgba(28,25,21,0.2); }
+    .try-cell { padding: 22px 8px 8px; border-right: 1px solid var(--hair); }
+    .try-cell:nth-child(2) { padding-left: 22px; }
+    .try-cell:last-child { padding: 22px 8px 8px 22px; border-right: none; }
+    .try-cell .t { font-family: var(--serif); font-size: 26px; }
+    .try-cell .d { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
     /* ============================================================
-       FEATURES STRIP
+       FRIEZE TICKER
     ============================================================ */
-    .features {
-      padding: 0 0 80px;
-    }
-    .features__grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-top: 40px;
-    }
-    .feat-card {
-      padding: 24px;
-      background: var(--color-bg-secondary);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-card);
-      transition: border-color 0.25s, transform 0.2s;
-    }
-    .feat-card:hover { border-color: var(--color-border-active); transform: translateY(-3px); }
-    .feat-card__icon { font-size: 1.8rem; margin-bottom: 14px; }
-    .feat-card__title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: var(--color-text);
-    }
-    .feat-card__desc { font-size: 0.83rem; color: var(--color-text-muted); line-height: 1.6; }
-    .feat-card__link {
-      display: inline-block;
-      margin-top: 12px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: var(--color-accent);
-      letter-spacing: 0.04em;
-    }
-    .feat-card__link:hover { text-decoration: underline; }
+    .frieze { overflow: hidden; background: var(--ink); padding: 17px 0; white-space: nowrap; }
+    .frieze-track { display: inline-flex; animation: marquee 36s linear infinite; will-change: transform; }
+    .frieze-run { font-family: var(--serif); font-size: 19px; color: var(--paper); }
+    .frieze-run .ver { font-family: var(--mono); font-size: 13px; letter-spacing: 0.14em; color: var(--terra-lt); }
+    .frieze-run .sep { color: var(--terra); }
 
     /* ============================================================
-       MODES (circle / fluid)
+       CARDS / DEMOS
     ============================================================ */
-    .modes__grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      margin-top: 48px;
+    .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    .trio { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
+    .card {
+      border: 1px solid rgba(28,25,21,0.18); background: var(--panel);
+      padding: 44px 40px; min-height: 220px; transition: border-color 0.25s ease;
     }
-    .mode-card {
-      background: var(--color-bg-secondary);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-card);
-      overflow: hidden;
-      transition: border-color 0.3s;
-    }
-    .mode-card:hover { border-color: var(--color-border-active); }
-    .mode-card__body { padding: 28px 28px 20px; }
-    .mode-card__tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 12px;
-      border-radius: 999px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin-bottom: 14px;
-    }
-    .mode-card__tag.circle { background: rgba(0,212,170,0.12); color: var(--color-accent); }
-    .mode-card__tag.fluid  { background: rgba(157,111,232,0.12); color: var(--color-violet); }
-    .mode-card__code {
-      font-family: var(--font-code);
-      font-size: 0.78rem;
-      color: var(--color-text-muted);
-      padding: 4px 10px;
-      background: var(--color-code-bg);
-      border-radius: 6px;
-      display: inline-block;
-      margin-bottom: 14px;
-    }
-    .mode-card__title { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
-    .mode-card__desc { font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.65; }
-    .mode-card__area {
-      margin: 20px 28px 28px;
-      height: 140px;
-      border: 1px dashed var(--color-border);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.8rem;
-      color: var(--color-text-muted);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      transition: border-color 0.25s, background 0.25s;
-      cursor: none;
-    }
-    .mode-card__area:hover {
-      border-color: var(--color-border-active);
-      background: rgba(0,212,170,0.03);
-    }
-    .modes__toggle {
-      display: flex;
-      justify-content: center;
-      margin-top: 32px;
-    }
-    .btn-toggle {
-      padding: 12px 32px;
-      background: rgba(157,111,232,0.1);
-      border: 1px solid rgba(157,111,232,0.3);
-      border-radius: var(--radius-btn);
-      color: var(--color-violet);
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s, border-color 0.2s, transform 0.15s;
-    }
-    .btn-toggle:hover { background: rgba(157,111,232,0.18); transform: translateY(-2px); }
+    .card:hover { border-color: var(--terra); }
+    .card .tag { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--terra); margin-bottom: 16px; }
+    .card .name { font-family: var(--serif); font-size: 34px; margin-bottom: 12px; }
+    .card .body { font-size: 15px; line-height: 1.7; color: var(--muted); margin: 0; }
 
-    /* ============================================================
-       PRESETS
-    ============================================================ */
-    .presets__grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 14px;
-      margin-top: 40px;
+    .ghost-btn {
+      margin-top: 32px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em;
+      background: transparent; color: var(--ink);
+      border: 1px solid var(--hair-strong); padding: 14px 26px; cursor: pointer;
+      transition: border-color 0.25s ease, color 0.25s ease;
     }
-    .preset-card {
-      padding: 22px 18px;
-      background: var(--color-bg-secondary);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-card);
-      transition: border-color 0.25s, transform 0.2s, background 0.25s;
-      cursor: none;
-      text-align: center;
-    }
-    .preset-card:hover { border-color: var(--color-border-active); transform: translateY(-4px); background: rgba(0,212,170,0.03); }
-    .preset-card__icon { font-size: 2rem; margin-bottom: 10px; display: block; }
-    .preset-card__name {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--color-text);
-      margin-bottom: 6px;
-    }
-    .preset-card__mode {
-      display: inline-block;
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 2px 8px;
-      border-radius: 999px;
-      margin-bottom: 8px;
-    }
-    .preset-card__mode.circle { background: rgba(0,212,170,0.1); color: var(--color-accent); }
-    .preset-card__mode.fluid  { background: rgba(157,111,232,0.1); color: var(--color-violet); }
-    .preset-card__desc { font-size: 0.78rem; color: var(--color-text-muted); line-height: 1.5; margin-bottom: 12px; }
-    .preset-card__code { font-family: var(--font-code); font-size: 0.7rem; color: var(--color-accent); }
-    .presets__code-block {
-      margin-top: 32px;
-      background: var(--color-code-bg);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-card);
-      padding: 24px;
-      font-family: var(--font-code);
-      font-size: 0.88rem;
-      line-height: 1.8;
-    }
-    .presets__code-block .cb-label {
-      font-size: 0.72rem;
-      color: var(--color-text-muted);
-      letter-spacing: .05em;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
+    .ghost-btn:hover { border-color: var(--terra); color: var(--terra); }
 
-    /* ============================================================
-       QUICK START
-    ============================================================ */
-    .quickstart__steps {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin-top: 48px;
-    }
-    .qs-card {
-      background: var(--color-code-bg);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-card);
-      overflow: hidden;
-    }
-    .qs-card__header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--color-border);
-      background: rgba(255,255,255,0.02);
-    }
-    .qs-card__step {
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--color-text-muted);
-    }
-    .qs-card__dots { display: flex; gap: 5px; }
-    .qs-card__dots span {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.1);
-    }
-    .qs-card__dots span:nth-child(1) { background: #FF5F57; }
-    .qs-card__dots span:nth-child(2) { background: #FFBD2E; }
-    .qs-card__dots span:nth-child(3) { background: #28C840; }
-    .qs-card__code {
-      padding: 20px;
-      font-family: var(--font-code);
-      font-size: 0.85rem;
-      line-height: 1.7;
-      overflow-x: auto;
-    }
-    /* Syntax highlight classes */
-    .sh-keyword  { color: #9D6FE8; }
-    .sh-string   { color: #00D4AA; }
-    .sh-number   { color: #FF9A3C; }
-    .sh-comment  { color: #4A6070; font-style: italic; }
-    .sh-prop     { color: #E8F4F8; }
-    .sh-fn       { color: #5BC8F5; }
-    .sh-punct    { color: #8BA8B5; }
+    /* presets strip (dark) */
+    .preset-strip { display: grid; grid-template-columns: repeat(5, 1fr); background: var(--ink); border-left: 1px solid rgba(243,239,229,0.16); }
+    .preset-cell { border-right: 1px solid rgba(243,239,229,0.16); padding: 28px 22px 34px; min-height: 190px; transition: background 0.25s ease; }
+    .preset-cell:hover { background: rgba(243,239,229,0.07); }
+    .preset-cell .num { font-family: var(--serif); font-size: 15px; color: rgba(243,239,229,0.4); margin-bottom: 20px; }
+    .preset-cell .name { font-family: var(--serif); font-size: 27px; margin-bottom: 10px; color: var(--paper); }
+    .preset-cell .desc { font-size: 13px; line-height: 1.6; color: rgba(243,239,229,0.55); }
+    .preset-note { font-size: 13px; color: var(--muted); margin: 14px 4px 0; }
 
-    /* ============================================================
-       CLICK ANIMATIONS
-    ============================================================ */
-    .click-anim__grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin-top: 48px;
+    /* click boxes */
+    .click-box {
+      border: 1px solid rgba(28,25,21,0.18); background: var(--panel); min-height: 210px;
+      display: flex; flex-direction: column; justify-content: space-between; padding: 28px;
+      transition: border-color 0.25s ease;
     }
-    .anim-box {
-      position: relative;
-      height: 200px;
-      border-radius: var(--radius-card);
-      border: 1px solid var(--color-border);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      overflow: hidden;
-      cursor: none;
-      transition: border-color 0.25s, transform 0.2s;
-    }
-    .anim-box:hover { transform: translateY(-3px); }
-    .anim-box--scale  { background: linear-gradient(135deg, rgba(91,200,245,0.08), rgba(91,200,245,0.02)); border-color: rgba(91,200,245,0.2); }
-    .anim-box--scale:hover  { border-color: rgba(91,200,245,0.4); }
-    .anim-box--ripple { background: linear-gradient(135deg, rgba(0,212,170,0.08), rgba(0,212,170,0.02)); border-color: rgba(0,212,170,0.2); }
-    .anim-box--ripple:hover { border-color: rgba(0,212,170,0.4); }
-    .anim-box--none   { background: linear-gradient(135deg, rgba(139,168,181,0.08), rgba(139,168,181,0.02)); border-color: rgba(139,168,181,0.2); }
-    .anim-box--none:hover   { border-color: rgba(139,168,181,0.3); }
-    .anim-box__icon { font-size: 2.2rem; }
-    .anim-box__name { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; }
-    .anim-box--scale  .anim-box__name { color: var(--color-cyan); }
-    .anim-box--ripple .anim-box__name { color: var(--color-accent); }
-    .anim-box--none   .anim-box__name { color: var(--color-text-muted); }
-    .anim-box__sub { font-size: 0.8rem; color: var(--color-text-muted); }
-    .anim-box--scale::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(91,200,245,0.04) 12px, rgba(91,200,245,0.04) 13px);
-    }
-    .anim-box--ripple::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at 50% 50%, rgba(0,212,170,0.1) 0%, transparent 70%);
-    }
-    .click-anim__hint {
-      margin-top: 20px;
-      text-align: center;
-      font-size: 0.85rem;
-      color: var(--color-text-muted);
-    }
+    .click-box:hover { border-color: var(--terra); }
+    .click-box .tag { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--terra); }
+    .click-box .tag.mute { color: var(--muted); }
+    .click-box .name { font-family: var(--serif); font-size: 28px; }
+    .click-box .d { font-size: 13px; color: var(--muted); margin-top: 4px; }
 
-    /* ============================================================
-       MAGNETIC
-    ============================================================ */
-    .magnetic__grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 20px;
-      margin-top: 48px;
-    }
+    /* magnetic cards */
     .mg-card {
-      position: relative;
-      min-height: 230px;
-      border-radius: var(--radius-card);
-      border: 1px solid var(--color-border);
-      background: linear-gradient(135deg, rgba(0,212,170,0.05), rgba(157,111,232,0.03));
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      padding: 28px 20px;
-      cursor: none;
-      transition: border-color 0.25s;
+      border: 1px solid rgba(28,25,21,0.18); background: var(--panel); padding: 28px; min-height: 230px;
+      display: flex; flex-direction: column; gap: 24px;
     }
-    .mg-card:hover { border-color: var(--color-border-active); }
+    .mg-card .tag { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--terra); }
+    .mg-card .well { flex: 1; display: flex; align-items: center; justify-content: center; }
+    .mg-card .cap { font-size: 13px; color: var(--muted); }
     .mg-target {
-      padding: 16px 34px;
-      border-radius: 14px;
-      border: 1px solid rgba(0,212,170,0.35);
-      background: rgba(0,212,170,0.08);
-      color: var(--color-accent);
-      font-family: inherit;
-      font-size: 0.85rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      cursor: none;
+      border: 1px solid rgba(28,25,21,0.4); background: transparent;
+      font-family: var(--serif); font-size: 15px; color: var(--ink); cursor: pointer;
     }
-    .mg-target--wide { padding: 22px 48px; }
-    .mg-card__sub { font-size: 0.8rem; color: var(--color-text-muted); text-align: center; max-width: 240px; }
-    .mg-card__code {
-      font-family: var(--font-code);
-      font-size: 0.72rem;
-      color: var(--color-violet);
-      background: rgba(157,111,232,0.08);
-      border: 1px solid rgba(157,111,232,0.2);
-      border-radius: 6px;
-      padding: 4px 10px;
-    }
-    .magnetic__hint {
-      margin-top: 20px;
-      text-align: center;
-      font-size: 0.85rem;
-      color: var(--color-text-muted);
-    }
+    .mg-target.circle { width: 92px; height: 92px; border-radius: 50%; }
+    .mg-target.pill { width: 130px; height: 76px; }
+    .mg-target.dashed { width: 92px; height: 92px; border-radius: 50%; border-style: dashed; }
 
     /* ============================================================
        PLAYGROUND
     ============================================================ */
-    .playground__presets {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .preset-btn {
-      padding: 6px 16px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--color-border);
-      border-radius: 999px;
-      font-size: 0.82rem;
-      font-weight: 500;
-      color: var(--color-text-muted);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .preset-btn:hover { border-color: var(--color-border-active); color: var(--color-text); }
-    .preset-btn.active { background: rgba(0,212,170,0.12); border-color: var(--color-accent); color: var(--color-accent); }
+    .pg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+    .pg-controls { display: flex; flex-direction: column; gap: 28px; }
+    .pg-field { border-top: 1px solid var(--hair); padding-top: 18px; }
+    .pg-field.row { display: flex; align-items: center; justify-content: space-between; }
+    .pg-caption { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+    .pg-caption.nomb { margin-bottom: 0; }
+    .pg-caption-row { display: flex; justify-content: space-between; margin-bottom: 12px; }
+    .pg-value { font-family: var(--mono); font-size: 12px; color: var(--terra); }
+    .pg-range { width: 100%; }
 
-    .playground__layout {
-      display: grid;
-      grid-template-columns: 280px 1fr 260px;
-      gap: 20px;
-      margin-top: 24px;
+    .seg-group { display: flex; border: 1px solid var(--hair-strong); width: fit-content; }
+    .seg {
+      font-family: var(--mono); font-size: 12px; padding: 10px 24px;
+      border: none; cursor: pointer; background: transparent; color: var(--ink);
     }
-    .pg-panel {
-      background: var(--color-bg-secondary);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-card);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      max-height: 600px;
-      overflow-y: auto;
-    }
-    .pg-panel::-webkit-scrollbar { width: 4px; }
-    .pg-panel::-webkit-scrollbar-thumb { background: var(--color-border-active); border-radius: 2px; }
-    .pg-group { display: flex; flex-direction: column; gap: 10px; }
-    .pg-group__label {
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--color-text-muted);
-      padding-bottom: 6px;
-      border-bottom: 1px solid var(--color-border);
-    }
-    .pg-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.82rem;
-      color: var(--color-text-muted);
-    }
-    .pg-row label { min-width: 48px; font-size: 0.78rem; }
-    .pg-slider {
-      flex: 1;
-      -webkit-appearance: none;
-      height: 3px;
-      border-radius: 2px;
-      background: var(--color-border);
-      outline: none;
-      cursor: pointer;
-    }
-    .pg-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      background: var(--color-accent);
-      cursor: pointer;
-    }
-    .pg-slider-val { font-family: var(--font-code); font-size: 0.75rem; color: var(--color-accent); min-width: 36px; text-align: right; }
-    .pg-color {
-      width: 32px; height: 24px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      padding: 0;
-      background: none;
-    }
-    .pg-switch { position: relative; display: inline-block; width: 36px; height: 20px; }
-    .pg-switch input { opacity: 0; width: 0; height: 0; }
-    .pg-switch .slider {
-      position: absolute;
-      inset: 0;
-      background: var(--color-border);
-      border-radius: 20px;
-      transition: background 0.2s;
-      cursor: pointer;
-    }
-    .pg-switch .slider::before {
-      content: '';
-      position: absolute;
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      background: #fff;
-      left: 3px; top: 3px;
-      transition: transform 0.2s;
-    }
-    .pg-switch input:checked + .slider { background: var(--color-accent); }
-    .pg-switch input:checked + .slider::before { transform: translateX(16px); }
-    .pg-toggle {
-      display: flex;
-      gap: 4px;
-    }
-    .pg-toggle button {
-      flex: 1;
-      padding: 6px 10px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--color-border);
-      border-radius: 8px;
-      font-size: 0.8rem;
-      color: var(--color-text-muted);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .pg-toggle button.active { background: rgba(0,212,170,0.12); border-color: var(--color-border-active); color: var(--color-accent); }
-    .pg-radio-group { display: flex; flex-direction: column; gap: 8px; }
-    .pg-radio {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.82rem;
-      color: var(--color-text-muted);
-      cursor: pointer;
-    }
-    .pg-radio input[type=radio] { accent-color: var(--color-accent); }
-    .pg-input-text {
-      flex: 1;
-      background: var(--color-code-bg);
-      border: 1px solid var(--color-border);
-      border-radius: 6px;
-      color: var(--color-text);
-      padding: 5px 10px;
-      font-size: 0.82rem;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .pg-input-text:focus { border-color: var(--color-border-active); }
+    .seg + .seg { border-left: 1px solid var(--hair-strong); }
+    .seg.active { background: var(--ink); color: var(--paper); }
 
-    /* Canvas */
-    .pg-canvas {
-      background: var(--color-bg-secondary);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-card);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 400px;
-      cursor: none;
-      position: relative;
-      overflow: hidden;
+    .btn-row { display: flex; gap: 10px; }
+    .pill-btn {
+      font-family: var(--mono); font-size: 12px; padding: 8px 16px;
+      border: 1px solid var(--hair-strong); cursor: pointer; background: transparent; color: var(--ink);
     }
-    .pg-canvas::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at 30% 40%, rgba(0,212,170,0.04) 0%, transparent 60%),
-                  radial-gradient(circle at 70% 70%, rgba(157,111,232,0.04) 0%, transparent 60%);
-    }
-    .pg-canvas__inner { text-align: center; z-index: 1; }
-    .pg-canvas__title { font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 28px; }
-    .pg-canvas__targets { display: flex; gap: 20px; justify-content: center; }
-    .pg-target {
-      width: 60px; height: 60px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--color-border);
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.6rem;
-      transition: border-color 0.2s, transform 0.2s;
-      cursor: none;
-    }
-    .pg-target:hover { border-color: var(--color-border-active); transform: scale(1.1); }
-    .pg-canvas__hint { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 20px; }
+    .pill-btn.wide { padding: 8px 18px; }
+    .pill-btn.active { background: var(--ink); color: var(--paper); }
 
-    /* Output */
-    .pg-output {
-      background: var(--color-code-bg);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-card);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
+    .swatch-row { display: flex; gap: 14px; }
+    .swatch { width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 1px solid rgba(28,25,21,0.25); padding: 0; }
+    .swatch.active { border: 3px solid rgba(166,75,42,0.5); }
+
+    .pg-sub { padding-left: 20px; border-left: 1px solid rgba(166,75,42,0.4); }
+    .pg-sub.stack { display: flex; flex-direction: column; gap: 16px; }
+    .pg-text-input {
+      font-family: var(--mono); font-size: 13px; padding: 10px 14px;
+      border: 1px solid var(--hair-strong); background: var(--panel); color: var(--ink);
+      width: 200px; outline: none;
     }
-    .pg-output__header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--color-border);
-      background: rgba(255,255,255,0.02);
+    .pg-targets { display: flex; gap: 14px; padding-top: 6px; }
+    .pg-target-btn {
+      width: 74px; height: 74px; border-radius: 50%; border: 1px solid rgba(28,25,21,0.4);
+      background: var(--panel); font-family: var(--mono); font-size: 12px; cursor: pointer;
     }
-    .pg-output__label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-text-muted); }
-    .btn-copy {
-      padding: 4px 12px;
-      background: rgba(0,212,170,0.1);
-      border: 1px solid var(--color-border-active);
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--color-accent);
-      cursor: pointer;
-      transition: background 0.2s;
+    .reset-btn {
+      font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em;
+      background: transparent; color: var(--muted); border: 1px solid rgba(28,25,21,0.25);
+      padding: 10px 20px; cursor: pointer; transition: color 0.25s ease, border-color 0.25s ease;
     }
-    .btn-copy:hover { background: rgba(0,212,170,0.2); }
-    .pg-output__code {
-      flex: 1;
-      padding: 20px;
-      font-family: var(--font-code);
-      font-size: 0.8rem;
-      line-height: 1.75;
-      color: var(--color-text);
-      overflow-y: auto;
-      white-space: pre-wrap;
+    .reset-btn:hover { color: var(--terra); border-color: var(--terra); }
+
+    .pg-code-wrap { position: sticky; top: 110px; }
+    .code-panel { background: var(--ink); padding: 32px 32px 28px; }
+    .code-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .code-panel-head .label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(243,239,229,0.5); }
+    .copy-btn {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em;
+      background: transparent; color: var(--paper); border: 1px solid rgba(243,239,229,0.35);
+      padding: 7px 16px; cursor: pointer; transition: color 0.25s ease, border-color 0.25s ease;
+    }
+    .copy-btn:hover { border-color: var(--terra-lt); color: var(--terra-lt); }
+    .code-panel pre { font-family: var(--mono); font-size: 13px; line-height: 1.75; color: var(--code); margin: 0; white-space: pre-wrap; }
+    .pg-code-note { font-size: 13px; line-height: 1.7; color: var(--muted); margin: 18px 4px 0; }
+
+    .hidden { display: none !important; }
+
+    /* ============================================================
+       QUICK START
+    ============================================================ */
+    .qs-step-label { font-family: var(--serif); font-size: 17px; color: var(--terra); border-top: 1px solid rgba(28,25,21,0.2); padding-top: 14px; margin-bottom: 14px; }
+    .code-block {
+      font-family: var(--mono); font-size: 12.5px; line-height: 1.7;
+      background: var(--ink); color: var(--code); padding: 22px; margin: 0; overflow-x: auto;
     }
 
     /* ============================================================
        DOCS CTA
     ============================================================ */
-    .docs-cta {
-      padding: 80px 0;
-      text-align: center;
+    .cta-section { max-width: 1260px; margin: 0 auto; padding: 110px 48px 130px; }
+    .cta-band { background: var(--ink); padding: 110px 48px; text-align: center; }
+    .cta-eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--terra-lt); margin-bottom: 22px; }
+    .cta-h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(40px, 6vw, 84px); line-height: 1.05; margin: 0 0 40px; color: var(--paper); }
+    .cta-p { font-size: 16px; line-height: 1.7; color: rgba(243,239,229,0.55); max-width: 52ch; margin: 0 auto 44px; }
+    .cta-btn {
+      display: inline-block; font-family: var(--mono); font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;
+      background: var(--paper); color: var(--ink); text-decoration: none; padding: 20px 44px;
+      transition: background 0.25s ease, color 0.25s ease;
     }
-    .docs-cta__inner {
-      max-width: 560px;
-      margin: 0 auto;
-    }
-    .docs-cta__title {
-      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
-      font-weight: 800;
-      margin-bottom: 16px;
-    }
-    .docs-cta__sub {
-      font-size: 1rem;
-      color: var(--color-text-muted);
-      margin-bottom: 32px;
-      line-height: 1.7;
-    }
-    .docs-cta__pills {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 32px;
-    }
-    .docs-cta__pill {
-      padding: 6px 14px;
-      background: var(--color-bg-secondary);
-      border: 1px solid var(--color-border);
-      border-radius: 999px;
-      font-size: 0.8rem;
-      color: var(--color-text-muted);
-    }
-    .btn-docs-big {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 36px;
-      background: linear-gradient(135deg, var(--color-accent), var(--color-violet));
-      border: none;
-      border-radius: var(--radius-btn);
-      color: #fff;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-    }
-    .btn-docs-big:hover {
-      opacity: 0.9;
-      transform: translateY(-2px);
-      box-shadow: 0 16px 40px rgba(0,212,170,0.3);
-    }
+    .cta-btn:hover { background: var(--terra); color: var(--paper); }
 
     /* ============================================================
-       FOOTER
+       FOOTER + FIXED CHROME
     ============================================================ */
-    .footer {
-      border-top: 1px solid var(--color-border);
-      padding: 40px 0;
-      text-align: center;
-    }
-    .footer__tagline { font-size: 1rem; color: var(--color-text-muted); margin-bottom: 24px; }
-    .footer__links { display: flex; justify-content: center; gap: 28px; margin-bottom: 28px; }
-    .footer__links a { font-size: 0.875rem; color: var(--color-text-muted); transition: color 0.2s; }
-    .footer__links a:hover { color: var(--color-accent); }
-    .footer__copy { font-size: 0.8rem; color: rgba(139,168,181,0.45); }
+    .footer { max-width: 1260px; margin: 0 auto; padding: 0 48px 60px; }
+    .footer-inner { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .footer-mark { font-family: var(--serif); font-size: 18px; }
+    .footer-links { display: flex; gap: 28px; }
+    .footer-links a { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.25s ease; }
+    .footer-links a:hover { color: var(--ink); }
+    .footer-license { font-family: var(--mono); font-size: 11px; color: var(--muted); }
 
-    /* ============================================================
-       RESPONSIVE
-    ============================================================ */
-    @media (max-width: 1100px) {
-      .playground__layout { grid-template-columns: 260px 1fr; }
-      .pg-output { display: none; }
-      .presets__grid { grid-template-columns: repeat(3, 1fr); }
+    .folio {
+      position: fixed; left: 20px; bottom: 26px; z-index: 900;
+      font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted);
+      writing-mode: vertical-rl; transform: rotate(180deg); pointer-events: none;
     }
-    @media (max-width: 900px) {
-      .hero__inner { grid-template-columns: 1fr; gap: 40px; }
-      .hero__bait  { display: none; }
-      .quickstart__steps { grid-template-columns: 1fr; }
-      .modes__grid { grid-template-columns: 1fr; }
-      .click-anim__grid { grid-template-columns: 1fr; }
-      .playground__layout { grid-template-columns: 1fr; }
-      .pg-canvas { min-height: 280px; }
-      .features__grid { grid-template-columns: repeat(2, 1fr); }
-      .presets__grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 600px) {
-      .nav__links  { display: none; }
-      .nav__npm    { display: none; }
-      .features__grid { grid-template-columns: 1fr; }
-      .presets__grid { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    /* ============================================================
-       TOAST
-    ============================================================ */
     .toast {
-      position: fixed;
-      bottom: 28px;
-      right: 28px;
-      padding: 10px 20px;
-      background: rgba(0,212,170,0.15);
-      border: 1px solid var(--color-accent);
-      border-radius: 10px;
-      color: var(--color-accent);
-      font-size: 0.85rem;
-      font-weight: 500;
-      z-index: 99999;
-      transform: translateY(80px);
-      opacity: 0;
-      transition: transform 0.3s, opacity 0.3s;
-      pointer-events: none;
-      backdrop-filter: blur(12px);
+      position: fixed; left: 50%; bottom: 34px; transform: translateX(-50%); z-index: 9500;
+      background: var(--ink); color: var(--paper); font-family: var(--mono); font-size: 12.5px;
+      padding: 13px 26px; pointer-events: none; transition: opacity 0.3s ease; opacity: 0;
     }
-    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ============================================================
+       RESPONSIVE SAFETY
+    ============================================================ */
+    @media (max-width: 900px) {
+      .hero { padding: 90px 24px 70px; }
+      .section { padding: 70px 24px; }
+      .cta-section { padding: 80px 24px 90px; }
+      .footer { padding: 0 24px 48px; }
+      .sgrid { grid-template-columns: 1fr; gap: 20px; }
+      .numeral { font-size: 54px; }
+      .hero-cols { grid-template-columns: 1fr; gap: 40px; }
+      .duo, .pg-grid { grid-template-columns: 1fr; }
+      .trio { grid-template-columns: 1fr; }
+      .preset-strip { grid-template-columns: 1fr 1fr; }
+      .pg-code-wrap { position: static; }
+      .cta-band { padding: 70px 24px; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- Banners -->
-  <div id="banner-mobile" class="banner-top">
-    <span>Heads up!</span> Proteus Cursor is best experienced on a desktop with a real mouse.
+<div class="noise"></div>
+
+<!-- ============ MASTHEAD ============ -->
+<header class="masthead">
+  <div class="masthead-inner">
+    <a href="#top" class="wordmark" data-cursor-state="nav-link">Proteus<span>&nbsp;Cursor</span></a>
+    <nav class="nav">
+      <a href="#modes" class="navlink" data-cursor-state="nav-link">Modes</a>
+      <a href="#presets" class="navlink" data-cursor-state="nav-link">Presets</a>
+      <a href="#playground" class="navlink" data-cursor-state="nav-link">Playground</a>
+      <a href="documentation.html" class="navlink active" data-cursor-state="nav-link">Documentation</a>
+      <button class="npm-btn" id="npm-copy">npm i proteuscursor</button>
+    </nav>
   </div>
-  <div id="banner-motion" class="banner-top">
-    <span>Reduced motion detected.</span> The custom cursor has been disabled to respect your system preferences.
+</header>
+
+<!-- ============ HERO ============ -->
+<section id="top" class="hero">
+  <div class="hero-eyebrow-row">
+    <span class="hero-eyebrow-l">A shapeshifting cursor library</span>
+    <span class="hero-eyebrow-r">Zero dependencies · TypeScript · &lt; 20 KB</span>
   </div>
 
-  <!-- Toast -->
-  <div class="toast" id="toast">Copied to clipboard!</div>
+  <h1 class="hero-title" id="hero-title">
+    <span data-hero-word data-cursor-state="hero-title">The cursor,</span><br />
+    <span data-hero-word data-cursor-state="hero-title" class="line-2">transfigured.</span>
+  </h1>
 
-  <!-- ============================================================
-       NAV
-  ============================================================ -->
-  <nav class="nav" id="nav">
-    <div class="container">
-      <div class="nav__inner">
-        <a href="#" class="nav__logo" data-cursor-state="nav-link">Proteus<span>.</span></a>
-        <ul class="nav__links">
-          <li><a href="#modes"      data-cursor-state="nav-link">Modes</a></li>
-          <li><a href="#presets"    data-cursor-state="nav-link">Presets</a></li>
-          <li><a href="#clickanim"  data-cursor-state="nav-link">Animations</a></li>
-          <li><a href="#magnetic" data-cursor-state="nav-link">Magnetic</a></li>
-          <li><a href="#playground" data-cursor-state="nav-link">Playground</a></li>
-          <li><a href="#quickstart" data-cursor-state="nav-link">Quick Start</a></li>
-        </ul>
-        <div class="nav__right">
-          <button class="nav__npm" id="nav-npm-copy" title="Copy install command">
-            <span>npm install proteuscursor</span>
-            <span class="copy-icon">⎘</span>
-          </button>
-          <a href="documentation.html">
-            <button class="btn-docs" data-cursor-state="nav-link">Docs ↗</button>
-          </a>
-          <a href="https://github.com/Shuriken933/proteus-cursor" target="_blank" rel="noopener">
-            <button class="btn-github" data-cursor-state="nav-link">GitHub →</button>
-          </a>
+  <div class="hero-cols">
+    <p class="hero-intro">
+      Named after <span class="serif">Proteus</span>, the old god of the sea who assumed every form — Proteus lets the pointer morph into dot, circle, fluid blob or text as it travels across your interface. Vanilla JS, with first-class adapters for React, Vue&nbsp;3 and Svelte.
+    </p>
+    <div>
+      <div class="try-label">Try the shapes — hover, then look at your cursor</div>
+      <div class="try-strip">
+        <div class="try-cell" data-cursor-state="hero-fluid">
+          <div class="t">Fluid</div>
+          <div class="d">a blob that stretches</div>
+        </div>
+        <div class="try-cell" data-cursor-state="hero-text">
+          <div class="t">Text</div>
+          <div class="d">words under the pointer</div>
+        </div>
+        <div class="try-cell" data-cursor-state="hero-cta">
+          <div class="t">Call to act</div>
+          <div class="d">an invitation</div>
         </div>
       </div>
     </div>
-  </nav>
+  </div>
+</section>
 
-  <!-- ============================================================
-       HERO
-  ============================================================ -->
-  <section class="hero" id="hero">
-    <div class="hero__orb hero__orb--teal"></div>
-    <div class="hero__orb hero__orb--violet"></div>
+<!-- ============ FRIEZE TICKER ============ -->
+<div class="frieze">
+  <div class="frieze-track">
+    <span class="frieze-run"><span class="ver">v2.2.0 — latest release</span><span class="sep">&nbsp;&nbsp;·&nbsp;&nbsp;</span>Magnetic parallax<span class="sep">&nbsp;&nbsp;·&nbsp;&nbsp;</span>State-machine debug overlay<span class="sep">&nbsp;&nbsp;·&nbsp;&nbsp;</span>Static reduced-motion fallback<span class="sep">&nbsp;&nbsp;·&nbsp;&nbsp;</span>Adapters for React, Vue 3 &amp; Svelte<span class="sep">&nbsp;&nbsp;·&nbsp;&nbsp;</span></span>
+    <span class="frieze-run" aria-hidden="true"><span class="ver">v2.2.0 — latest release</span><span class="sep">&nbsp;&nbsp;·&nbsp;&nbsp;</span>Magnetic parallax<span class="sep">&nbsp;&nbsp;·&nbsp;&nbsp;</span>State-machine debug overlay<span class="sep">&nbsp;&nbsp;·&nbsp;&nbsp;</span>Static reduced-motion fallback<span class="sep">&nbsp;&nbsp;·&nbsp;&nbsp;</span>Adapters for React, Vue 3 &amp; Svelte<span class="sep">&nbsp;&nbsp;·&nbsp;&nbsp;</span></span>
+  </div>
+</div>
 
-    <div class="container">
-      <div class="hero__inner">
+<!-- ============ I. MODES ============ -->
+<section id="modes" class="section">
+  <div class="sgrid">
+    <div class="rule" data-rule></div>
+    <div class="numeral" data-reveal>I</div>
+    <div>
+      <h2 class="h2" data-reveal>Two modes. Infinite personality.</h2>
+      <p class="lead">Every Proteus cursor starts from one of two base modes. Everything else — presets, states, animations — builds on top.</p>
 
-        <!-- Left column -->
-        <div class="hero__content">
-          <div class="hero__topbadge">✦ Zero dependencies &middot; TypeScript ready &middot; &lt; 20KB</div>
-
-          <h1 class="hero__h1">
-            Your Cursor.<br />
-            <span class="gradient-text">Fully Unleashed.</span>
-          </h1>
-
-          <p class="hero__sub">
-            A shapeshifting cursor library inspired by the Greek god Proteus.
-            Two modes, five presets, infinite states — drop in one line and transform your UX.
-          </p>
-
-          <div class="hero__npm" id="hero-npm-copy">
-            <span style="color:var(--color-text-muted)">$</span>
-            <span>npm install proteuscursor</span>
-            <span style="opacity:0.4; font-size:0.8rem;">⎘</span>
-          </div>
-
-          <!-- CTAs first -->
-          <div class="hero__ctas">
-            <a href="#quickstart">
-              <button class="btn-primary" data-proteus-shapeColor="rgba(255,107,53,0.2)" data-proteus-shapeSize="56px">Get Started →</button>
-            </a>
-            <a href="documentation.html">
-              <button class="btn-ghost">Full Docs</button>
-            </a>
-          </div>
-
-          <!-- Accessibility / framework badges below CTAs, left-aligned -->
-          <div class="hero__badges">
-            <span class="hero__badge-pill hero__badge-pill--teal">📱 Touch-safe</span>
-            <span class="hero__badge-pill hero__badge-pill--violet">♿ Reduced-motion</span>
-            <span class="hero__badge-pill hero__badge-pill--cyan">⚛️ React · Vue · Svelte</span>
-            <span class="hero__badge-pill hero__badge-pill--cta">📦 TypeScript</span>
-          </div>
+      <div class="duo">
+        <div class="card" data-cursor-state="demo-circle">
+          <div class="tag">shape: 'circle'</div>
+          <div class="name">Circle</div>
+          <p class="body">A precise dot with an optional trailing shadow. Supports text, magnetism, blend modes. The classic — hover this plaque to feel it.</p>
         </div>
-
-        <!-- Right column — Interactive Bait Zone -->
-        <div class="hero__bait" id="hero-bait">
-          <div class="bait-item" data-cursor-state="demo-circle">
-            <div class="bait-dot"></div>
-            <span class="bait-label">Circle</span>
-            <span class="bait-desc">Crisp dot with trailing shadow</span>
-          </div>
-          <div class="bait-item" data-cursor-state="hero-fluid">
-            <div class="bait-dot violet"></div>
-            <span class="bait-label">Fluid</span>
-            <span class="bait-desc">Physics-based morphing blob</span>
-          </div>
-          <div class="bait-item" data-cursor-state="hero-text">
-            <div class="bait-dot cyan"></div>
-            <span class="bait-label">Text inside</span>
-            <span class="bait-desc">Embed any string in the cursor</span>
-          </div>
-          <div class="bait-item" data-cursor-state="hero-cta" id="bait-ripple">
-            <div class="bait-dot cta"></div>
-            <span class="bait-label">Click → Ripple</span>
-            <span class="bait-desc">Animated click feedback effects</span>
-          </div>
-          <div class="hero__state-label" id="hero-state-label">
-            Move cursor over a card &nbsp;·&nbsp; active state: <span id="hero-state-name">—</span>
-          </div>
+        <div class="card" data-cursor-state="demo-fluid">
+          <div class="tag">shape: 'fluid'</div>
+          <div class="name">Fluid</div>
+          <p class="body">A morphing blob that stretches and squeezes with velocity, like water finding its shape. Hover here and move quickly.</p>
         </div>
-
       </div>
+
+      <button class="ghost-btn" id="toggle-shape">Switch the whole page to Fluid mode</button>
     </div>
+  </div>
+</section>
 
-    <div class="hero__scroll-arrow">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 5v14M5 12l7 7 7-7"/>
-      </svg>
-      <span>scroll</span>
+<!-- ============ II. PRESETS ============ -->
+<section id="presets" class="section">
+  <div class="sgrid">
+    <div class="rule" data-rule></div>
+    <div class="numeral" data-reveal>II</div>
+    <div>
+      <h2 class="h2" data-reveal>Start with a preset.</h2>
+      <p class="lead">Five ready-made configurations, applied in one line: <span class="inline-code">cursor.loadPreset('ghost')</span>. Hover each entry to wear it.</p>
+
+      <div class="preset-strip">
+        <div class="preset-cell" data-cursor-state="preset-ghost">
+          <div class="num">i.</div>
+          <div class="name">Ghost</div>
+          <div class="desc">Translucent circle — blends into any design.</div>
+        </div>
+        <div class="preset-cell" data-cursor-state="preset-neon">
+          <div class="num">ii.</div>
+          <div class="name">Neon</div>
+          <div class="desc">Glowing halo, for dark creative sites.</div>
+        </div>
+        <div class="preset-cell" data-cursor-state="preset-minimal">
+          <div class="num">iii.</div>
+          <div class="name">Minimal</div>
+          <div class="desc">Tiny dot, no shadow. Zero visual noise.</div>
+        </div>
+        <div class="preset-cell" data-cursor-state="preset-chrome">
+          <div class="num">iv.</div>
+          <div class="name">Chrome</div>
+          <div class="desc">Blend-difference circle — inverts what it crosses.</div>
+        </div>
+        <div class="preset-cell" data-cursor-state="preset-ink">
+          <div class="num">v.</div>
+          <div class="name">Ink</div>
+          <div class="desc">A fluid blob that stretches with movement.</div>
+        </div>
+      </div>
+      <p class="preset-note">The field is dark on purpose — every preset, ghost and chrome included, stays visible while you try it.</p>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ============================================================
-       FEATURES STRIP
-  ============================================================ -->
-  <section class="features" id="features">
-    <div class="container">
-      <div class="features__grid">
+<!-- ============ III. CLICK ANIMATIONS ============ -->
+<section id="clicks" class="section">
+  <div class="sgrid">
+    <div class="rule" data-rule></div>
+    <div class="numeral" data-reveal>III</div>
+    <div>
+      <h2 class="h2" data-reveal>Every click, a choice.</h2>
+      <p class="lead">Tactile feedback on every mousedown. Click inside each field to feel the difference.</p>
 
-        <div class="feat-card" data-cursor-state="nav-link">
-          <div class="feat-card__icon">🧩</div>
-          <div class="feat-card__title">State Machine</div>
-          <div class="feat-card__desc">Define named cursor states in JS, activate them anywhere in HTML with a single <code style="font-family:var(--font-code);color:var(--color-accent);font-size:0.78rem;">data-cursor-state</code> attribute.</div>
-          <a class="feat-card__link" href="documentation.html#states">See API →</a>
+      <div class="trio">
+        <div class="click-box" data-cursor-state="box-scale">
+          <div class="tag">'scale'</div>
+          <div><div class="name">Scale</div><div class="d">shrinks, then springs back</div></div>
         </div>
-
-        <div class="feat-card" data-cursor-state="nav-link">
-          <div class="feat-card__icon">✨</div>
-          <div class="feat-card__title">Click Animations</div>
-          <div class="feat-card__desc">Three built-in click feedback styles: <strong style="color:var(--color-cyan)">scale</strong>, <strong style="color:var(--color-accent)">ripple</strong>, and <strong style="color:var(--color-text-muted)">none</strong>. Configurable duration.</div>
-          <a class="feat-card__link" href="#clickanim">Try them →</a>
+        <div class="click-box" data-cursor-state="box-ripple">
+          <div class="tag">'ripple'</div>
+          <div><div class="name">Ripple</div><div class="d">a circle expands and fades</div></div>
         </div>
-
-        <div class="feat-card" data-cursor-state="nav-link">
-          <div class="feat-card__icon">⚛️</div>
-          <div class="feat-card__title">Framework Adapters</div>
-          <div class="feat-card__desc">First-class hooks for React, Vue 3, and Svelte. Handles mount/unmount lifecycle. SSR-safe for Next.js, Nuxt, SvelteKit.</div>
-          <a class="feat-card__link" href="documentation.html#frameworks">View adapters →</a>
-        </div>
-
-        <div class="feat-card" data-cursor-state="nav-link">
-          <div class="feat-card__icon">♿</div>
-          <div class="feat-card__title">Accessibility Built-in</div>
-          <div class="feat-card__desc">Auto-skips init on touch-only devices and when the OS <code style="font-family:var(--font-code);color:var(--color-accent);font-size:0.78rem;">prefers-reduced-motion</code> flag is set.</div>
-          <a class="feat-card__link" href="documentation.html#accessibility">Learn more →</a>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================================
-       MODES (the two fundamental cursor shapes)
-  ============================================================ -->
-  <section class="section" id="modes">
-    <div class="container">
-      <div class="section-label">How it works</div>
-      <h2 class="section-title">Two modes. <span class="gradient-text">Infinite personality.</span></h2>
-      <p class="section-sub">
-        Every Proteus cursor starts from one of two base modes.
-        All visual customisation — color, size, shadow, text, presets — is layered on top.
-      </p>
-
-      <div class="modes__grid">
-
-        <!-- Circle mode -->
-        <div class="mode-card">
-          <div class="mode-card__body">
-            <div class="mode-card__tag circle">● Circle</div>
-            <div class="mode-card__code">shape: 'circle'</div>
-            <h3 class="mode-card__title">Precise. Clean. Iconic.</h3>
-            <p class="mode-card__desc">
-              A perfectly round dot with a smoothly lagging shadow.
-              The shadow follows with a configurable delay — giving depth and elegance.
-              Supports custom size, color, shadow glow, and embedded text.
-            </p>
-          </div>
-          <div class="mode-card__area" data-cursor-state="demo-circle">hover to feel circle mode</div>
-        </div>
-
-        <!-- Fluid mode -->
-        <div class="mode-card">
-          <div class="mode-card__body">
-            <div class="mode-card__tag fluid">◉ Fluid</div>
-            <div class="mode-card__code">shape: 'fluid'</div>
-            <h3 class="mode-card__title">Alive. Dynamic. Magnetic.</h3>
-            <p class="mode-card__desc">
-              A blob that squishes and stretches based on mouse velocity.
-              Uses linear interpolation so it always chases the pointer with a satisfying delay.
-              Control physics with <code style="font-family:var(--font-code);color:var(--color-violet);font-size:0.82rem;">speed</code>
-              and <code style="font-family:var(--font-code);color:var(--color-violet);font-size:0.82rem;">maxVelocity</code>.
-            </p>
-          </div>
-          <div class="mode-card__area" data-cursor-state="demo-fluid">hover to feel fluid mode</div>
-        </div>
-
-      </div>
-
-      <div class="modes__toggle">
-        <button class="btn-toggle" id="shape-toggle-btn">Switch the whole page to Fluid mode</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================================
-       PRESETS
-  ============================================================ -->
-  <section class="section" id="presets">
-    <div class="container">
-      <div class="section-label">Built-in</div>
-      <h2 class="section-title">Start with a preset.</h2>
-      <p class="section-sub">
-        Five ready-to-use configurations built on the two modes above.
-        Apply in one line, override any property you want.
-        Hover each card to preview the cursor.
-      </p>
-
-      <div class="presets__grid">
-
-        <div class="preset-card" data-cursor-state="preset-ghost">
-          <span class="preset-card__icon">👻</span>
-          <div class="preset-card__name">Ghost</div>
-          <span class="preset-card__mode circle">circle</span>
-          <p class="preset-card__desc">Translucent white dot with a whisper of shadow. Blends into any design.</p>
-          <code class="preset-card__code">loadPreset('ghost')</code>
-        </div>
-
-        <div class="preset-card" data-cursor-state="preset-neon">
-          <span class="preset-card__icon">⚡</span>
-          <div class="preset-card__name">Neon</div>
-          <span class="preset-card__mode circle">circle</span>
-          <p class="preset-card__desc">Solid teal dot with a wide electric glow. Built for dark, creative UIs.</p>
-          <code class="preset-card__code">loadPreset('neon')</code>
-        </div>
-
-        <div class="preset-card" data-cursor-state="preset-chrome">
-          <span class="preset-card__icon">🔲</span>
-          <div class="preset-card__name">Chrome</div>
-          <span class="preset-card__mode circle">circle</span>
-          <p class="preset-card__desc">Large white circle with <code style="font-size:0.7rem;color:var(--color-violet)">mix-blend-mode: difference</code>. Auto inverts any background.</p>
-          <code class="preset-card__code">loadPreset('chrome')</code>
-        </div>
-
-        <div class="preset-card" data-cursor-state="preset-ink">
-          <span class="preset-card__icon">💧</span>
-          <div class="preset-card__name">Ink</div>
-          <span class="preset-card__mode fluid">fluid</span>
-          <p class="preset-card__desc">Physics blob that stretches and squeezes with your movement. Tactile and organic.</p>
-          <code class="preset-card__code">loadPreset('ink')</code>
-        </div>
-
-        <div class="preset-card" data-cursor-state="preset-minimal">
-          <span class="preset-card__icon">◉</span>
-          <div class="preset-card__name">Minimal</div>
-          <span class="preset-card__mode circle">circle</span>
-          <p class="preset-card__desc">Tiny 6px white dot, no shadow, no animation. Almost invisible — until it isn't.</p>
-          <code class="preset-card__code">loadPreset('minimal')</code>
-        </div>
-
-      </div>
-
-      <div class="presets__code-block">
-        <div class="cb-label">Usage</div>
-<pre style="margin:0;color:var(--color-text);white-space:pre-wrap;"><span class="sh-keyword">const</span> cursor = <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span>({ shape: <span class="sh-string">'circle'</span> });
-
-<span class="sh-comment">// apply preset to live instance (chainable)</span>
-cursor.<span class="sh-fn">loadPreset</span>(<span class="sh-string">'neon'</span>);
-cursor.<span class="sh-fn">loadPreset</span>(<span class="sh-string">'chrome'</span>, { shape_size: <span class="sh-string">'64px'</span> }); <span class="sh-comment">// with overrides</span>
-
-<span class="sh-comment">// use preset as constructor base</span>
-<span class="sh-keyword">const</span> cursor2 = <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span>({
-  ...ProteusCursor.<span class="sh-fn">getPreset</span>(<span class="sh-string">'neon'</span>),
-  shape_color: <span class="sh-string">'#ff4444'</span>,
-});</pre>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================================
-       CLICK ANIMATIONS
-  ============================================================ -->
-  <section class="section" id="clickanim">
-    <div class="container">
-      <div class="section-label">Click Animations</div>
-      <h2 class="section-title">Every click, a choice.</h2>
-      <p class="section-sub">Pick the feedback style that fits your product. Click anywhere inside each box to feel the difference.</p>
-
-      <div class="click-anim__grid">
-        <div class="anim-box anim-box--scale" id="box-scale" data-cursor-state="box-scale">
-          <div class="anim-box__icon">⊕</div>
-          <span class="anim-box__name">Scale</span>
-          <span class="anim-box__sub">Satisfying punch on click</span>
-        </div>
-        <div class="anim-box anim-box--ripple" id="box-ripple" data-cursor-state="box-ripple">
-          <div class="anim-box__icon">◎</div>
-          <span class="anim-box__name">Ripple</span>
-          <span class="anim-box__sub">Expanding wave from cursor</span>
-        </div>
-        <div class="anim-box anim-box--none" id="box-none" data-cursor-state="box-none">
-          <div class="anim-box__icon">·</div>
-          <span class="anim-box__name">None</span>
-          <span class="anim-box__sub">For the purists.</span>
+        <div class="click-box" data-cursor-state="box-none">
+          <div class="tag mute">'none'</div>
+          <div><div class="name">Stillness</div><div class="d">no animation at all</div></div>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ============================================================
-       MAGNETIC
-  ============================================================ -->
-  <section class="section" id="magnetic">
-    <div class="container">
-      <div class="section-label">Magnetic</div>
-      <h2 class="section-title">Pulled into place.</h2>
-      <p class="section-sub">
-        Hover the targets below: the cursor is <em>attracted</em> to their centre and eases back to your
-        pointer when you leave. Each card demoes a different flavour — attraction only works in
-        <code style="font-family:var(--font-code);color:var(--color-violet);font-size:0.82rem;">circle</code> mode.
-      </p>
+<!-- ============ IV. MAGNETIC ============ -->
+<section id="magnetic" class="section">
+  <div class="sgrid">
+    <div class="rule" data-rule></div>
+    <div class="numeral" data-reveal>IV</div>
+    <div>
+      <h2 class="h2" data-reveal>Pulled into place.</h2>
+      <p class="lead">Hover the targets: the cursor is <em>attracted</em> to their centre and eases back when it leaves. With parallax, the element itself leans toward you.</p>
 
-      <div class="magnetic__grid" id="magnetic-demo-grid">
-        <div class="mg-card" data-mg-mode="plain">
-          <button class="mg-target">Attraction</button>
-          <span class="mg-card__sub">The cursor snaps onto the centre of the target while you hover it.</span>
-          <code class="mg-card__code">magnetic: true</code>
+      <div class="trio" id="mg-grid">
+        <div class="mg-card" data-mg="default">
+          <div class="tag">magnetic: true</div>
+          <div class="well">
+            <button class="mg-target circle">pull</button>
+          </div>
+          <div class="cap">Constant full pull while hovering.</div>
         </div>
-        <div class="mg-card" data-mg-mode="parallax">
-          <button class="mg-target">+ Parallax</button>
-          <span class="mg-card__sub">The element itself leans toward your pointer — and springs back on leave.</span>
-          <code class="mg-card__code">magnetic_parallax: true</code>
+        <div class="mg-card" data-mg="parallax">
+          <div class="tag">+ parallax</div>
+          <div class="well">
+            <button class="mg-target pill">lean</button>
+          </div>
+          <div class="cap">The element leans toward the cursor, then springs back.</div>
         </div>
-        <div class="mg-card" data-mg-mode="radius">
-          <button class="mg-target mg-target--wide">Falloff radius</button>
-          <span class="mg-card__sub">The pull fades with distance from the centre. Move slowly near the edges.</span>
-          <code class="mg-card__code">magnetic_radius: 140</code>
+        <div class="mg-card" data-mg="radius">
+          <div class="tag">radius: 140</div>
+          <div class="well">
+            <button class="mg-target dashed">falloff</button>
+          </div>
+          <div class="cap">Full pull at the centre, fading to none at 140 px.</div>
         </div>
       </div>
-      <p class="magnetic__hint">Tune strength, radius and parallax live in the <a href="#playground" style="color:var(--color-accent);">sandbox below</a>.</p>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ============================================================
-       PLAYGROUND
-  ============================================================ -->
-  <section class="section" id="playground">
-    <div class="container">
-      <div class="section-label">Playground</div>
-      <h2 class="section-title">Cursor Sandbox</h2>
-      <p class="section-sub">Tune every parameter live. Copy the generated code and drop it into your project.</p>
+<!-- ============ V. PLAYGROUND ============ -->
+<section id="playground" class="section">
+  <div class="sgrid">
+    <div class="rule" data-rule></div>
+    <div class="numeral" data-reveal>V</div>
+    <div>
+      <h2 class="h2" data-reveal>The workshop.</h2>
+      <p class="lead">Tune every parameter live — the cursor you are moving right now is the preview. Copy the generated code when it feels right.</p>
 
-      <!-- Presets bar -->
-      <div class="playground__presets" style="margin-top:32px;">
-        <button class="preset-btn active" data-preset="ghost">Ghost</button>
-        <button class="preset-btn" data-preset="neon">Neon</button>
-        <button class="preset-btn" data-preset="chrome">Chrome</button>
-        <button class="preset-btn" data-preset="ink">Ink</button>
-        <button class="preset-btn" data-preset="minimal">Minimal</button>
-      </div>
-
-      <div class="playground__layout">
-
+      <div class="pg-grid">
         <!-- Controls -->
-        <div class="pg-panel">
+        <div class="pg-controls">
 
-          <div class="pg-group">
-            <div class="pg-group__label">Shape Mode</div>
-            <div class="pg-toggle">
-              <button id="pg-shape-circle" class="active" onclick="pgSetShape('circle')">Circle</button>
-              <button id="pg-shape-fluid" onclick="pgSetShape('fluid')">Fluid</button>
+          <div class="pg-field">
+            <div class="pg-caption">Mode</div>
+            <div class="seg-group">
+              <button class="seg active" data-shape="circle">circle</button>
+              <button class="seg" data-shape="fluid">fluid</button>
             </div>
           </div>
 
-          <div class="pg-group">
-            <div class="pg-group__label">Click Animation</div>
-            <div class="pg-radio-group">
-              <label class="pg-radio">
-                <input type="radio" name="pg-click" value="scale" checked onchange="pgSetClickAnim(this.value)" />
-                <span>Scale</span>
-              </label>
-              <label class="pg-radio">
-                <input type="radio" name="pg-click" value="ripple" onchange="pgSetClickAnim(this.value)" />
-                <span>Ripple</span>
-              </label>
-              <label class="pg-radio">
-                <input type="radio" name="pg-click" value="none" onchange="pgSetClickAnim(this.value)" />
-                <span>None</span>
-              </label>
+          <div class="pg-field">
+            <div class="pg-caption-row">
+              <span class="pg-caption nomb">Size</span>
+              <span class="pg-value" id="pg-size-label">10px</span>
+            </div>
+            <input type="range" class="pg-range" id="pg-size" min="4" max="60" value="10" />
+          </div>
+
+          <div class="pg-field">
+            <div class="pg-caption">Colour</div>
+            <div class="swatch-row" id="pg-swatches">
+              <button class="swatch active" data-hex="#1C1915" title="#1C1915" style="background:#1C1915"></button>
+              <button class="swatch" data-hex="#A64B2A" title="#A64B2A" style="background:#A64B2A"></button>
+              <button class="swatch" data-hex="#8C6F3F" title="#8C6F3F" style="background:#8C6F3F"></button>
+              <button class="swatch" data-hex="#556052" title="#556052" style="background:#556052"></button>
             </div>
           </div>
 
-          <div class="pg-group">
-            <div class="pg-group__label">Size</div>
-            <div class="pg-row">
-              <label>Size</label>
-              <input type="range" class="pg-slider" id="pg-size" min="6" max="100" value="10" oninput="pgSetSize(this.value)" />
-              <span class="pg-slider-val" id="pg-size-val">10px</span>
+          <div class="pg-field row">
+            <span class="pg-caption nomb">Shadow</span>
+            <button class="pill-btn wide active" id="pg-shadow-toggle">on</button>
+          </div>
+
+          <div class="pg-sub" id="pg-shadow-block">
+            <div class="pg-caption-row">
+              <span class="pg-caption nomb">Shadow size</span>
+              <span class="pg-value" id="pg-shadow-label">44px</span>
+            </div>
+            <input type="range" class="pg-range" id="pg-shadow-size" min="20" max="120" value="44" />
+          </div>
+
+          <div class="pg-field">
+            <div class="pg-caption">Click animation</div>
+            <div class="btn-row" id="pg-click">
+              <button class="pill-btn" data-val="scale">scale</button>
+              <button class="pill-btn active" data-val="ripple">ripple</button>
+              <button class="pill-btn" data-val="none">none</button>
             </div>
           </div>
 
-          <div class="pg-group">
-            <div class="pg-group__label">Color</div>
-            <div class="pg-row">
-              <label>Shape</label>
-              <input type="color" class="pg-color" id="pg-color" value="#00D4AA" oninput="pgSetColor(this.value)" />
-              <span style="font-size:0.8rem;color:var(--color-text-muted);" id="pg-color-val">#00D4AA</span>
-            </div>
-            <div class="pg-row">
-              <label>Alpha</label>
-              <input type="range" class="pg-slider" id="pg-alpha" min="10" max="100" value="100" oninput="pgSetAlpha(this.value)" />
-              <span class="pg-slider-val" id="pg-alpha-val">1.00</span>
+          <div class="pg-field">
+            <div class="pg-caption">Blend mode</div>
+            <div class="btn-row" id="pg-blend">
+              <button class="pill-btn active" data-val="normal">normal</button>
+              <button class="pill-btn" data-val="difference">difference</button>
+              <button class="pill-btn" data-val="exclusion">exclusion</button>
             </div>
           </div>
 
-          <div class="pg-group">
-            <div class="pg-group__label">Shadow / Glow</div>
-            <div class="pg-row">
-              <label>Enable</label>
-              <label class="pg-switch">
-                <input type="checkbox" id="pg-shadow-on" checked onchange="pgSetShadowEnabled(this.checked)" />
-                <span class="slider"></span>
-              </label>
+          <div id="pg-circle-only">
+            <div class="pg-field">
+              <div class="pg-caption">Cursor text</div>
+              <input type="text" class="pg-text-input" id="pg-text" placeholder="e.g. View" maxlength="12" />
             </div>
-            <div class="pg-row">
-              <label>Size</label>
-              <input type="range" class="pg-slider" id="pg-shadow-size" min="10" max="120" value="40" oninput="pgSetShadowSize(this.value)" />
-              <span class="pg-slider-val" id="pg-shadow-size-val">40px</span>
-            </div>
-            <div class="pg-row">
-              <label>Color</label>
-              <input type="color" class="pg-color" id="pg-shadow-color" value="#00D4AA" oninput="pgSetShadowColor(this.value)" />
-              <span style="font-size:0.8rem;color:var(--color-text-muted);" id="pg-shadow-color-val">#00D4AA</span>
-            </div>
-            <div class="pg-row">
-              <label>Alpha</label>
-              <input type="range" class="pg-slider" id="pg-shadow-alpha" min="0" max="100" value="60" oninput="pgSetShadowAlpha(this.value)" />
-              <span class="pg-slider-val" id="pg-shadow-alpha-val">0.60</span>
-            </div>
-          </div>
 
-          <div class="pg-group" data-modes="circle">
-            <div class="pg-group__label">Magnetic</div>
-            <div class="pg-row">
-              <label>Enable</label>
-              <label class="pg-switch">
-                <input type="checkbox" id="pg-magnetic-on" onchange="pgSetMagnetic(this.checked)" />
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="pg-row">
-              <label>Strength</label>
-              <input type="range" class="pg-slider" id="pg-mag-strength" min="5" max="100" value="40" oninput="pgSetMagStrength(this.value)" />
-              <span class="pg-slider-val" id="pg-mag-strength-val">0.40</span>
-            </div>
-            <div class="pg-row">
-              <label>Radius</label>
-              <input type="range" class="pg-slider" id="pg-mag-radius" min="0" max="300" step="10" value="0" oninput="pgSetMagRadius(this.value)" />
-              <span class="pg-slider-val" id="pg-mag-radius-val">off</span>
-            </div>
-            <div class="pg-row">
-              <label>Parallax</label>
-              <label class="pg-switch">
-                <input type="checkbox" id="pg-parallax-on" onchange="pgSetParallax(this.checked)" />
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="pg-row">
-              <label>Lean</label>
-              <input type="range" class="pg-slider" id="pg-parallax-strength" min="5" max="60" value="15" oninput="pgSetParallaxStrength(this.value)" />
-              <span class="pg-slider-val" id="pg-parallax-strength-val">0.15</span>
-            </div>
-          </div>
-
-          <div class="pg-group">
-            <div class="pg-group__label">Trail</div>
-            <div class="pg-row">
-              <label>Length</label>
-              <input type="range" class="pg-slider" id="pg-trail-length" min="0" max="20" value="0" oninput="pgSetTrailLength(this.value)" />
-              <span class="pg-slider-val" id="pg-trail-length-val">off</span>
-            </div>
-            <div class="pg-row">
-              <label>Opacity</label>
-              <input type="range" class="pg-slider" id="pg-trail-opacity" min="5" max="100" value="30" oninput="pgSetTrailOpacity(this.value)" />
-              <span class="pg-slider-val" id="pg-trail-opacity-val">0.30</span>
-            </div>
-          </div>
-
-          <div class="pg-group" data-modes="fluid">
-            <div class="pg-group__label">Fluid Physics</div>
-            <div class="pg-row">
-              <label>Speed</label>
-              <input type="range" class="pg-slider" id="pg-speed" min="10" max="100" value="90" oninput="pgSetSpeed(this.value)" />
-              <span class="pg-slider-val" id="pg-speed-val">0.90</span>
-            </div>
-            <div class="pg-row">
-              <label>Max vel</label>
-              <input type="range" class="pg-slider" id="pg-maxvel" min="2" max="30" value="10" oninput="pgSetMaxVelocity(this.value)" />
-              <span class="pg-slider-val" id="pg-maxvel-val">10</span>
-            </div>
-          </div>
-
-          <div class="pg-group" data-modes="circle">
-            <div class="pg-group__label">Text</div>
-            <div class="pg-row">
-              <label>Content</label>
-              <input type="text" class="pg-input-text" id="pg-text" placeholder="Hello" maxlength="20" oninput="pgSetText(this.value)" />
-            </div>
-            <div class="pg-row">
-              <label>Size</label>
-              <input type="range" class="pg-slider" id="pg-text-size" min="8" max="32" value="12" oninput="pgSetTextSize(this.value)" />
-              <span class="pg-slider-val" id="pg-text-size-val">12px</span>
-            </div>
-            <div class="pg-row">
-              <label>Weight</label>
-              <div class="pg-toggle" style="flex:1;">
-                <button id="pg-tw-400" class="active" onclick="pgSetTextWeight('400')">400</button>
-                <button id="pg-tw-600" onclick="pgSetTextWeight('600')">600</button>
-                <button id="pg-tw-800" onclick="pgSetTextWeight('800')">800</button>
+            <div class="pg-field" style="margin-top: 28px;">
+              <div class="pg-caption-row" style="align-items: center;">
+                <span class="pg-caption nomb">Magnetic</span>
+                <button class="pill-btn wide" id="pg-magnetic-toggle">off</button>
+              </div>
+              <div class="pg-sub stack hidden" id="pg-magnetic-block">
+                <div>
+                  <div class="pg-caption-row" style="margin-bottom: 10px;">
+                    <span class="pg-caption nomb">Strength</span>
+                    <span class="pg-value" id="pg-mag-strength-label">0.40</span>
+                  </div>
+                  <input type="range" class="pg-range" id="pg-mag-strength" min="10" max="90" value="40" />
+                </div>
+                <div class="pg-field row" style="border-top: none; padding-top: 0;">
+                  <span class="pg-caption nomb">Parallax</span>
+                  <button class="pill-btn wide" id="pg-parallax-toggle">off</button>
+                </div>
+                <div class="pg-targets">
+                  <button class="pg-target-btn" data-pg-target>01</button>
+                  <button class="pg-target-btn" data-pg-target>02</button>
+                  <button class="pg-target-btn" data-pg-target>03</button>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="pg-group">
-            <div class="pg-group__label">Blend Mode</div>
-            <div class="pg-row">
-              <label class="pg-label">Blend</label>
-              <select id="pg-blend" onchange="pgSetBlendMode(this.value)" style="background:var(--color-bg-primary);color:var(--color-text);border:1px solid var(--color-border);border-radius:6px;padding:6px 10px;font-family:var(--font-code);font-size:0.8rem;flex:1;">
-                <option value="normal">normal</option>
-                <option value="difference">difference</option>
-                <option value="exclusion">exclusion</option>
-                <option value="multiply">multiply</option>
-                <option value="screen">screen</option>
-                <option value="overlay">overlay</option>
-              </select>
+          <div id="pg-fluid-only" class="hidden">
+            <div class="pg-field">
+              <div class="pg-caption-row">
+                <span class="pg-caption nomb">Fluid speed</span>
+                <span class="pg-value" id="pg-speed-label">0.90</span>
+              </div>
+              <input type="range" class="pg-range" id="pg-speed" min="40" max="100" value="90" />
             </div>
           </div>
 
+          <div class="pg-field">
+            <button class="reset-btn" id="pg-reset">Reset to defaults</button>
+          </div>
         </div>
 
-        <!-- Canvas -->
-        <div class="pg-canvas" id="pg-canvas">
-          <div class="pg-canvas__inner">
-            <p class="pg-canvas__title">Move your cursor here</p>
-            <div class="pg-canvas__targets">
-              <div class="pg-target" title="Hover me!">🎨</div>
-              <div class="pg-target" title="And me!">⚡</div>
-              <div class="pg-target" title="Click me!">✦</div>
-              <div class="pg-target" title="Hi there!">🌊</div>
+        <!-- Generated code -->
+        <div class="pg-code-wrap">
+          <div class="code-panel">
+            <div class="code-panel-head">
+              <span class="label">generated code</span>
+              <button class="copy-btn" id="pg-copy">copy</button>
             </div>
-            <p class="pg-canvas__hint">Click anywhere to test the animation</p>
+            <pre id="pg-code"></pre>
           </div>
+          <p class="pg-code-note">The sandbox writes to the page cursor's default preset — hover states elsewhere on the page temporarily overlay it, then restore your settings.</p>
         </div>
-
-        <!-- Generated Code -->
-        <div class="pg-output">
-          <div class="pg-output__header">
-            <span class="pg-output__label">Generated Code</span>
-            <button class="btn-copy" id="pg-copy-btn" onclick="pgCopyCode()">Copy</button>
-          </div>
-          <div class="pg-output__code" id="pg-code-output"></div>
-        </div>
-
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ============================================================
-       QUICK START
-  ============================================================ -->
-  <section class="section" id="quickstart">
-    <div class="container">
-      <div class="section-label">Quick Start</div>
-      <h2 class="section-title">Up and running in 60 seconds.</h2>
-      <p class="section-sub">Three steps. No build tools required. Works with any framework or vanilla HTML.</p>
+<!-- ============ VI. QUICK START ============ -->
+<section id="quickstart" class="section">
+  <div class="sgrid">
+    <div class="rule" data-rule></div>
+    <div class="numeral" data-reveal>VI</div>
+    <div>
+      <h2 class="h2" data-reveal>Up and running in sixty seconds.</h2>
+      <p class="lead">Three steps. No build tools required. Works with any framework or vanilla HTML.</p>
 
-      <div class="quickstart__steps">
-
-        <!-- Step 1 -->
-        <div class="qs-card">
-          <div class="qs-card__header">
-            <span class="qs-card__step">Step 1 — Install</span>
-            <div class="qs-card__dots"><span></span><span></span><span></span></div>
-          </div>
-          <div class="qs-card__code">
-            <span class="sh-comment"># via npm</span><br />
-            <span class="sh-punct">$</span> <span class="sh-fn">npm</span> <span class="sh-keyword">install</span> <span class="sh-string">proteuscursor</span><br />
-            <br />
-            <span class="sh-comment"># or CDN</span><br />
-            <span class="sh-punct">&lt;</span><span class="sh-keyword">link</span> <span class="sh-prop">rel</span><span class="sh-punct">=</span><span class="sh-string">"stylesheet"</span><br />
-            &nbsp;&nbsp;<span class="sh-prop">href</span><span class="sh-punct">=</span><span class="sh-string">"proteus-cursor.min.css"</span><span class="sh-punct">&gt;</span>
-          </div>
+      <div class="trio">
+        <div>
+          <div class="qs-step-label">01 — Install</div>
+          <pre class="code-block">npm i proteuscursor</pre>
         </div>
-
-        <!-- Step 2 -->
-        <div class="qs-card">
-          <div class="qs-card__header">
-            <span class="qs-card__step">Step 2 — Import</span>
-            <div class="qs-card__dots"><span></span><span></span><span></span></div>
-          </div>
-          <div class="qs-card__code">
-            <span class="sh-comment">// ES Module</span><br />
-            <span class="sh-keyword">import</span> <span class="sh-prop">ProteusCursor</span> <span class="sh-keyword">from</span><br />
-            &nbsp;&nbsp;<span class="sh-string">'proteuscursor'</span><span class="sh-punct">;</span><br />
-            <br />
-            <span class="sh-comment">// or UMD (script tag)</span><br />
-            <span class="sh-punct">&lt;</span><span class="sh-keyword">script</span> <span class="sh-prop">src</span><span class="sh-punct">=</span><span class="sh-string">"proteus-cursor.umd.js"</span><span class="sh-punct">&gt;&lt;/</span><span class="sh-keyword">script</span><span class="sh-punct">&gt;</span>
-          </div>
+        <div>
+          <div class="qs-step-label">02 — Import</div>
+          <pre class="code-block">import ProteusCursor
+  from 'proteuscursor';
+import 'proteuscursor/style';</pre>
         </div>
-
-        <!-- Step 3 -->
-        <div class="qs-card">
-          <div class="qs-card__header">
-            <span class="qs-card__step">Step 3 — Initialize</span>
-            <div class="qs-card__dots"><span></span><span></span><span></span></div>
-          </div>
-          <div class="qs-card__code">
-            <span class="sh-comment">// Your first cursor</span><br />
-            <span class="sh-keyword">const</span> <span class="sh-prop">cursor</span> <span class="sh-punct">=</span> <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span><span class="sh-punct">({</span><br />
-            &nbsp;&nbsp;<span class="sh-prop">shape</span><span class="sh-punct">:</span> <span class="sh-string">'circle'</span><span class="sh-punct">,</span><br />
-            &nbsp;&nbsp;<span class="sh-prop">shape_color</span><span class="sh-punct">:</span> <span class="sh-string">'#00D4AA'</span><span class="sh-punct">,</span><br />
-            &nbsp;&nbsp;<span class="sh-prop">click_animation</span><span class="sh-punct">:</span> <span class="sh-string">'ripple'</span><span class="sh-punct">,</span><br />
-            <span class="sh-punct">});</span>
-          </div>
+        <div>
+          <div class="qs-step-label">03 — Summon</div>
+          <pre class="code-block">const cursor =
+  new ProteusCursor({
+    shape: 'circle',
+  });</pre>
         </div>
-
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ============================================================
-       DOCS CTA
-  ============================================================ -->
-  <section class="docs-cta" id="docs-cta">
-    <div class="container">
-      <div class="docs-cta__inner">
-        <h2 class="docs-cta__title">Ready to <span class="gradient-text">dive deeper?</span></h2>
-        <p class="docs-cta__sub">
-          Full API reference, State Machine guide, Framework adapters,
-          Blend Mode, Accessibility — all in one place.
-        </p>
-        <div class="docs-cta__pills">
-          <span class="docs-cta__pill">Constructor Options</span>
-          <span class="docs-cta__pill">Setters & Methods</span>
-          <span class="docs-cta__pill">State Machine</span>
-          <span class="docs-cta__pill">React / Vue / Svelte</span>
-          <span class="docs-cta__pill">Blend Mode</span>
-          <span class="docs-cta__pill">Accessibility</span>
-        </div>
-        <a href="documentation.html">
-          <button class="btn-docs-big">Open Documentation ↗</button>
-        </a>
-      </div>
+<!-- ============ DOCS CTA ============ -->
+<section class="cta-section">
+  <div class="cta-band" data-reveal>
+    <div class="cta-eyebrow">The full account</div>
+    <h2 class="cta-h2">Consult the<br />documentation.</h2>
+    <p class="cta-p">API reference, the state machine, framework adapters, blend modes, accessibility — every option the library exposes, catalogued.</p>
+    <a href="documentation.html" class="cta-btn" data-cursor-state="hero-cta">Read the documentation →</a>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <span class="footer-mark">Proteus Cursor</span>
+    <div class="footer-links">
+      <a href="https://github.com/Shuriken933/proteus-cursor" data-cursor-state="nav-link">GitHub</a>
+      <a href="https://www.npmjs.com/package/proteuscursor" data-cursor-state="nav-link">npm</a>
+      <a href="documentation.html" data-cursor-state="nav-link">Docs</a>
     </div>
-  </section>
+    <span class="footer-license">MIT License · MMXXVI</span>
+  </div>
+</footer>
 
-  <!-- ============================================================
-       FOOTER
-  ============================================================ -->
-  <footer class="footer">
-    <div class="container">
-      <p class="footer__tagline">Shape-shifting cursors for the modern web.</p>
-      <div class="footer__links">
-        <a href="https://github.com/Shuriken933/proteus-cursor" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://www.npmjs.com/package/proteuscursor" target="_blank" rel="noopener">npm</a>
-        <a href="documentation.html">Documentation</a>
-        <a href="https://github.com/Shuriken933/proteus-cursor/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
-      </div>
-      <p class="footer__copy">Built by Eros Agostini &nbsp;·&nbsp; Proteus Cursor v2.2.0</p>
-    </div>
-  </footer>
+<!-- folio / scroll indicator -->
+<div class="folio" id="folio">Prologue</div>
 
-  <!-- ============================================================
-       SCRIPT
-  ============================================================ -->
-  <script type="module">
-    import ProteusCursor from './proteus-cursor.es.js';
+<!-- toast -->
+<div class="toast" id="toast"></div>
 
-    /* ------------------------------------------------------------------
-       TOUCH & REDUCED MOTION DETECTION
-    ------------------------------------------------------------------ */
-    const isTouchDevice = () => ProteusCursor.isTouchOnly();
-    const prefersReducedMotion = () => ProteusCursor.prefersReducedMotion();
+<script type="module">
+  import ProteusCursor from './proteus-cursor.es.js';
 
-    if (isTouchDevice()) {
-      document.getElementById('banner-mobile').classList.add('visible');
-    }
-    if (prefersReducedMotion()) {
-      document.getElementById('banner-motion').classList.add('visible');
-    }
+  /* ============================================================
+     STATE
+  ============================================================ */
+  let cursor = null;
+  let currentShape = 'circle';
+  const pg = {
+    shape: 'circle',
+    size: 10,
+    color: '#1C1915',
+    hasShadow: true,
+    shadowSize: 44,
+    clickAnim: 'ripple',
+    blend: 'normal',
+    text: '',
+    magnetic: false,
+    magStrength: 40,
+    parallax: false,
+    speed: 90,
+  };
+  let toastTimer = null;
 
-    /* ------------------------------------------------------------------
-       CURSOR INIT
-    ------------------------------------------------------------------ */
-    let cursor = null;
-    let currentShape = 'circle';
-    let isPlaygroundMode = false;
-
-    if (!isTouchDevice() && !prefersReducedMotion()) {
-      cursor = new ProteusCursor({
-        shape: 'circle',
-        shape_size: '10px',
-        shape_color: '#00D4AA',
-        hasShadow: true,
-        shadow_size: '40px',
-        shadow_color: 'rgba(0,212,170,0.25)',
-        click_animation: 'ripple',
-        click_duration: 350,
-      });
-
-      // Centralized state configs — preset-* states mirror ProteusCursor.PRESETS exactly
-      const P = ProteusCursor.PRESETS;
-      cursor
-        // Hero bait zone
-        .addState('hero-fluid', { shape: 'fluid', shape_size: '24px', shape_color: '#9D6FE8', hasShadow: false })
-        .addState('hero-text',  { shape_size: '60px', shape_color: 'rgba(0,212,170,0.1)', text: 'Hello', text_size: '12px', text_color: '#00D4AA' })
-        .addState('hero-cta',   { shape_size: '56px', shape_color: 'rgba(255,107,53,0.15)', text: 'Click', text_size: '12px', text_color: '#FF6B35' })
-        // Mode demos
-        .addState('demo-circle', { shape_size: '20px', shape_color: '#fff', hasShadow: true })
-        .addState('demo-fluid',  { shape: 'fluid', shape_size: '28px', shape_color: '#9D6FE8', hasShadow: false })
-        // Preset previews — exact same config as PRESETS so hover matches the sandbox
-        .addState('preset-ghost',   { ...P.ghost })
-        .addState('preset-neon',    { ...P.neon })
-        .addState('preset-chrome',  { ...P.chrome })
-        .addState('preset-ink',     { ...P.ink })
-        .addState('preset-minimal', { ...P.minimal })
-        // Click animation boxes — state machine handles click_animation as
-        // a temporary override, restored automatically on mouseleave.
-        .addState('box-scale',  { shape_size: '16px', shape_color: '#5BC8F5', click_animation: 'scale' })
-        .addState('box-ripple', { shape_size: '16px', shape_color: '#00D4AA', click_animation: 'ripple' })
-        .addState('box-none',   { shape_size: '16px', shape_color: '#8BA8B5', click_animation: 'none' })
-        // Nav links
-        .addState('nav-link', { shape_size: '8px', shape_color: '#00D4AA', hasShadow: false });
-
-      window.cursor = cursor;
-
-      /* ------------------------------------------------------------------
-         HERO — active state label
-      ------------------------------------------------------------------ */
-      const heroStateName = document.getElementById('hero-state-name');
-      document.querySelectorAll('.bait-item').forEach(item => {
-        const stateName = item.getAttribute('data-cursor-state');
-        item.addEventListener('mouseenter', () => {
-          if (heroStateName) heroStateName.textContent = stateName;
-        });
-        item.addEventListener('mouseleave', () => {
-          if (heroStateName) heroStateName.textContent = '—';
-        });
-      });
-
-      /* ------------------------------------------------------------------
-         CLICK ANIMATION BOXES — state-machine driven
-         box-scale / box-ripple / box-none all carry `click_animation` in
-         their state config (see addState calls above), so the cursor's own
-         state machine activates and restores the animation automatically.
-         No manual mouseenter/mouseleave handlers needed.
-      ------------------------------------------------------------------ */
-
-      /* ------------------------------------------------------------------
-         MODES TOGGLE BUTTON
-      ------------------------------------------------------------------ */
-      const shapeToggleBtn = document.getElementById('shape-toggle-btn');
-      shapeToggleBtn.addEventListener('click', () => {
-        if (!cursor) return;
-        if (currentShape === 'circle') {
-          cursor.setShape('fluid');
-          currentShape = 'fluid';
-          shapeToggleBtn.textContent = 'Switch the whole page back to Circle mode';
-        } else {
-          cursor.setShape('circle');
-          currentShape = 'circle';
-          shapeToggleBtn.textContent = 'Switch the whole page to Fluid mode';
-        }
-      });
-
-    } // end non-touch/non-reduced-motion block
-
-    /* ------------------------------------------------------------------
-       NAV SCROLL EFFECT
-    ------------------------------------------------------------------ */
-    const nav = document.getElementById('nav');
-    window.addEventListener('scroll', () => {
-      nav.classList.toggle('scrolled', window.scrollY > 40);
-    }, { passive: true });
-
-    /* ------------------------------------------------------------------
-       TOAST
-    ------------------------------------------------------------------ */
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2200);
-    }
-
-    /* ------------------------------------------------------------------
-       COPY HELPERS
-    ------------------------------------------------------------------ */
-    function copyText(text, label) {
-      navigator.clipboard.writeText(text).then(() => {
-        showToast(label || 'Copied!');
-      }).catch(() => {
-        showToast('Copy failed. Please copy manually.');
-      });
-    }
-
-    document.getElementById('nav-npm-copy').addEventListener('click', () => {
-      copyText('npm install proteuscursor', 'Install command copied!');
-    });
-    document.getElementById('hero-npm-copy').addEventListener('click', () => {
-      copyText('npm install proteuscursor', 'Install command copied!');
-    });
-
-    /* ------------------------------------------------------------------
-       PLAYGROUND
-    ------------------------------------------------------------------ */
-    const PRESETS = Object.fromEntries(
-      Object.entries(ProteusCursor.PRESETS).map(([name, cfg]) => [name, {
-        ...cfg,
-        shadow_alpha: 60,
-        text: '',
-        text_size: '12',
-        text_weight: '400',
-      }])
+  /* ============================================================
+     TOAST + COPY
+  ============================================================ */
+  const toastEl = document.getElementById('toast');
+  function toast(msg) {
+    clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.style.opacity = '1';
+    toastTimer = setTimeout(() => { toastEl.style.opacity = '0'; }, 2200);
+  }
+  function copy(text, label) {
+    navigator.clipboard.writeText(text).then(
+      () => toast(label),
+      () => toast('Copy failed — copy manually')
     );
+  }
+  document.getElementById('npm-copy').addEventListener('click', () => copy('npm install proteuscursor', 'Install command copied'));
 
-    const pgState = {
+  /* ============================================================
+     CURSOR INIT
+  ============================================================ */
+  function initCursor() {
+    if (ProteusCursor.isTouchOnly && ProteusCursor.isTouchOnly()) return;
+    if (ProteusCursor.prefersReducedMotion && ProteusCursor.prefersReducedMotion()) return;
+
+    cursor = new ProteusCursor({
       shape: 'circle',
-      shape_size: 10,
-      shape_color: '#00D4AA',
-      shape_alpha: 100,               // %
+      shape_size: '10px',
+      shape_color: '#1C1915',
       hasShadow: true,
-      shadow_size: 40,
-      shadow_color: '#00D4AA',
-      shadow_alpha: 60,               // %
-      click_animation: 'scale',
-      blend_mode: 'normal',
-      text: '',
-      text_size: 12,
-      text_weight: '400',
-      trail_length: 0,                // 0 = off
-      trail_opacity: 30,              // %
-      magnetic: false,
-      magnetic_strength: 40,          // %
-      magnetic_radius: 0,             // px, 0 = off (null)
-      magnetic_parallax: false,
-      magnetic_parallax_strength: 15, // %
-      speed: 90,                      // % (fluid only)
-      maxVelocity: 10,                //   (fluid only)
-    };
-
-    // Sandbox magnetism is scoped to the canvas targets so enabling it in the
-    // playground doesn't hijack every nav link on the page. The generated code
-    // intentionally omits magnetic_targets: in a real project the default
-    // selector ('a, button, [data-cursor-magnetic]') is what you want.
-    const PG_MAGNETIC_TARGETS = '#playground .pg-target';
-
-    /* Color helpers: <input type="color"> only speaks hex, the library speaks
-       any CSS color. hex+alpha% is the single source of truth in pgState;
-       these convert in both directions so the generated code always matches
-       what the cursor actually shows (no more hardcoded fallback colors). */
-    function pgRgba(hex, alphaPct) {
-      if (alphaPct >= 100) return hex;
-      const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
-      return `rgba(${r},${g},${b},${(alphaPct / 100).toFixed(2)})`;
-    }
-    function pgParseColor(color, fallbackHex) {
-      if (!color || typeof color !== 'string') return { hex: fallbackHex, alpha: 100 };
-      if (color[0] === '#') {
-        let hex = color.slice(1);
-        if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
-        return { hex: '#' + hex.slice(0, 6), alpha: 100 };
-      }
-      const m = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?/);
-      if (!m) return { hex: fallbackHex, alpha: 100 };
-      const toHex = n => (+n).toString(16).padStart(2, '0');
-      return {
-        hex: '#' + toHex(m[1]) + toHex(m[2]) + toHex(m[3]),
-        alpha: m[4] !== undefined ? Math.round(parseFloat(m[4]) * 100) : 100,
-      };
-    }
-
-    function pgUpdateCode() {
-      const prop = (name, valHtml) => `\n  <span class="sh-prop">${name}</span><span class="sh-punct">:</span> ${valHtml}<span class="sh-punct">,</span>`;
-      const str  = v => `<span class="sh-string">'${v}'</span>`;
-      const num  = v => `<span class="sh-number">${v}</span>`;
-      const bool = v => `<span class="sh-keyword">${v}</span>`;
-      const isCircle = pgState.shape === 'circle';
-
-      let lines = '';
-      lines += prop('shape', str(pgState.shape));
-      lines += prop('shape_size', str(pgState.shape_size + 'px'));
-      lines += prop('shape_color', str(pgRgba(pgState.shape_color, pgState.shape_alpha)));
-      if (pgState.hasShadow) {
-        lines += prop('hasShadow', bool('true'));
-        lines += prop('shadow_size', str(pgState.shadow_size + 'px'));
-        lines += prop('shadow_color', str(pgRgba(pgState.shadow_color, pgState.shadow_alpha)));
-      } else {
-        lines += prop('hasShadow', bool('false'));
-      }
-      lines += prop('click_animation', str(pgState.click_animation));
-      if (pgState.blend_mode !== 'normal') lines += prop('blend_mode', str(pgState.blend_mode));
-      if (isCircle && pgState.text) {
-        lines += prop('text', str(pgState.text));
-        lines += prop('text_size', str(pgState.text_size + 'px'));
-        if (pgState.text_weight !== '400') lines += prop('text_weight', str(pgState.text_weight));
-      }
-      if (pgState.trail_length > 0) {
-        lines += prop('trail_length', num(pgState.trail_length));
-        if (pgState.trail_opacity !== 30) lines += prop('trail_opacity', num((pgState.trail_opacity / 100).toFixed(2)));
-      }
-      if (isCircle && pgState.magnetic) {
-        lines += prop('magnetic', bool('true'));
-        if (pgState.magnetic_strength !== 40) lines += prop('magnetic_strength', num((pgState.magnetic_strength / 100).toFixed(2)));
-        if (pgState.magnetic_radius > 0) lines += prop('magnetic_radius', num(pgState.magnetic_radius));
-      }
-      if (isCircle && pgState.magnetic_parallax) {
-        lines += prop('magnetic_parallax', bool('true'));
-        if (pgState.magnetic_parallax_strength !== 15) lines += prop('magnetic_parallax_strength', num((pgState.magnetic_parallax_strength / 100).toFixed(2)));
-      }
-      if (!isCircle) {
-        if (pgState.speed !== 90) lines += prop('speed', num((pgState.speed / 100).toFixed(2)));
-        if (pgState.maxVelocity !== 10) lines += prop('maxVelocity', num(pgState.maxVelocity));
-      }
-
-      document.getElementById('pg-code-output').innerHTML =
-        `<span class="sh-keyword">const</span> <span class="sh-prop">cursor</span> <span class="sh-punct">=</span> <span class="sh-keyword">new</span> <span class="sh-fn">ProteusCursor</span><span class="sh-punct">({</span>${lines}\n<span class="sh-punct">});</span>`;
-    }
-
-    /* Show only the control groups that apply to the current shape mode:
-       data-modes="circle" / "fluid" — groups without the attribute are universal. */
-    function pgUpdateVisibility() {
-      document.querySelectorAll('.pg-panel .pg-group[data-modes]').forEach(g => {
-        g.style.display = g.dataset.modes.includes(pgState.shape) ? '' : 'none';
-      });
-    }
-
-    /**
-     * Push the playground state into the cursor's DEFAULT preset.
-     * Hover-triggered states overlay temporary changes; this function is the
-     * only thing that should mutate the underlying default. Uses
-     * setDefaultPreset() for size/colors/text/blend/click + setShadowColor()
-     * to convert hex+alpha to rgba. After this call, _resetState() (mouseleave)
-     * will restore the cursor to exactly these values.
-     */
-    function pgApplyToCursor() {
-      if (!cursor) return;
-      const isCircle = pgState.shape === 'circle';
-      cursor.setDefaultPreset({
-        shape:           pgState.shape,
-        shape_size:      pgState.shape_size + 'px',
-        shape_color:     pgRgba(pgState.shape_color, pgState.shape_alpha),
-        hasShadow:       pgState.hasShadow,
-        blend_mode:      pgState.blend_mode,
-        click_animation: pgState.click_animation,
-        // Text is circle-only in the sandbox: the fluid stretch matrix
-        // distorts glyphs, so the whole group is hidden in fluid mode.
-        text:            isCircle ? (pgState.text || '') : '',
-        text_size:       isCircle && pgState.text ? pgState.text_size + 'px' : '',
-        text_weight:     pgState.text_weight,
-        trail_length:    pgState.trail_length,
-        trail_opacity:   pgState.trail_opacity / 100,
-      });
-      if (pgState.hasShadow) {
-        const sz = pgState.shadow_size + 'px';
-        cursor.setShadowSize(sz, sz, true);
-        cursor.setShadowColor(pgState.shadow_color, pgState.shadow_alpha / 100, true);
-      }
-      // Magnetic (circle-only) — live targets scoped to the sandbox canvas.
-      cursor.magnetic_targets = PG_MAGNETIC_TARGETS;
-      cursor.setMagneticStrength(pgState.magnetic_strength / 100, true);
-      cursor.magnetic_parallax_strength = pgState.magnetic_parallax_strength / 100;
-      cursor.magnetic_radius = pgState.magnetic_radius > 0 ? pgState.magnetic_radius : null;
-      cursor.setMagnetic(isCircle && pgState.magnetic, true);
-      cursor.setMagneticParallax(isCircle && pgState.magnetic_parallax, true);
-      // Fluid physics
-      cursor.setSpeed(pgState.speed / 100);
-      cursor.setMaxVelocity(pgState.maxVelocity);
-    }
-
-    function pgSync() { pgApplyToCursor(); pgUpdateCode(); }
-
-    /* Sync EVERY control from pgState — the single place that writes the UI.
-       Called after preset clicks so no control is ever left showing a stale
-       value (the old code only synced a subset: radios, text weight and the
-       new groups drifted out of sync). */
-    function pgSyncControls() {
-      const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-      const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-
-      document.getElementById('pg-shape-circle').classList.toggle('active', pgState.shape === 'circle');
-      document.getElementById('pg-shape-fluid').classList.toggle('active', pgState.shape === 'fluid');
-
-      const clickRadio = document.querySelector(`input[name="pg-click"][value="${pgState.click_animation}"]`);
-      if (clickRadio) clickRadio.checked = true;
-
-      set('pg-size', pgState.shape_size);            setTxt('pg-size-val', pgState.shape_size + 'px');
-      set('pg-color', pgState.shape_color);          setTxt('pg-color-val', pgState.shape_color);
-      set('pg-alpha', pgState.shape_alpha);          setTxt('pg-alpha-val', (pgState.shape_alpha / 100).toFixed(2));
-      document.getElementById('pg-shadow-on').checked = pgState.hasShadow;
-      set('pg-shadow-size', pgState.shadow_size);    setTxt('pg-shadow-size-val', pgState.shadow_size + 'px');
-      set('pg-shadow-color', pgState.shadow_color);  setTxt('pg-shadow-color-val', pgState.shadow_color);
-      set('pg-shadow-alpha', pgState.shadow_alpha);  setTxt('pg-shadow-alpha-val', (pgState.shadow_alpha / 100).toFixed(2));
-      set('pg-text', pgState.text);
-      set('pg-text-size', pgState.text_size);        setTxt('pg-text-size-val', pgState.text_size + 'px');
-      ['400', '600', '800'].forEach(w => document.getElementById('pg-tw-' + w).classList.toggle('active', w === pgState.text_weight));
-      set('pg-blend', pgState.blend_mode);
-      set('pg-trail-length', pgState.trail_length);  setTxt('pg-trail-length-val', pgState.trail_length > 0 ? String(pgState.trail_length) : 'off');
-      set('pg-trail-opacity', pgState.trail_opacity); setTxt('pg-trail-opacity-val', (pgState.trail_opacity / 100).toFixed(2));
-      document.getElementById('pg-magnetic-on').checked = pgState.magnetic;
-      set('pg-mag-strength', pgState.magnetic_strength); setTxt('pg-mag-strength-val', (pgState.magnetic_strength / 100).toFixed(2));
-      set('pg-mag-radius', pgState.magnetic_radius);     setTxt('pg-mag-radius-val', pgState.magnetic_radius > 0 ? pgState.magnetic_radius + 'px' : 'off');
-      document.getElementById('pg-parallax-on').checked = pgState.magnetic_parallax;
-      set('pg-parallax-strength', pgState.magnetic_parallax_strength); setTxt('pg-parallax-strength-val', (pgState.magnetic_parallax_strength / 100).toFixed(2));
-      set('pg-speed', pgState.speed);                setTxt('pg-speed-val', (pgState.speed / 100).toFixed(2));
-      set('pg-maxvel', pgState.maxVelocity);         setTxt('pg-maxvel-val', String(pgState.maxVelocity));
-
-      pgUpdateVisibility();
-    }
-
-    /* Playground controls */
-    window.pgSetShape = function(shape) {
-      pgState.shape = shape;
-      document.getElementById('pg-shape-circle').classList.toggle('active', shape === 'circle');
-      document.getElementById('pg-shape-fluid').classList.toggle('active', shape === 'fluid');
-      currentShape = shape;
-      isPlaygroundMode = true;
-      pgUpdateVisibility();
-      // pgSync (setDefaultPreset) performs the mode switch itself and re-applies
-      // every mode-dependent value (text dropped in fluid, physics, magnetic).
-      pgSync();
-    };
-
-    window.pgSetAlpha = function(val) {
-      pgState.shape_alpha = +val;
-      document.getElementById('pg-alpha-val').textContent = (val / 100).toFixed(2);
-      pgSync();
-    };
-
-    window.pgSetTrailLength = function(val) {
-      pgState.trail_length = +val;
-      document.getElementById('pg-trail-length-val').textContent = +val > 0 ? String(val) : 'off';
-      pgSync();
-    };
-
-    window.pgSetTrailOpacity = function(val) {
-      pgState.trail_opacity = +val;
-      document.getElementById('pg-trail-opacity-val').textContent = (val / 100).toFixed(2);
-      pgSync();
-    };
-
-    window.pgSetMagnetic = function(checked) { pgState.magnetic = checked; pgSync(); };
-
-    window.pgSetMagStrength = function(val) {
-      pgState.magnetic_strength = +val;
-      document.getElementById('pg-mag-strength-val').textContent = (val / 100).toFixed(2);
-      pgSync();
-    };
-
-    window.pgSetMagRadius = function(val) {
-      pgState.magnetic_radius = +val;
-      document.getElementById('pg-mag-radius-val').textContent = +val > 0 ? val + 'px' : 'off';
-      pgSync();
-    };
-
-    window.pgSetParallax = function(checked) { pgState.magnetic_parallax = checked; pgSync(); };
-
-    window.pgSetParallaxStrength = function(val) {
-      pgState.magnetic_parallax_strength = +val;
-      document.getElementById('pg-parallax-strength-val').textContent = (val / 100).toFixed(2);
-      pgSync();
-    };
-
-    window.pgSetSpeed = function(val) {
-      pgState.speed = +val;
-      document.getElementById('pg-speed-val').textContent = (val / 100).toFixed(2);
-      pgSync();
-    };
-
-    window.pgSetMaxVelocity = function(val) {
-      pgState.maxVelocity = +val;
-      document.getElementById('pg-maxvel-val').textContent = String(val);
-      pgSync();
-    };
-
-    window.pgSetClickAnim = function(val) { pgState.click_animation = val; pgSync(); };
-
-    window.pgSetSize = function(val) {
-      pgState.shape_size = val;
-      document.getElementById('pg-size-val').textContent = val + 'px';
-      pgSync();
-    };
-
-    window.pgSetColor = function(val) {
-      pgState.shape_color = val;
-      document.getElementById('pg-color-val').textContent = val;
-      pgSync();
-    };
-
-    window.pgSetShadowEnabled = function(checked) { pgState.hasShadow = checked; pgSync(); };
-
-    window.pgSetShadowSize = function(val) {
-      pgState.shadow_size = val;
-      document.getElementById('pg-shadow-size-val').textContent = val + 'px';
-      pgSync();
-    };
-
-    window.pgSetShadowColor = function(val) {
-      pgState.shadow_color = val;
-      document.getElementById('pg-shadow-color-val').textContent = val;
-      pgSync();
-    };
-
-    window.pgSetShadowAlpha = function(val) {
-      pgState.shadow_alpha = val;
-      document.getElementById('pg-shadow-alpha-val').textContent = (val / 100).toFixed(2);
-      pgSync();
-    };
-
-    window.pgSetText = function(val) { pgState.text = val; pgSync(); };
-
-    window.pgSetTextSize = function(val) {
-      pgState.text_size = val;
-      document.getElementById('pg-text-size-val').textContent = val + 'px';
-      pgSync();
-    };
-
-    window.pgSetTextWeight = function(val) {
-      pgState.text_weight = val;
-      ['400','600','800'].forEach(w => {
-        document.getElementById('pg-tw-' + w).classList.toggle('active', w === val);
-      });
-      pgSync();
-    };
-
-    window.pgSetBlendMode = function(val) { pgState.blend_mode = val; pgSync(); };
-
-    window.pgCopyCode = function() {
-      const raw = document.getElementById('pg-code-output').innerText;
-      copyText(raw, 'Code copied!');
-    };
-
-    /* Preset buttons in playground */
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const name = btn.getAttribute('data-preset');
-        const p = PRESETS[name];
-        if (!p) return;
-
-        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        // Rebuild pgState from the preset. Colors keep their REAL rgba values
-        // (split into hex + alpha for the inputs) so the generated code matches
-        // what's on screen. Properties a preset doesn't define reset to the
-        // sandbox defaults, mirroring loadPreset()'s baseline behaviour.
-        const shapeCol  = pgParseColor(p.shape_color, '#ffffff');
-        const shadowCol = pgParseColor(p.shadow_color, '#00D4AA');
-        pgState.shape           = p.shape || 'circle';
-        pgState.shape_size      = parseInt(p.shape_size) || 10;
-        pgState.shape_color     = shapeCol.hex;
-        pgState.shape_alpha     = shapeCol.alpha;
-        pgState.hasShadow       = p.hasShadow ?? true;
-        pgState.shadow_size     = parseInt(p.shadow_size) || 40;
-        pgState.shadow_color    = shadowCol.hex;
-        pgState.shadow_alpha    = shadowCol.alpha;
-        pgState.blend_mode      = p.blend_mode || 'normal';
-        pgState.click_animation = p.click_animation || 'scale';
-        pgState.text            = p.text || '';
-        pgState.text_size       = parseInt(p.text_size) || 12;
-        pgState.text_weight     = p.text_weight || '400';
-        pgState.trail_length    = p.trail_length || 0;
-        pgState.trail_opacity   = Math.round((p.trail_opacity ?? 0.3) * 100);
-        pgState.magnetic        = false;
-        pgState.magnetic_radius = 0;
-        pgState.magnetic_parallax = false;
-        pgState.speed           = 90;
-        pgState.maxVelocity     = 10;
-
-        currentShape = pgState.shape;
-        isPlaygroundMode = true;
-
-        pgSyncControls();
-        pgSync();
-      });
+      shadow_size: '44px',
+      shadow_color: 'rgba(166,75,42,0.3)',
+      click_animation: 'ripple',
+      click_duration: 350,
     });
 
-    /* ------------------------------------------------------------------
-       MAGNETIC DEMO — the section owns the magnetic flags only while the
-       pointer is inside its grid, then hands them back to the sandbox
-       state. Targets are scoped per-context so page links never attract.
-    ------------------------------------------------------------------ */
-    (function initMagneticDemo() {
-      const grid = document.getElementById('magnetic-demo-grid');
-      if (!grid || !cursor) return;
+    const P = ProteusCursor.PRESETS || {};
+    cursor
+      .addState('hero-fluid', { shape: 'fluid', shape_size: '26px', shape_color: '#A64B2A', hasShadow: false })
+      .addState('hero-text', { shape_size: '66px', shape_color: 'rgba(28,25,21,0.08)', text: 'Hello', text_size: '13px', text_color: '#1C1915' })
+      .addState('hero-cta', { shape_size: '58px', shape_color: 'rgba(166,75,42,0.14)', text: 'Click', text_size: '12px', text_color: '#A64B2A' })
+      .addState('hero-title', { shape_size: '110px', shape_color: '#ffffff', blend_mode: 'difference', hasShadow: false })
+      .addState('demo-circle', { shape_size: '20px', shape_color: '#1C1915', hasShadow: true })
+      .addState('demo-fluid', { shape: 'fluid', shape_size: '28px', shape_color: '#A64B2A', hasShadow: false })
+      .addState('preset-ghost', Object.assign({}, P.ghost))
+      .addState('preset-neon', Object.assign({}, P.neon))
+      .addState('preset-minimal', Object.assign({}, P.minimal))
+      .addState('preset-chrome', Object.assign({}, P.chrome))
+      .addState('preset-ink', Object.assign({}, P.ink))
+      .addState('box-scale', { shape_size: '16px', shape_color: '#1C1915', click_animation: 'scale' })
+      .addState('box-ripple', { shape_size: '16px', shape_color: '#A64B2A', click_animation: 'ripple' })
+      .addState('box-none', { shape_size: '16px', shape_color: '#8C6F3F', click_animation: 'none' })
+      .addState('nav-link', { shape_size: '8px', shape_color: '#A64B2A', hasShadow: false });
 
-      grid.addEventListener('mouseenter', () => {
-        cursor.magnetic_targets = '#magnetic .mg-target';
-        cursor.setMagneticStrength(0.4, true);
-        cursor.setMagnetic(true, true);
+    window.__proteus = cursor;
+    applyPg();
+  }
+
+  /* ============================================================
+     PLAYGROUND
+  ============================================================ */
+  function applyPg() {
+    if (!cursor) return;
+    const isCircle = pg.shape === 'circle';
+    cursor.setDefaultPreset({
+      shape: pg.shape,
+      shape_size: pg.size + 'px',
+      shape_color: pg.color,
+      hasShadow: pg.hasShadow,
+      blend_mode: pg.blend,
+      click_animation: pg.clickAnim,
+      text: isCircle ? (pg.text || '') : '',
+      text_size: isCircle && pg.text ? '12px' : '',
+      text_color: '#F3EFE5',
+    });
+    if (pg.hasShadow) {
+      const sz = pg.shadowSize + 'px';
+      cursor.setShadowSize(sz, sz, true);
+      cursor.setShadowColor('#A64B2A', 0.3, true);
+    }
+    cursor.magnetic_targets = '[data-pg-target]';
+    cursor.setMagneticStrength(pg.magStrength / 100, true);
+    cursor.magnetic_radius = null;
+    cursor.setMagnetic(isCircle && pg.magnetic, true);
+    cursor.setMagneticParallax(isCircle && pg.magnetic && pg.parallax, true);
+    cursor.setSpeed(pg.speed / 100);
+  }
+
+  function pgCode() {
+    const isCircle = pg.shape === 'circle';
+    const L = [];
+    L.push(`  shape: '${pg.shape}',`);
+    L.push(`  shape_size: '${pg.size}px',`);
+    L.push(`  shape_color: '${pg.color}',`);
+    if (pg.hasShadow) {
+      L.push(`  hasShadow: true,`);
+      L.push(`  shadow_size: '${pg.shadowSize}px',`);
+      L.push(`  shadow_color: 'rgba(166,75,42,0.3)',`);
+    } else {
+      L.push(`  hasShadow: false,`);
+    }
+    L.push(`  click_animation: '${pg.clickAnim}',`);
+    if (pg.blend !== 'normal') L.push(`  blend_mode: '${pg.blend}',`);
+    if (isCircle && pg.text) {
+      L.push(`  text: '${pg.text}',`);
+      L.push(`  text_size: '12px',`);
+    }
+    if (isCircle && pg.magnetic) {
+      L.push(`  magnetic: true,`);
+      if (pg.magStrength !== 40) L.push(`  magnetic_strength: ${(pg.magStrength / 100).toFixed(2)},`);
+      if (pg.parallax) L.push(`  magnetic_parallax: true,`);
+    }
+    if (!isCircle && pg.speed !== 90) L.push(`  speed: ${(pg.speed / 100).toFixed(2)},`);
+    return `const cursor = new ProteusCursor({\n${L.join('\n')}\n});`;
+  }
+
+  // DOM refs
+  const el = (id) => document.getElementById(id);
+  const shapeSegs = document.querySelectorAll('#playground .seg[data-shape]');
+  const swatches = document.querySelectorAll('#pg-swatches .swatch');
+  const clickBtns = document.querySelectorAll('#pg-click .pill-btn');
+  const blendBtns = document.querySelectorAll('#pg-blend .pill-btn');
+
+  function renderPg() {
+    const isCircle = pg.shape === 'circle';
+    // mode
+    shapeSegs.forEach((b) => b.classList.toggle('active', b.dataset.shape === pg.shape));
+    // size
+    el('pg-size').value = pg.size;
+    el('pg-size-label').textContent = pg.size + 'px';
+    // colour
+    swatches.forEach((s) => s.classList.toggle('active', s.dataset.hex === pg.color));
+    // shadow
+    el('pg-shadow-toggle').classList.toggle('active', pg.hasShadow);
+    el('pg-shadow-toggle').textContent = pg.hasShadow ? 'on' : 'off';
+    el('pg-shadow-block').classList.toggle('hidden', !pg.hasShadow);
+    el('pg-shadow-size').value = pg.shadowSize;
+    el('pg-shadow-label').textContent = pg.shadowSize + 'px';
+    // click anim
+    clickBtns.forEach((b) => b.classList.toggle('active', b.dataset.val === pg.clickAnim));
+    // blend
+    blendBtns.forEach((b) => b.classList.toggle('active', b.dataset.val === pg.blend));
+    // circle-only vs fluid-only
+    el('pg-circle-only').classList.toggle('hidden', !isCircle);
+    el('pg-fluid-only').classList.toggle('hidden', isCircle);
+    // text
+    if (el('pg-text').value !== pg.text) el('pg-text').value = pg.text;
+    // magnetic
+    el('pg-magnetic-toggle').classList.toggle('active', pg.magnetic);
+    el('pg-magnetic-toggle').textContent = pg.magnetic ? 'on' : 'off';
+    el('pg-magnetic-block').classList.toggle('hidden', !pg.magnetic);
+    el('pg-mag-strength').value = pg.magStrength;
+    el('pg-mag-strength-label').textContent = (pg.magStrength / 100).toFixed(2);
+    el('pg-parallax-toggle').classList.toggle('active', pg.parallax);
+    el('pg-parallax-toggle').textContent = pg.parallax ? 'on' : 'off';
+    // speed
+    el('pg-speed').value = pg.speed;
+    el('pg-speed-label').textContent = (pg.speed / 100).toFixed(2);
+    // code
+    el('pg-code').textContent = pgCode();
+  }
+
+  function setPg(patch) {
+    Object.assign(pg, patch);
+    currentShape = pg.shape;
+    if (Object.prototype.hasOwnProperty.call(patch, 'shape')) {
+      el('toggle-shape').textContent = currentShape === 'circle'
+        ? 'Switch the whole page to Fluid mode'
+        : 'Switch the whole page back to Circle mode';
+    }
+    renderPg();
+    applyPg();
+  }
+
+  // wire controls
+  shapeSegs.forEach((b) => b.addEventListener('click', () => setPg({ shape: b.dataset.shape })));
+  el('pg-size').addEventListener('input', (e) => setPg({ size: +e.target.value }));
+  swatches.forEach((s) => s.addEventListener('click', () => setPg({ color: s.dataset.hex })));
+  el('pg-shadow-toggle').addEventListener('click', () => setPg({ hasShadow: !pg.hasShadow }));
+  el('pg-shadow-size').addEventListener('input', (e) => setPg({ shadowSize: +e.target.value }));
+  clickBtns.forEach((b) => b.addEventListener('click', () => setPg({ clickAnim: b.dataset.val })));
+  blendBtns.forEach((b) => b.addEventListener('click', () => setPg({ blend: b.dataset.val })));
+  el('pg-text').addEventListener('input', (e) => setPg({ text: e.target.value }));
+  el('pg-magnetic-toggle').addEventListener('click', () => setPg({ magnetic: !pg.magnetic }));
+  el('pg-mag-strength').addEventListener('input', (e) => setPg({ magStrength: +e.target.value }));
+  el('pg-parallax-toggle').addEventListener('click', () => setPg({ parallax: !pg.parallax }));
+  el('pg-speed').addEventListener('input', (e) => setPg({ speed: +e.target.value }));
+  el('pg-reset').addEventListener('click', () => setPg({
+    shape: 'circle', size: 10, color: '#1C1915', hasShadow: true, shadowSize: 44,
+    clickAnim: 'ripple', blend: 'normal', text: '', magnetic: false, magStrength: 40,
+    parallax: false, speed: 90,
+  }));
+  el('pg-copy').addEventListener('click', () => copy(pgCode(), 'Code copied'));
+  el('toggle-shape').addEventListener('click', () => {
+    setPg({ shape: currentShape === 'circle' ? 'fluid' : 'circle' });
+  });
+
+  /* ============================================================
+     MAGNETIC SECTION (scoped)
+  ============================================================ */
+  const mgGrid = document.getElementById('mg-grid');
+  mgGrid.addEventListener('mouseenter', () => {
+    if (!cursor) return;
+    cursor.magnetic_targets = '.mg-target';
+    cursor.setMagneticStrength(0.4, true);
+    cursor.setMagnetic(true, true);
+  });
+  mgGrid.addEventListener('mouseleave', () => {
+    if (!cursor) return;
+    cursor.magnetic_targets = '[data-pg-target]';
+    cursor.setMagnetic(pg.shape === 'circle' && pg.magnetic, true);
+    cursor.setMagneticParallax(pg.shape === 'circle' && pg.magnetic && pg.parallax, true);
+    cursor.setMagneticStrength(pg.magStrength / 100, true);
+    cursor.magnetic_radius = null;
+  });
+  function mgMode(mode) {
+    if (!cursor) return;
+    cursor.setMagneticParallax(mode === 'parallax', true);
+    cursor.magnetic_radius = mode === 'radius' ? 140 : null;
+  }
+  mgGrid.querySelectorAll('[data-mg]').forEach((card) => {
+    card.addEventListener('mouseenter', () => mgMode(card.dataset.mg));
+  });
+
+  /* ============================================================
+     HERO TITLE (magnetic parallax on the words)
+  ============================================================ */
+  const heroTitle = document.getElementById('hero-title');
+  heroTitle.addEventListener('mouseenter', () => {
+    if (!cursor) return;
+    cursor.magnetic_targets = '[data-hero-word]';
+    cursor.magnetic_parallax_strength = 0.1;
+    cursor.setMagneticParallax(true, true);
+  });
+  heroTitle.addEventListener('mouseleave', () => {
+    if (!cursor) return;
+    cursor.magnetic_targets = '[data-pg-target]';
+    cursor.magnetic_parallax_strength = 0.15;
+    cursor.setMagneticParallax(pg.shape === 'circle' && pg.magnetic && pg.parallax, true);
+  });
+
+  /* ============================================================
+     SCROLL REVEAL + FOLIO SCROLLSPY
+  ============================================================ */
+  function setupMotion() {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); }
       });
-      grid.addEventListener('mouseleave', () => {
-        // Hand the flags back to whatever the sandbox says.
-        cursor.magnetic_targets = PG_MAGNETIC_TARGETS;
-        cursor.setMagnetic(pgState.shape === 'circle' && pgState.magnetic, true);
-        cursor.setMagneticParallax(pgState.shape === 'circle' && pgState.magnetic_parallax, true);
-        cursor.setMagneticStrength(pgState.magnetic_strength / 100, true);
-        cursor.magnetic_radius = pgState.magnetic_radius > 0 ? pgState.magnetic_radius : null;
+    }, { threshold: 0.12 });
+    document.querySelectorAll('[data-reveal], [data-rule]').forEach((el) => io.observe(el));
+
+    // safety: never leave content hidden
+    setTimeout(() => {
+      document.querySelectorAll('[data-reveal], [data-rule]').forEach((el) => el.classList.add('on'));
+    }, 3000);
+
+    const names = {
+      top: 'Prologue', modes: 'I — Modes', presets: 'II — Presets', clicks: 'III — Clicks',
+      magnetic: 'IV — Magnetic', playground: 'V — Workshop', quickstart: 'VI — Quick start',
+    };
+    const folioEl = document.getElementById('folio');
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting && names[e.target.id]) folioEl.textContent = names[e.target.id];
       });
+    }, { rootMargin: '-35% 0px -55% 0px' });
+    Object.keys(names).forEach((id) => {
+      const node = document.getElementById(id);
+      if (node) spy.observe(node);
+    });
+  }
 
-      // Per-card flavour: parallax / falloff radius engage only on that card.
-      grid.querySelectorAll('.mg-card').forEach(card => {
-        const mode = card.getAttribute('data-mg-mode');
-        card.addEventListener('mouseenter', () => {
-          cursor.setMagneticParallax(mode === 'parallax', true);
-          cursor.magnetic_radius = mode === 'radius' ? 140 : null;
-        });
-      });
-    })();
-
-    // Init controls + code output
-    pgSyncControls();
-    pgUpdateCode();
-
-  </script>
+  /* ============================================================
+     BOOT
+  ============================================================ */
+  renderPg();
+  initCursor();
+  setupMotion();
+</script>
 </body>
 </html>
